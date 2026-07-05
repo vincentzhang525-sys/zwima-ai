@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima Pricing Sheet V1 | Intern</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge-finance">Pricing · Intern</span>
+        <a href="dashboard.html" class="arch-back">← Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Pläne</span>
+        <a href="#starter">Starter</a>
+        <a href="#pro">Pro</a>
+        <a href="#business">Business</a>
+        <a href="#enterprise">Enterprise</a>
+        <a href="#billing">Billing Notes</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Interne Dokumentation</span>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="supplier-due-diligence.html">Supplier Due Diligence</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="pricing-sheet.html" class="active">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+        <a href="mvp.html">MVP V0.1</a>
+        <a href="architecture.html">Architecture V1</a>
+      </nav>
+      <div class="arch-meta"><span>V1 · Juni 2026</span></div>
+    </aside>
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menü"><span></span><span></span><span></span></button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Interne Preisliste</p>
+          <h1>Zwima Pricing Sheet V1</h1>
+          <p class="arch-subtitle">AI API access Pakete · Nicht öffentlich</p>
+        </div>
+      </header>
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p>Offizielle interne Preisstruktur für <strong>AI credits</strong> und monatliche API-Nutzungspakete. Alle Preise netto, zzgl. MwSt. <strong>European business billing</strong> per monatlicher Rechnung.</p>
+        </div>
+
+        <div class="pricing-sheet-grid">
+          <div id="starter" class="pricing-sheet-card">
+            <h3>Starter</h3>
+            <div class="pricing-sheet-price">49 EUR <span>/ Monat</span></div>
+            <ul>
+              <li><strong>Zielkunden:</strong> Pilotprojekte, kleine Teams, erste Integration</li>
+              <li><strong>Modelle:</strong> OpenAI (MVP); ab V1.0 Basis Multi-Model</li>
+              <li><strong>AI Credits:</strong> 10.000 / Monat</li>
+              <li><strong>Support:</strong> E-Mail, 48h Reaktionszeit</li>
+              <li><strong>API Keys:</strong> bis 3 aktiv</li>
+            </ul>
+            <div class="pricing-target">Ideal für: AI Developers, erste SaaS-Integration</div>
+          </div>
+          <div id="pro" class="pricing-sheet-card featured">
+            <h3>Pro</h3>
+            <div class="pricing-sheet-price">199 EUR <span>/ Monat</span></div>
+            <ul>
+              <li><strong>Zielkunden:</strong> Produktive B2B-Integration, wachsende Teams</li>
+              <li><strong>Modelle:</strong> OpenAI + Claude (ab V0.3); volles Multi-Model ab V1.0</li>
+              <li><strong>AI Credits:</strong> 50.000 / Monat</li>
+              <li><strong>Support:</strong> Prioritäts-E-Mail, 24h Reaktionszeit</li>
+              <li><strong>API Keys:</strong> bis 10 aktiv</li>
+            </ul>
+            <div class="pricing-target">Ideal für: AI Startups, SaaS-Unternehmen</div>
+          </div>
+          <div id="business" class="pricing-sheet-card">
+            <h3>Business</h3>
+            <div class="pricing-sheet-price">499 EUR <span>/ Monat</span></div>
+            <ul>
+              <li><strong>Zielkunden:</strong> Skalierende Produkte, höheres API-Volumen</li>
+              <li><strong>Modelle:</strong> Vollständiger multi-model infrastructure Zugang</li>
+              <li><strong>AI Credits:</strong> 200.000 / Monat</li>
+              <li><strong>Support:</strong> Priorität + dedizierter Ansprechpartner</li>
+              <li><strong>API Keys:</strong> unbegrenzt</li>
+            </ul>
+            <div class="pricing-target">Ideal für: German SMEs, Industrial Companies</div>
+          </div>
+          <div id="enterprise" class="pricing-sheet-card">
+            <h3>Enterprise</h3>
+            <div class="pricing-sheet-price">Individuell</div>
+            <ul>
+              <li><strong>Zielkunden:</strong> Großunternehmen, regulierte Branchen</li>
+              <li><strong>Modelle:</strong> Individuell, SLA, dedizierte Routing-Regeln</li>
+              <li><strong>AI Credits:</strong> Nach Vereinbarung</li>
+              <li><strong>Support:</strong> SLA, AVV, dedizierter Support</li>
+              <li><strong>API Keys:</strong> Enterprise-SSO, Audit-Logs</li>
+            </ul>
+            <div class="pricing-target">Ideal für: Enterprise, Cross-Border Teams</div>
+          </div>
+        </div>
+
+        <section id="billing" class="arch-section">
+          <h2>Billing Notes</h2>
+          <div class="arch-card">
+            <ul>
+              <li>Monatliche Abrechnung im Voraus per <strong>European business billing</strong> (Rechnung / Überweisung; Stripe ab V0.2)</li>
+              <li>AI credits werden monatlich zurückgesetzt; kein Rollover in V1</li>
+              <li>Quota-Überschreitung: Starter/Pro blockiert (HTTP 429); Business mit Overage-Option ab V1.0</li>
+              <li>Alle Pläne: <strong>GDPR-conscious service</strong>, AVV auf Anfrage</li>
+              <li>Planwechsel zum nächsten Abrechnungszeitraum; Upgrades jederzeit auf Anfrage</li>
+              <li>Enterprise: individuelle Vertragslaufzeit, Mindestlaufzeit 12 Monate empfohlen</li>
+            </ul>
+            <p class="spec-note">Öffentliche Website zeigt dieselben Preise. Interne Margen-Kalkulation: <a href="cost-sheet.html">Cost Sheet V1 →</a></p>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima Pricing Sheet V1 · Intern · Nicht für Endkunden-Verteilung ohne Freigabe</p>
+          <p class="arch-footer-links">
+            <a href="revenue-engine.html">Revenue Engine</a><span>·</span>
+            <a href="cost-sheet.html">Cost Sheet</a><span>·</span>
+            <a href="index.html">Website</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+  <script src="architecture.js"></script>
+</body>
+</html>

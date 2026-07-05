@@ -1,0 +1,16 @@
+{
+  "overview": {
+    "balance": 12450,
+    "balanceLabel": "12,450 Credits",
+    "consumption": "3,550 credits this month",
+    "monthlyUsage": "3.2M model tokens",
+    "providerCost": "€1,840 estimated",
+    "currency": "EUR (€)"
+  },
+  "billingSettings": {
+    "autoRecharge": true,
+    "monthlyLimit": 5000,
+    "alertThreshold": 2000
+  },
+  "topUpConfirmMessage": "Credits added successfully via Stripe."
+}

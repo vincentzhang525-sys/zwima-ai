@@ -1,0 +1,35 @@
+{
+  "requestLogs": [
+    { "time": "14:38:12", "endpoint": "/v1/chat/completions", "provider": "OpenAI", "latency": "241 ms", "status": "200", "tokens": "842" },
+    { "time": "14:37:58", "endpoint": "/v1/chat/completions", "provider": "Claude", "latency": "312 ms", "status": "200", "tokens": "1,204" },
+    { "time": "14:37:44", "endpoint": "/v1/chat/completions", "provider": "Gemini", "latency": "198 ms", "status": "200", "tokens": "560" },
+    { "time": "14:37:29", "endpoint": "/v1/chat/completions", "provider": "DeepSeek", "latency": "176 ms", "status": "200", "tokens": "392" },
+    { "time": "14:37:11", "endpoint": "/v1/chat/completions", "provider": "OpenRouter", "latency": "428 ms", "status": "200", "tokens": "718" },
+    { "time": "14:36:55", "endpoint": "/v1/chat/completions", "provider": "Claude", "latency": "—", "status": "429", "tokens": "0" }
+  ],
+  "gatewayProviders": [
+    { "name": "OpenAI", "status": "Connected", "statusClass": "active" },
+    { "name": "Claude", "status": "Connected", "statusClass": "active" },
+    { "name": "Gemini", "status": "Connected", "statusClass": "active" },
+    { "name": "DeepSeek", "status": "Connected", "statusClass": "active" },
+    { "name": "Qwen", "status": "Mock", "statusClass": "mock" },
+    { "name": "Mistral", "status": "Mock", "statusClass": "mock" },
+    { "name": "OpenRouter", "status": "Connected", "statusClass": "active" }
+  ],
+  "health": [
+    { "name": "Gateway Status", "status": "Operational", "statusClass": "active" },
+    { "name": "Provider Status", "status": "Operational", "statusClass": "active" },
+    { "name": "Database", "status": "Operational", "statusClass": "active" },
+    { "name": "Billing", "status": "Operational", "statusClass": "active" }
+  ],
+  "rateLimits": [
+    { "plan": "Free", "rpm": "10", "tpd": "50K", "concurrent": "2" },
+    { "plan": "Starter", "rpm": "60", "tpd": "500K", "concurrent": "5" },
+    { "plan": "Business", "rpm": "300", "tpd": "5M", "concurrent": "20" },
+    { "plan": "Enterprise", "rpm": "Custom", "tpd": "Custom", "concurrent": "Custom" }
+  ],
+  "gatewayStatistics": {
+    "tokenUsage": "3.2M"
+  },
+  "sdkMessage": "SDK package coming soon."
+}

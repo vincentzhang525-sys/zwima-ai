@@ -1,0 +1,17 @@
+{
+  "id": "user-admin-1",
+  "name": "Admin User",
+  "company": "Zwima Technologie GmbH",
+  "email": "admin@zwima-group.info",
+  "plan": "Early Access",
+  "contactName": "Admin User",
+  "country": "Germany",
+  "language": "English",
+  "timezone": "Europe/Berlin",
+  "billingEmail": "hello@zwima-group.info",
+  "vatNumber": "DE321456789",
+  "apiKeyCount": 4,
+  "creditsBalance": "12,450",
+  "role": "Admin",
+  "avatar": "AU"
+}

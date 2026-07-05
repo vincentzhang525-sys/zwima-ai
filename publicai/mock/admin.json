@@ -1,0 +1,70 @@
+{
+  "users": [
+    {
+      "id": "user-admin-1",
+      "email": "admin@zwima-group.info",
+      "name": "Admin User",
+      "company": "Zwima Technologie GmbH",
+      "role": "Admin",
+      "status": "active",
+      "credits": 12450,
+      "createdAt": "2026-01-15"
+    },
+    {
+      "id": "user-demo-1",
+      "email": "alex.weber@company.eu",
+      "name": "Alex Weber",
+      "company": "Zwima Technologie GmbH",
+      "role": "Developer",
+      "status": "active",
+      "credits": 8200,
+      "createdAt": "2026-03-02"
+    },
+    {
+      "id": "user-viewer-1",
+      "email": "viewer@company.eu",
+      "name": "Sara Klein",
+      "company": "Acme GmbH",
+      "role": "Viewer",
+      "status": "disabled",
+      "credits": 500,
+      "createdAt": "2026-04-10"
+    },
+    {
+      "id": "user-owner-1",
+      "email": "owner@zwima-group.info",
+      "name": "Thomas Richter",
+      "company": "Zwima Technologie GmbH",
+      "role": "Owner",
+      "status": "active",
+      "credits": 25000,
+      "createdAt": "2026-02-20"
+    }
+  ],
+  "pricing": [
+    { "id": "price-1", "provider": "OpenAI", "model": "GPT-4o", "tokenCost": 0.0000025, "sellPrice": 0.000004, "margin": 60 },
+    { "id": "price-2", "provider": "Anthropic", "model": "Claude 4 Sonnet", "tokenCost": 0.0000018, "sellPrice": 0.0000032, "margin": 56 },
+    { "id": "price-3", "provider": "DeepSeek", "model": "DeepSeek V3", "tokenCost": 0.0000004, "sellPrice": 0.0000008, "margin": 50 },
+    { "id": "price-4", "provider": "Google Gemini", "model": "Gemini 2.5 Pro", "tokenCost": 0.0000012, "sellPrice": 0.0000022, "margin": 45 },
+    { "id": "price-5", "provider": "Qwen", "model": "Qwen Max", "tokenCost": 0.0000006, "sellPrice": 0.0000012, "margin": 50 }
+  ],
+  "statistics": {
+    "todayRevenue": 2840,
+    "totalRevenue": 128400,
+    "tokenUsage": 3200000,
+    "apiCalls": 38420,
+    "profit": 42100,
+    "topCustomers": [
+      { "name": "Zwima Technologie GmbH", "revenue": 18400, "credits": 45000 },
+      { "name": "Acme GmbH", "revenue": 9200, "credits": 22000 },
+      { "name": "Nova Systems AG", "revenue": 6800, "credits": 15000 },
+      { "name": "Helix Digital", "revenue": 4100, "credits": 9800 },
+      { "name": "CloudPeak EU", "revenue": 3200, "credits": 7600 }
+    ]
+  },
+  "auditLog": [
+    { "id": "audit-1", "time": "2026-07-05 14:22", "actor": "admin@zwima-group.info", "action": "user.credits.adjust", "target": "alex.weber@company.eu", "detail": "+500 credits" },
+    { "id": "audit-2", "time": "2026-07-05 11:05", "actor": "admin@zwima-group.info", "action": "provider.disable", "target": "qwen", "detail": "Disabled Qwen provider" },
+    { "id": "audit-3", "time": "2026-07-04 16:40", "actor": "admin@zwima-group.info", "action": "pricing.update", "target": "GPT-4o", "detail": "Sell price updated to €0.000004" }
+  ]
+}

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima AI Provider Catalog | Internal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+  <style>
+    .catalog-toolbar {
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+
+    .catalog-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .catalog-field label {
+      color: var(--gray-400);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .catalog-input,
+    .catalog-select {
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--gray-600);
+      font: inherit;
+      font-size: 13px;
+      padding: 10px 12px;
+      width: 100%;
+    }
+
+    .catalog-input:focus,
+    .catalog-select:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+      outline: none;
+    }
+
+    .catalog-button {
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--blue-dark);
+      color: var(--white);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 11px 16px;
+      white-space: nowrap;
+    }
+
+    .catalog-button:hover {
+      background: var(--blue-mid);
+    }
+
+    .provider-table-card {
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .provider-table-header {
+      align-items: center;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      padding: 16px 20px;
+    }
+
+    .provider-table-header h3 {
+      color: var(--blue-dark);
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .provider-count {
+      background: var(--blue-light);
+      border-radius: 20px;
+      color: var(--blue-dark);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+    }
+
+    .provider-table-wrap {
+      overflow-x: auto;
+      padding: 0 20px 12px;
+    }
+
+    .provider-catalog-table {
+      min-width: 1320px;
+    }
+
+    .visual-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .visual-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 18px;
+    }
+
+    .visual-card span {
+      color: var(--gray-400);
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .visual-card strong {
+      color: var(--blue-dark);
+      display: block;
+      font-size: 1.45rem;
+      line-height: 1.2;
+    }
+
+    .visual-card small {
+      color: var(--gray-600);
+      display: block;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+
+    .price-pill {
+      background: var(--blue-light);
+      border-radius: 999px;
+      color: var(--blue-dark);
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 9px;
+      white-space: nowrap;
+    }
+
+    .level-pill {
+      background: #e6f4ed;
+      border-radius: 999px;
+      color: #2d7a52;
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 9px;
+      white-space: nowrap;
+    }
+
+    .catalog-note {
+      color: var(--gray-400);
+      font-size: 12px;
+      line-height: 1.6;
+      margin: 14px 0 0;
+    }
+
+    .catalog-empty {
+      color: var(--gray-400);
+      display: none;
+      font-size: 13px;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    @media (max-width: 1024px) {
+      .catalog-toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .visual-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .catalog-toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .visual-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge-ops">Provider · Internal</span>
+        <a href="dashboard.html" class="arch-back">Back to Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Provider Catalog</span>
+        <a href="#catalog">Catalog</a>
+        <a href="#openai">OpenAI</a>
+        <a href="#anthropic">Anthropic Claude</a>
+        <a href="#google">Google Gemini</a>
+        <a href="#deepseek">DeepSeek</a>
+        <a href="#alibaba">Alibaba Qwen</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Internal Documentation</span>
+        <a href="provider-catalog.html" class="active">Provider Catalog</a>
+        <a href="customer-simulation.html">Revenue Simulation</a>
+        <a href="outreach-kit.html">Outreach Kit</a>
+        <a href="lead-database.html">Lead Database</a>
+        <a href="first-10-customers.html">First 10 Customers</a>
+        <a href="supplier-due-diligence.html">Supplier Due Diligence</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+      </nav>
+      <div class="arch-meta">
+        <span>Internal provider database</span>
+        <span>Robots: noindex, nofollow</span>
+      </div>
+    </aside>
+
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Model Operations</p>
+          <h1>Zwima AI Provider Catalog</h1>
+          <p class="arch-subtitle">Internal model database for provider selection, API pricing, routing, and Zwima Credits planning.</p>
+        </div>
+      </header>
+
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p>Internal catalog for comparing AI providers and models across input price, output price, context window, reasoning level, speed, use case, and Zwima Credits.</p>
+        </div>
+
+        <section id="catalog" class="arch-section">
+          <h2>Provider Catalog</h2>
+          <div class="arch-card">
+            <div class="catalog-toolbar" aria-label="Provider catalog controls">
+              <div class="catalog-field">
+                <label for="catalogSearch">Search</label>
+                <input class="catalog-input" id="catalogSearch" type="search" placeholder="Search provider, model, use case...">
+              </div>
+              <div class="catalog-field">
+                <label for="providerFilter">Provider</label>
+                <select class="catalog-select" id="providerFilter">
+                  <option value="">All providers</option>
+                </select>
+              </div>
+              <div class="catalog-field">
+                <label for="speedFilter">Speed</label>
+                <select class="catalog-select" id="speedFilter">
+                  <option value="">All speeds</option>
+                </select>
+              </div>
+              <div class="catalog-field">
+                <label for="useCaseFilter">Reasoning</label>
+                <select class="catalog-select" id="useCaseFilter">
+                  <option value="">All reasoning levels</option>
+                </select>
+              </div>
+              <button class="catalog-button" id="exportCatalogCsv" type="button">Export CSV</button>
+            </div>
+            <p class="catalog-empty" id="catalogEmpty">No provider models match the current search and filters.</p>
+            <div class="visual-grid">
+              <div class="visual-card"><span>Total Models</span><strong>14</strong><small>Across 5 providers</small></div>
+              <div class="visual-card"><span>Lowest Input</span><strong>$0.05</strong><small>Qwen Turbo per 1M input tokens</small></div>
+              <div class="visual-card"><span>Largest Context</span><strong>1M</strong><small>OpenAI 4.1, Claude Opus/Sonnet, Gemini 2.5, DeepSeek aliases, Qwen Turbo</small></div>
+              <div class="visual-card"><span>Pricing Unit</span><strong>1M</strong><small>All input/output prices shown per 1M tokens in USD</small></div>
+            </div>
+            <p class="catalog-note">Prices are current public API list prices verified from provider documentation/search results during update. They exclude batch discounts, cache discounts, regional premiums, taxes, and negotiated enterprise rates. DeepSeek V3/R1 are listed as requested, with current API compatibility routing to V4 Flash pricing.</p>
+          </div>
+        </section>
+
+        <section id="openai" class="arch-section provider-section">
+          <div class="arch-card provider-table-card">
+            <div class="provider-table-header">
+              <h3>OpenAI</h3>
+              <span class="provider-count">4 models</span>
+            </div>
+            <div class="provider-table-wrap">
+              <table class="arch-table provider-catalog-table">
+                <thead>
+                  <tr><th>Provider</th><th>Model Name</th><th>Input Price</th><th>Output Price</th><th>Context Window</th><th>Reasoning Level</th><th>Speed</th><th>Use Case</th><th>Zwima Credits</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>OpenAI</td><td>GPT-4.1</td><td><span class="price-pill">$2.00 / 1M tokens</span></td><td><span class="price-pill">$8.00 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">High</span></td><td>Medium</td><td>Production coding, long-document analysis, tool calling, agents</td><td>12 credits / 1M blended tokens</td></tr>
+                  <tr><td>OpenAI</td><td>GPT-4.1 Mini</td><td><span class="price-pill">$0.40 / 1M tokens</span></td><td><span class="price-pill">$1.60 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">Medium</span></td><td>Fast</td><td>High-volume production chat, extraction, summarization, routing</td><td>3 credits / 1M blended tokens</td></tr>
+                  <tr><td>OpenAI</td><td>GPT-4o</td><td><span class="price-pill">$2.50 / 1M tokens</span></td><td><span class="price-pill">$10.00 / 1M tokens</span></td><td>128K tokens</td><td><span class="level-pill">High</span></td><td>Fast</td><td>Legacy multimodal assistants, support, realtime-style UX</td><td>14 credits / 1M blended tokens</td></tr>
+                  <tr><td>OpenAI</td><td>GPT-4o Mini</td><td><span class="price-pill">$0.15 / 1M tokens</span></td><td><span class="price-pill">$0.60 / 1M tokens</span></td><td>128K tokens</td><td><span class="level-pill">Basic</span></td><td>Very Fast</td><td>Legacy low-cost chat, lightweight multimodal, simple support flows</td><td>2 credits / 1M blended tokens</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="anthropic" class="arch-section provider-section">
+          <div class="arch-card provider-table-card">
+            <div class="provider-table-header">
+              <h3>Anthropic Claude</h3>
+              <span class="provider-count">3 models</span>
+            </div>
+            <div class="provider-table-wrap">
+              <table class="arch-table provider-catalog-table">
+                <thead>
+                  <tr><th>Provider</th><th>Model Name</th><th>Input Price</th><th>Output Price</th><th>Context Window</th><th>Reasoning Level</th><th>Speed</th><th>Use Case</th><th>Zwima Credits</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Anthropic</td><td>Claude Opus 4.8</td><td><span class="price-pill">$5.00 / 1M tokens</span></td><td><span class="price-pill">$25.00 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">Very High</span></td><td>Moderate</td><td>Complex reasoning, agentic coding, deep analysis</td><td>38 credits / 1M blended tokens</td></tr>
+                  <tr><td>Anthropic</td><td>Claude Sonnet 4.6</td><td><span class="price-pill">$3.00 / 1M tokens</span></td><td><span class="price-pill">$15.00 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">High</span></td><td>Fast</td><td>Daily coding, business analysis, writing, balanced reasoning</td><td>23 credits / 1M blended tokens</td></tr>
+                  <tr><td>Anthropic</td><td>Claude Haiku 4.5</td><td><span class="price-pill">$1.00 / 1M tokens</span></td><td><span class="price-pill">$5.00 / 1M tokens</span></td><td>200K tokens</td><td><span class="level-pill">Medium</span></td><td>Fastest</td><td>Fast support drafts, classification, lightweight coding, routing</td><td>8 credits / 1M blended tokens</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="google" class="arch-section provider-section">
+          <div class="arch-card provider-table-card">
+            <div class="provider-table-header">
+              <h3>Google Gemini</h3>
+              <span class="provider-count">2 models</span>
+            </div>
+            <div class="provider-table-wrap">
+              <table class="arch-table provider-catalog-table">
+                <thead>
+                  <tr><th>Provider</th><th>Model Name</th><th>Input Price</th><th>Output Price</th><th>Context Window</th><th>Reasoning Level</th><th>Speed</th><th>Use Case</th><th>Zwima Credits</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Google Gemini</td><td>Gemini 2.5 Pro</td><td><span class="price-pill">$1.25 / 1M tokens</span></td><td><span class="price-pill">$10.00 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">Very High</span></td><td>Medium</td><td>Complex reasoning, long-context analysis, multimodal research</td><td>16 credits / 1M blended tokens</td></tr>
+                  <tr><td>Google Gemini</td><td>Gemini 2.5 Flash</td><td><span class="price-pill">$0.30 / 1M tokens</span></td><td><span class="price-pill">$2.50 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">Medium</span></td><td>Fast</td><td>High-volume production, multimodal workflows, balanced cost and quality</td><td>4 credits / 1M blended tokens</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="deepseek" class="arch-section provider-section">
+          <div class="arch-card provider-table-card">
+            <div class="provider-table-header">
+              <h3>DeepSeek</h3>
+              <span class="provider-count">2 models</span>
+            </div>
+            <div class="provider-table-wrap">
+              <table class="arch-table provider-catalog-table">
+                <thead>
+                  <tr><th>Provider</th><th>Model Name</th><th>Input Price</th><th>Output Price</th><th>Context Window</th><th>Reasoning Level</th><th>Speed</th><th>Use Case</th><th>Zwima Credits</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>DeepSeek</td><td>DeepSeek V3</td><td><span class="price-pill">$0.14 / 1M tokens</span></td><td><span class="price-pill">$0.28 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">Medium</span></td><td>Very Fast</td><td>Legacy deepseek-chat alias for cost-efficient coding, chat, extraction</td><td>1 credit / 1M blended tokens</td></tr>
+                  <tr><td>DeepSeek</td><td>DeepSeek R1</td><td><span class="price-pill">$0.14 / 1M tokens</span></td><td><span class="price-pill">$0.28 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">High</span></td><td>Medium</td><td>Legacy deepseek-reasoner alias for reasoning, math, technical problem solving</td><td>1 credit / 1M blended tokens</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="alibaba" class="arch-section provider-section">
+          <div class="arch-card provider-table-card">
+            <div class="provider-table-header">
+              <h3>Alibaba Qwen</h3>
+              <span class="provider-count">3 models</span>
+            </div>
+            <div class="provider-table-wrap">
+              <table class="arch-table provider-catalog-table">
+                <thead>
+                  <tr><th>Provider</th><th>Model Name</th><th>Input Price</th><th>Output Price</th><th>Context Window</th><th>Reasoning Level</th><th>Speed</th><th>Use Case</th><th>Zwima Credits</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Alibaba Qwen</td><td>Qwen Max</td><td><span class="price-pill">$1.60 / 1M tokens</span></td><td><span class="price-pill">$6.40 / 1M tokens</span></td><td>131K tokens</td><td><span class="level-pill">High</span></td><td>Medium</td><td>Stable production alias, Chinese language, enterprise assistant</td><td>10 credits / 1M blended tokens</td></tr>
+                  <tr><td>Alibaba Qwen</td><td>Qwen Plus</td><td><span class="price-pill">$0.40 / 1M tokens</span></td><td><span class="price-pill">$1.20 / 1M tokens</span></td><td>131K tokens</td><td><span class="level-pill">Medium</span></td><td>Fast</td><td>Multilingual content, e-commerce, support, cost-efficient production</td><td>3 credits / 1M blended tokens</td></tr>
+                  <tr><td>Alibaba Qwen</td><td>Qwen Turbo</td><td><span class="price-pill">$0.05 / 1M tokens</span></td><td><span class="price-pill">$0.20 / 1M tokens</span></td><td>1M tokens</td><td><span class="level-pill">Basic</span></td><td>Very Fast</td><td>Cheapest Qwen text tier, simple chat, routing, micro-automation</td><td>1 credit / 1M blended tokens</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima AI Provider Catalog · Internal Page Only · Noindex</p>
+          <p class="arch-footer-links">
+            <a href="customer-simulation.html">Revenue Simulation</a><span>|</span>
+            <a href="supplier-due-diligence.html">Supplier Due Diligence</a><span>|</span>
+            <a href="pricing-sheet.html">Pricing Sheet</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+
+  <script src="architecture.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('catalogSearch');
+      const providerFilter = document.getElementById('providerFilter');
+      const speedFilter = document.getElementById('speedFilter');
+      const useCaseFilter = document.getElementById('useCaseFilter');
+      const exportButton = document.getElementById('exportCatalogCsv');
+      const emptyState = document.getElementById('catalogEmpty');
+      const tables = Array.from(document.querySelectorAll('.provider-catalog-table'));
+      const rows = tables.flatMap((table) => Array.from(table.querySelectorAll('tbody tr')));
+      const columnIndexes = { provider: 0, reasoning: 5, speed: 6 };
+
+      const cellText = (row, index) => row.cells[index].textContent.trim();
+
+      const populateFilter = (select, columnIndex, label) => {
+        const values = Array.from(new Set(rows.map((row) => cellText(row, columnIndex)).filter(Boolean))).sort();
+        select.innerHTML = '<option value="">All ' + label + '</option>';
+        values.forEach((value) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+      };
+
+      const updateSections = () => {
+        document.querySelectorAll('.provider-section').forEach((section) => {
+          const visibleRows = Array.from(section.querySelectorAll('tbody tr')).filter((row) => row.style.display !== 'none');
+          section.style.display = visibleRows.length ? '' : 'none';
+        });
+      };
+
+      const applyFilters = () => {
+        const query = searchInput.value.trim().toLowerCase();
+        const selectedProvider = providerFilter.value;
+        const selectedSpeed = speedFilter.value;
+        const selectedReasoning = useCaseFilter.value;
+        let visibleCount = 0;
+
+        rows.forEach((row) => {
+          const matchesSearch = !query || row.textContent.toLowerCase().includes(query);
+          const matchesProvider = !selectedProvider || cellText(row, columnIndexes.provider) === selectedProvider;
+          const matchesSpeed = !selectedSpeed || cellText(row, columnIndexes.speed) === selectedSpeed;
+          const matchesReasoning = !selectedReasoning || cellText(row, columnIndexes.reasoning) === selectedReasoning;
+          const isVisible = matchesSearch && matchesProvider && matchesSpeed && matchesReasoning;
+
+          row.style.display = isVisible ? '' : 'none';
+          if (isVisible) visibleCount += 1;
+        });
+
+        emptyState.style.display = visibleCount ? 'none' : 'block';
+        updateSections();
+      };
+
+      const escapeCsv = (value) => {
+        const normalized = value.replace(/\s+/g, ' ').trim();
+        return '"' + normalized.replace(/"/g, '""') + '"';
+      };
+
+      const exportCsv = () => {
+        const headers = Array.from(tables[0].querySelectorAll('thead th')).map((header) => escapeCsv(header.textContent));
+        const visibleRows = rows
+          .filter((row) => row.style.display !== 'none')
+          .map((row) => Array.from(row.cells).map((cell) => escapeCsv(cell.textContent)).join(','));
+        const csv = [headers.join(','), ...visibleRows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = 'zwima-ai-provider-catalog.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      };
+
+      populateFilter(providerFilter, columnIndexes.provider, 'providers');
+      populateFilter(speedFilter, columnIndexes.speed, 'speeds');
+      populateFilter(useCaseFilter, columnIndexes.reasoning, 'reasoning levels');
+
+      searchInput.addEventListener('input', applyFilters);
+      providerFilter.addEventListener('change', applyFilters);
+      speedFilter.addEventListener('change', applyFilters);
+      useCaseFilter.addEventListener('change', applyFilters);
+      exportButton.addEventListener('click', exportCsv);
+
+      applyFilters();
+    });
+  </script>
+</body>
+</html>

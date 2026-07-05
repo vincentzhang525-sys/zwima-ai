@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account | ZWIMA AI</title>
+  <meta name="description" content="Sign in, create account and manage your ZWIMA AI platform profile.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body class="auth-module-body">
+  <div class="auth-module-layout">
+    <header class="auth-module-header">
+      <a class="logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a>
+      <nav class="auth-module-tabs" id="authTabs" aria-label="Authentication views"></nav>
+    </header>
+
+    <section class="auth-view" id="view-signin" data-mode="signin">
+      <div class="auth-card-wide">
+        <h1>Sign In</h1>
+        <p class="auth-subtitle">Access your ZWIMA AI platform console.</p>
+        <form class="auth-form-grid" id="signInForm">
+          <label for="signInEmail">Email</label>
+          <input id="signInEmail" type="email" placeholder="you@company.com" required>
+          <label for="signInPassword">Password</label>
+          <input id="signInPassword" type="password" placeholder="Enter your password" required>
+          <label class="auth-remember"><input id="signInRemember" type="checkbox"> Remember me</label>
+          <button class="button button-primary auth-submit" type="submit">Sign In</button>
+        </form>
+        <div class="auth-switch-links">
+          <a href="auth.html?mode=forgot">Forgot password</a>
+          <a href="auth.html?mode=register">Create account</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-view" id="view-register" data-mode="register">
+      <div class="auth-card-wide">
+        <h1>Create Account</h1>
+        <p class="auth-subtitle">Register for early access to the ZWIMA AI platform.</p>
+        <form class="auth-form-grid" id="registerForm">
+          <label for="registerCompany">Company Name</label>
+          <input id="registerCompany" type="text" placeholder="Your company" required>
+          <label for="registerName">Contact Name</label>
+          <input id="registerName" type="text" placeholder="Full name" required>
+          <label for="registerEmail">Email</label>
+          <input id="registerEmail" type="email" placeholder="you@company.com" required>
+          <label for="registerPassword">Password</label>
+          <input id="registerPassword" type="password" placeholder="Create a password" required>
+          <button class="button button-primary auth-submit" type="submit">Create Account</button>
+        </form>
+        <div class="auth-switch-links">
+          <a href="auth.html?mode=signin">Already have an account? Sign in</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-view" id="view-forgot" data-mode="forgot">
+      <div class="auth-card-wide">
+        <h1>Forgot Password</h1>
+        <p class="auth-subtitle">We will send a reset link to your email.</p>
+        <form class="auth-form-grid" id="forgotForm">
+          <label for="forgotEmail">Email</label>
+          <input id="forgotEmail" type="email" placeholder="you@company.com" required>
+          <button class="button button-primary auth-submit" type="submit">Send Reset Link</button>
+        </form>
+        <div class="auth-switch-links">
+          <a href="auth.html?mode=signin">Back to sign in</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-view" id="view-verify" data-mode="verify">
+      <div class="auth-card-wide">
+        <h1>Verify Email</h1>
+        <p class="auth-subtitle">Enter the 6-digit code sent to your email.</p>
+        <div class="auth-success-box">Verification code sent to your email address.</div>
+        <form class="auth-form-grid" id="verifyForm">
+          <label for="verifyCode">Verification Code</label>
+          <input id="verifyCode" type="text" maxlength="6" placeholder="123456" required>
+          <button class="button button-primary auth-submit" type="submit">Verify Email</button>
+        </form>
+        <div class="auth-switch-links">
+          <a href="auth.html?mode=signin">Back to sign in</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-view" id="view-reset" data-mode="reset">
+      <div class="auth-card-wide">
+        <h1>Reset Password</h1>
+        <p class="auth-subtitle">Choose a new password for your account.</p>
+        <form class="auth-form-grid" id="resetForm">
+          <label for="resetPassword">New Password</label>
+          <input id="resetPassword" type="password" placeholder="New password" required>
+          <label for="resetConfirm">Confirm Password</label>
+          <input id="resetConfirm" type="password" placeholder="Confirm password" required>
+          <button class="button button-primary auth-submit" type="submit">Reset Password</button>
+        </form>
+        <div class="auth-switch-links">
+          <a href="auth.html?mode=signin">Back to sign in</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-view" id="view-profile" data-mode="profile">
+      <div class="profile-layout">
+        <nav class="profile-nav" id="profileNav">
+          <a href="#profile-settings" class="active" data-section="profile-settings">Profile Settings</a>
+          <a href="#security" data-section="security">Security</a>
+          <a href="#api-access" data-section="api-access">API Access</a>
+          <a href="dashboard.html">Back to Dashboard</a>
+          <a href="#" id="signOutLink">Sign Out</a>
+        </nav>
+        <div>
+          <section class="profile-section active" id="profile-settings">
+            <h2>Profile Settings</h2>
+            <form class="profile-form" id="profileForm">
+              <label for="profileCompany">Company Name</label>
+              <input id="profileCompany" type="text">
+              <label for="profileContact">Contact Name</label>
+              <input id="profileContact" type="text">
+              <label for="profileEmail">Email</label>
+              <input id="profileEmail" type="email">
+              <label for="profileBillingEmail">Billing Email</label>
+              <input id="profileBillingEmail" type="email">
+              <label for="profileCountry">Country</label>
+              <input id="profileCountry" type="text">
+              <label for="profileLanguage">Language</label>
+              <select id="profileLanguage">
+                <option value="English">English</option>
+                <option value="German">German</option>
+                <option value="French">French</option>
+              </select>
+              <label for="profileTimezone">Timezone</label>
+              <select id="profileTimezone">
+                <option value="Europe/Berlin">Europe/Berlin</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="America/New_York">America/New_York</option>
+              </select>
+              <label for="profileVat">VAT Number</label>
+              <input id="profileVat" type="text">
+              <button class="button button-primary" type="submit">Save Profile</button>
+            </form>
+          </section>
+
+          <section class="profile-section" id="security">
+            <h2>Security</h2>
+            <ul class="security-list">
+              <li class="security-item">
+                <span>Change Password</span>
+                <button class="button button-secondary button-sm" type="button" id="changePasswordBtn">Update</button>
+              </li>
+              <li class="toggle-row">
+                <span>Two Factor Authentication</span>
+                <label><input type="checkbox" id="twoFactorToggle"> Enable</label>
+              </li>
+            </ul>
+            <h2 style="margin-top:24px;">Session Management</h2>
+            <ul class="session-list">
+              <li class="session-item"><span>Current session · Chrome · Berlin</span><span class="status-pill active">Active</span></li>
+              <li class="session-item"><span>Mobile session · Safari · Munich</span><button class="button button-secondary button-sm" type="button">Revoke</button></li>
+            </ul>
+            <h2 style="margin-top:24px;">Login History</h2>
+            <ul class="history-list">
+              <li class="history-item"><span>2026-07-05 09:14 · Berlin, DE</span><span class="muted">Success</span></li>
+              <li class="history-item"><span>2026-07-04 18:02 · Berlin, DE</span><span class="muted">Success</span></li>
+              <li class="history-item"><span>2026-07-03 11:48 · Munich, DE</span><span class="muted">Success</span></li>
+            </ul>
+          </section>
+
+          <section class="profile-section" id="api-access">
+            <h2>API Access</h2>
+            <div class="api-access-grid">
+              <article class="api-access-card">
+                <span>Current Plan</span>
+                <strong id="accessPlan">Early Access</strong>
+              </article>
+              <article class="api-access-card">
+                <span>API Key Count</span>
+                <strong id="accessKeys">4</strong>
+              </article>
+              <article class="api-access-card">
+                <span>Credits Balance</span>
+                <strong id="accessCredits">12,450</strong>
+              </article>
+            </div>
+            <div class="auth-switch-links" style="margin-top:20px;">
+              <a href="apikeys.html">Manage API Keys</a>
+              <a href="credits.html">Manage Credits</a>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth/permissionManager.js"></script>
+  <script src="auth/jwtManager.js"></script>
+  <script src="auth/sessionManager.js"></script>
+  <script src="auth/authEngine.js"></script>
+  <script src="auth/authGuard.js"></script>
+  <script src="gateway/gatewayConfig.js"></script>
+  <script src="gateway/adapters/BaseProviderAdapter.js"></script>
+  <script src="gateway/adapters/OpenAIAdapter.js"></script>
+  <script src="gateway/adapters/AnthropicAdapter.js"></script>
+  <script src="gateway/adapters/GoogleGeminiAdapter.js"></script>
+  <script src="gateway/adapters/DeepSeekAdapter.js"></script>
+  <script src="gateway/adapters/QwenAdapter.js"></script>
+  <script src="gateway/adapters/MistralAdapter.js"></script>
+  <script src="gateway/adapters/OpenRouterAdapter.js"></script>
+  <script src="gateway/adapters/OpenAICompatibleAdapter.js"></script>
+  <script src="gateway/adapters/index.js"></script>
+  <script src="gateway/providerManager.js"></script>
+  <script src="gateway/routingEngine.js"></script>
+  <script src="gateway/healthMonitor.js"></script>
+  <script src="gateway/gateway.js"></script>
+  <script src="utils/apiClient.js"></script>
+  <script src="database/seed.js"></script>
+  <script src="database/adapters/MockAdapter.js"></script>
+  <script src="database/adapters/SQLiteAdapter.js"></script>
+  <script src="database/adapters/PostgresAdapter.js"></script>
+  <script src="database/DatabaseAdapter.js"></script>
+  <script src="database/health.js"></script>
+  <script src="database/repositories/BaseRepository.js"></script>
+  <script src="database/repositories/ProviderRepository.js"></script>
+  <script src="database/repositories/ModelRepository.js"></script>
+  <script src="database/repositories/ApiKeyRepository.js"></script>
+  <script src="database/repositories/CreditRepository.js"></script>
+  <script src="database/repositories/BillingRepository.js"></script>
+  <script src="database/repositories/UserRepository.js"></script>
+  <script src="database/repositories/AuthRepository.js"></script>
+  <script src="database/repositories/RoutingRepository.js"></script>
+  <script src="database/repositories/LogRepository.js"></script>
+  <script src="database/repositories/SettingsRepository.js"></script>
+  <script src="database/repositories/GatewayRepository.js"></script>
+  <script src="database/models/index.js"></script>
+  <script src="database/index.js"></script>
+  <script src="utils/constants.js"></script>
+  <script src="utils/storage.js"></script>
+  <script src="utils/format.js"></script>
+  <script src="utils/validators.js"></script>
+  <script src="components/modal.js"></script>
+  <script src="components/toast.js"></script>
+  <script src="components/table.js"></script>
+  <script src="components/loading.js"></script>
+  <script src="components/empty.js"></script>
+  <script src="layouts/sidebar.js"></script>
+  <script src="layouts/header.js"></script>
+  <script src="layouts/footer.js"></script>
+  <script src="services/providerService.js"></script>
+  <script src="services/userService.js"></script>
+  <script src="services/authService.js"></script>
+  <script src="services/billingService.js"></script>
+  <script src="services/routingService.js"></script>
+  <script src="services/apiService.js"></script>
+  <script src="services/gatewayService.js"></script>
+  <script src="platform-data.js"></script>
+  <script src="platform.js"></script>
+  <script src="user-session.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

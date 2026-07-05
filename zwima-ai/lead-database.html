@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima AI Lead Database | Internal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+  <style>
+    .crm-toolbar {
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    .crm-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .crm-field label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--gray-400);
+    }
+
+    .crm-input,
+    .crm-select {
+      width: 100%;
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--gray-600);
+      font: inherit;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .crm-input:focus,
+    .crm-select:focus {
+      border-color: var(--blue-mid);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .crm-button {
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--blue-dark);
+      color: var(--white);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 11px 16px;
+      white-space: nowrap;
+    }
+
+    .crm-button:hover {
+      background: var(--blue-mid);
+    }
+
+    .crm-table-wrap {
+      overflow-x: auto;
+    }
+
+    .crm-table {
+      min-width: 1180px;
+    }
+
+    .crm-table td[contenteditable="true"] {
+      cursor: text;
+    }
+
+    .crm-table td[contenteditable="true"]:focus {
+      background: var(--blue-light);
+      outline: 2px solid var(--blue-mid);
+      outline-offset: -2px;
+    }
+
+    .crm-empty {
+      display: none;
+      margin-top: 12px;
+      color: var(--gray-400);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 1024px) {
+      .crm-toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .crm-toolbar {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge">CRM · Internal</span>
+        <a href="dashboard.html" class="arch-back">Back to Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Lead Database</span>
+        <a href="#database">CRM Database</a>
+        <a href="#usage">Usage Notes</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Internal Documentation</span>
+        <a href="lead-database.html" class="active">Lead Database</a>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-10-customers.html">First 10 Customers</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="supplier-due-diligence.html">Supplier Due Diligence</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+        <a href="mvp.html">MVP V0.1</a>
+        <a href="architecture.html">Architecture V1</a>
+      </nav>
+      <div class="arch-meta">
+        <span>Internal CRM database</span>
+        <span>Robots: noindex, nofollow</span>
+      </div>
+    </aside>
+
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Sales CRM</p>
+          <h1>Zwima AI Lead Database</h1>
+          <p class="arch-subtitle">Internal CRM-style database for 20-500 employee DACH software, agency, AI, e-commerce, and industrial trading prospects.</p>
+        </div>
+      </header>
+
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p>Mid-market lead database focused on companies with estimated 20-500 employees. Enterprise corporations are intentionally excluded.</p>
+        </div>
+
+        <section id="database" class="arch-section">
+          <h2>CRM Database</h2>
+          <div class="arch-card">
+            <div class="crm-toolbar" aria-label="Lead database controls">
+              <div class="crm-field">
+                <label for="leadSearch">Search</label>
+                <input class="crm-input" id="leadSearch" type="search" placeholder="Search company, website, decision maker, email...">
+              </div>
+              <div class="crm-field">
+                <label for="countryFilter">Country</label>
+                <select class="crm-select" id="countryFilter">
+                  <option value="">All countries</option>
+                </select>
+              </div>
+              <div class="crm-field">
+                <label for="industryFilter">Industry</label>
+                <select class="crm-select" id="industryFilter">
+                  <option value="">All industries</option>
+                </select>
+              </div>
+              <div class="crm-field">
+                <label for="statusFilter">Sales Priority</label>
+                <select class="crm-select" id="statusFilter">
+                  <option value="">All priorities</option>
+                </select>
+              </div>
+              <button class="crm-button" id="exportCsv" type="button">Export CSV</button>
+            </div>
+
+            <div class="crm-table-wrap">
+              <table class="arch-table crm-table" id="leadTable">
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Website</th>
+                    <th>Country</th>
+                    <th>Industry</th>
+                    <th>LinkedIn</th>
+                    <th>Decision Maker</th>
+                    <th>Email</th>
+                    <th>Employee Size</th>
+                    <th>AI Adoption Score</th>
+                    <th>Sales Priority</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <p class="crm-empty" id="emptyState">No leads match the current search and filters.</p>
+          </div>
+        </section>
+
+        <section id="usage" class="arch-section">
+          <h2>Usage Notes</h2>
+          <div class="arch-card">
+            <ul>
+              <li>Click any table cell to edit lead data directly in the browser.</li>
+              <li>Use search for broad matching across all columns.</li>
+              <li>Use country, industry, and sales priority filters to narrow the active pipeline view.</li>
+              <li>Export CSV downloads only the currently visible rows.</li>
+            </ul>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima AI Lead Database · Internal CRM · Noindex</p>
+          <p class="arch-footer-links">
+            <a href="first-10-customers.html">First 10 Customers</a><span>|</span>
+            <a href="first-100-customers.html">First 100 Customers</a><span>|</span>
+            <a href="revenue-engine.html">Revenue Engine</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+
+  <script src="architecture.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const table = document.getElementById('leadTable');
+      const tbody = table.querySelector('tbody');
+      const searchInput = document.getElementById('leadSearch');
+      const countryFilter = document.getElementById('countryFilter');
+      const industryFilter = document.getElementById('industryFilter');
+      const statusFilter = document.getElementById('statusFilter');
+      const exportButton = document.getElementById('exportCsv');
+      const emptyState = document.getElementById('emptyState');
+      const columnIndexes = {
+        country: 2,
+        industry: 3,
+        priority: 9
+      };
+      const leads = [
+        ['n8n', 'https://n8n.io', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=n8n', 'CTO / Head of Product', 'hello@n8n.io', '100-250', '5', 'High'],
+        ['Parloa', 'https://www.parloa.com', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Parloa', 'VP Product / Head of AI', 'info@parloa.com', '100-250', '5', 'High'],
+        ['Aleph Alpha', 'https://www.aleph-alpha.com', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Aleph+Alpha', 'Partnerships / Business Development', 'info@aleph-alpha.com', '100-250', '5', 'High'],
+        ['HiveMQ', 'https://www.hivemq.com', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=HiveMQ', 'CTO / Product Lead', 'contact@hivemq.com', '100-250', '4', 'High'],
+        ['Usercentrics', 'https://usercentrics.com', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Usercentrics', 'Head of Product', 'info@usercentrics.com', '250-500', '4', 'Medium'],
+        ['Tacto', 'https://www.tacto.ai', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Tacto', 'Founder / CTO', 'hello@tacto.ai', '50-100', '5', 'High'],
+        ['Wandelbots', 'https://www.wandelbots.com', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Wandelbots', 'CTO / Product Lead', 'info@wandelbots.com', '100-250', '5', 'High'],
+        ['CELUS', 'https://www.celus.io', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=CELUS', 'CTO / Head of Engineering', 'info@celus.io', '50-100', '4', 'High'],
+        ['Hygraph', 'https://hygraph.com', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Hygraph', 'Head of Product', 'hello@hygraph.com', '100-250', '4', 'Medium'],
+        ['Rows', 'https://rows.com', 'Germany', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Rows', 'Head of Product', 'hello@rows.com', '50-100', '4', 'Medium'],
+        ['statworx', 'https://www.statworx.com', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=statworx', 'Managing Director / AI Lead', 'info@statworx.com', '50-100', '5', 'High'],
+        ['dida', 'https://dida.do', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=dida+machine+learning', 'Managing Director / AI Lead', 'info@dida.do', '20-50', '5', 'High'],
+        ['Merantix Momentum', 'https://www.merantix-momentum.com', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Merantix+Momentum', 'AI Consulting Lead', 'hello@merantix-momentum.com', '50-100', '5', 'High'],
+        ['Birds on Mars', 'https://www.birdsonmars.com', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Birds+on+Mars', 'Managing Partner / AI Lead', 'hello@birdsonmars.com', '20-50', '5', 'High'],
+        ['Alexander Thamm', 'https://www.alexanderthamm.com', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Alexander+Thamm', 'AI Consulting Lead', 'info@alexanderthamm.com', '250-500', '5', 'High'],
+        ['ML6 Germany', 'https://www.ml6.eu', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=ML6+Germany', 'AI Solutions Lead', 'hello@ml6.eu', '100-250', '5', 'Medium'],
+        ['inovex', 'https://www.inovex.de', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=inovex', 'Head of Data & AI', 'info@inovex.de', '250-500', '5', 'Medium'],
+        ['viadee', 'https://www.viadee.de', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=viadee', 'Head of AI / Consulting Lead', 'info@viadee.de', '100-250', '4', 'Medium'],
+        ['Kineo AI', 'https://www.kineo.ai', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Kineo+AI', 'Founder / AI Lead', 'hello@kineo.ai', '20-50', '5', 'High'],
+        ['Kauz', 'https://www.kauz.ai', 'Germany', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Kauz', 'Founder / AI Lead', 'info@kauz.ai', '20-50', '5', 'High'],
+        ['Jung von Matt', 'https://www.jvm.com', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Jung+von+Matt', 'Head of Innovation / Digital', 'info@jvm.com', '250-500', '4', 'Medium'],
+        ['Scholz & Friends', 'https://www.s-f.com', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Scholz+Friends', 'Digital Strategy Lead', 'info@s-f.com', '250-500', '4', 'Medium'],
+        ['FischerAppelt', 'https://www.fischerappelt.com', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=FischerAppelt', 'Digital Lead', 'info@fischerappelt.com', '100-250', '4', 'Medium'],
+        ['Projecter', 'https://www.projecter.de', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Projecter', 'Managing Director / Digital Lead', 'info@projecter.de', '50-100', '4', 'High'],
+        ['Aufgesang', 'https://www.aufgesang.de', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Aufgesang', 'Managing Director / SEO Lead', 'info@aufgesang.de', '20-50', '4', 'High'],
+        ['Bloofusion', 'https://www.bloofusion.de', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Bloofusion', 'Managing Director', 'info@bloofusion.de', '20-50', '3', 'Medium'],
+        ['artundweise', 'https://www.artundweise.de', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=artundweise', 'Digital Strategy Lead', 'info@artundweise.de', '20-50', '4', 'Medium'],
+        ['Moccu', 'https://www.moccu.com', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Moccu', 'Managing Director / Digital Lead', 'info@moccu.com', '50-100', '4', 'Medium'],
+        ['DREIKON', 'https://www.dreikon.de', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=DREIKON', 'Managing Director', 'info@dreikon.de', '20-50', '3', 'Medium'],
+        ['PIA Media', 'https://www.pia-media.com', 'Germany', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=PIA+Media', 'Data & Automation Lead', 'info@pia-media.com', '100-250', '4', 'Medium'],
+        ['KoRo', 'https://www.korodrogerie.de', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=KoRo', 'Head of E-commerce / Product Content', 'service@korodrogerie.de', '250-500', '4', 'High'],
+        ['Kapten & Son', 'https://kapten-son.com', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Kapten+Son', 'Head of E-commerce', 'service@kapten-son.com', '100-250', '4', 'Medium'],
+        ['ARMEDANGELS', 'https://www.armedangels.com', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=ARMEDANGELS', 'Head of E-commerce', 'service@armedangels.com', '100-250', '3', 'Medium'],
+        ['Avocadostore', 'https://www.avocadostore.de', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Avocadostore', 'Marketplace Lead', 'service@avocadostore.de', '20-50', '3', 'Medium'],
+        ['roastmarket', 'https://www.roastmarket.de', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=roastmarket', 'Head of E-commerce', 'service@roastmarket.de', '50-100', '3', 'Medium'],
+        ['Bike24', 'https://www.bike24.com', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Bike24', 'Head of Product Content', 'info@bike24.com', '250-500', '3', 'Medium'],
+        ['Mister Spex', 'https://www.misterspex.de', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Mister+Spex', 'Head of E-commerce', 'info@misterspex.de', '250-500', '4', 'Medium'],
+        ['Westwing', 'https://www.westwing.com', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Westwing', 'Head of Product Content', 'service@westwing.com', '250-500', '4', 'Medium'],
+        ['babymarkt.de', 'https://www.babymarkt.de', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=babymarkt.de', 'Head of E-commerce', 'service@babymarkt.de', '250-500', '3', 'Medium'],
+        ['Tennis-Point', 'https://www.tennis-point.de', 'Germany', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Tennis-Point', 'Head of E-commerce', 'service@tennis-point.de', '250-500', '3', 'Medium'],
+        ['Automation24', 'https://www.automation24.de', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Automation24', 'E-commerce / Product Data Lead', 'info@automation24.de', '50-100', '4', 'High'],
+        ['item Industrietechnik', 'https://www.item24.com', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=item+Industrietechnik', 'Digital Sales Lead', 'info@item24.com', '250-500', '4', 'Medium'],
+        ['Reichelt Elektronik', 'https://www.reichelt.de', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Reichelt+Elektronik', 'E-commerce Lead', 'info@reichelt.de', '100-250', '3', 'Medium'],
+        ['norelem', 'https://www.norelem.de', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=norelem', 'Product Data Lead', 'info@norelem.de', '100-250', '3', 'Medium'],
+        ['Mercateo Unite', 'https://unite.eu', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Mercateo+Unite', 'Marketplace Product Lead', 'info@unite.eu', '250-500', '4', 'Medium'],
+        ['Toolineo', 'https://www.toolineo.de', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Toolineo', 'E-commerce Lead', 'info@toolineo.de', '50-100', '3', 'Medium'],
+        ['Visable', 'https://www.visable.com', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Visable', 'Product / Marketplace Lead', 'info@visable.com', '250-500', '4', 'Medium'],
+        ['Wer liefert was', 'https://www.wlw.de', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Wer+liefert+was', 'Marketplace Lead', 'info@wlw.de', '100-250', '4', 'Medium'],
+        ['contorion', 'https://www.contorion.de', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=contorion', 'E-commerce Lead', 'service@contorion.de', '250-500', '4', 'Medium'],
+        ['simple system', 'https://www.simplesystem.com', 'Germany', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=simple+system', 'Digital Procurement Lead', 'info@simplesystem.com', '50-100', '3', 'Medium'],
+        ['Storyblok', 'https://www.storyblok.com', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Storyblok', 'Head of Product', 'hello@storyblok.com', '250-500', '5', 'High'],
+        ['Bitmovin', 'https://bitmovin.com', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Bitmovin', 'CTO / Product Lead', 'info@bitmovin.com', '100-250', '4', 'Medium'],
+        ['Anyline', 'https://anyline.com', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Anyline', 'Head of Product', 'contact@anyline.com', '100-250', '5', 'High'],
+        ['PlanRadar', 'https://www.planradar.com', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=PlanRadar', 'Head of Product', 'info@planradar.com', '250-500', '4', 'Medium'],
+        ['Adverity', 'https://www.adverity.com', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Adverity', 'Product / Data Lead', 'info@adverity.com', '250-500', '5', 'High'],
+        ['Usersnap', 'https://usersnap.com', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Usersnap', 'Founder / Product Lead', 'hello@usersnap.com', '20-50', '4', 'High'],
+        ['Nutrient', 'https://www.nutrient.io', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Nutrient+PDF', 'Developer Platform Lead', 'contact@nutrient.io', '100-250', '4', 'Medium'],
+        ['Tractive', 'https://www.tractive.com', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Tractive', 'Head of Product', 'info@tractive.com', '100-250', '4', 'Medium'],
+        ['Mindbreeze', 'https://www.mindbreeze.com', 'Austria', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Mindbreeze', 'AI Product Lead', 'info@mindbreeze.com', '100-250', '5', 'High'],
+        ['craftworks', 'https://www.craftworks.ai', 'Austria', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=craftworks+AI', 'AI Consulting Lead', 'hello@craftworks.ai', '20-50', '5', 'High'],
+        ['enliteAI', 'https://www.enlite.ai', 'Austria', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=enliteAI', 'AI Lead / Founder', 'office@enlite.ai', '20-50', '5', 'High'],
+        ['Leftshift One', 'https://www.leftshift.one', 'Austria', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Leftshift+One', 'AI Product Lead', 'office@leftshift.one', '20-50', '5', 'High'],
+        ['refurbed', 'https://www.refurbed.com', 'Austria', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=refurbed', 'Head of E-commerce', 'service@refurbed.com', '250-500', '4', 'High'],
+        ['niceshops', 'https://www.niceshops.com', 'Austria', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=niceshops', 'E-commerce Lead', 'office@niceshops.com', '250-500', '4', 'Medium'],
+        ['myClubs', 'https://www.myclubs.com', 'Austria', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=myClubs', 'Product Lead', 'hello@myclubs.com', '20-50', '3', 'Medium'],
+        ['willhaben', 'https://www.willhaben.at', 'Austria', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=willhaben', 'Marketplace Product Lead', 'info@willhaben.at', '250-500', '4', 'Medium'],
+        ['Shöpping', 'https://www.shoepping.at', 'Austria', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Shoepping', 'Marketplace Lead', 'info@shoepping.at', '50-100', '3', 'Medium'],
+        ['LOOP', 'https://www.agentur-loop.com', 'Austria', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=LOOP+Agency', 'Digital Strategy Lead', 'hello@agentur-loop.com', '250-500', '4', 'Medium'],
+        ['elements', 'https://www.elements.at', 'Austria', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=elements.at', 'Managing Director / Digital Lead', 'office@elements.at', '100-250', '4', 'Medium'],
+        ['kraftwerk', 'https://www.kraftwerk.co.at', 'Austria', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=kraftwerk+agency', 'Digital Lead', 'office@kraftwerk.co.at', '20-50', '3', 'Medium'],
+        ['Demner Merlicek & Bergmann', 'https://www.dmb.at', 'Austria', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Demner+Merlicek+Bergmann', 'Creative / Digital Lead', 'info@dmb.at', '50-100', '3', 'Medium'],
+        ['Liip', 'https://www.liip.ch', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Liip', 'Head of Engineering', 'contact@liip.ch', '100-250', '4', 'High'],
+        ['Ergon Informatik', 'https://www.ergon.ch', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Ergon+Informatik', 'CTO / Product Lead', 'info@ergon.ch', '250-500', '4', 'Medium'],
+        ['Smallpdf', 'https://smallpdf.com', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Smallpdf', 'Head of Product', 'support@smallpdf.com', '100-250', '5', 'High'],
+        ['Scandit', 'https://www.scandit.com', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Scandit', 'AI Product Lead', 'info@scandit.com', '250-500', '5', 'High'],
+        ['Lakera', 'https://www.lakera.ai', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Lakera', 'AI Security Lead', 'hello@lakera.ai', '20-50', '5', 'High'],
+        ['Starmind', 'https://www.starmind.ai', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Starmind', 'Head of Product', 'info@starmind.ai', '50-100', '5', 'High'],
+        ['Skribble', 'https://www.skribble.com', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Skribble', 'Head of Product', 'hello@skribble.com', '50-100', '3', 'Medium'],
+        ['Beekeeper', 'https://www.beekeeper.io', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Beekeeper', 'Product Lead', 'info@beekeeper.io', '100-250', '4', 'Medium'],
+        ['Frontify', 'https://www.frontify.com', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Frontify', 'Head of Product', 'hello@frontify.com', '250-500', '4', 'Medium'],
+        ['Sherpany', 'https://www.sherpany.com', 'Switzerland', 'Software', 'https://www.linkedin.com/search/results/companies/?keywords=Sherpany', 'Head of Product', 'info@sherpany.com', '100-250', '3', 'Medium'],
+        ['Mindfire', 'https://mindfire.global', 'Switzerland', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Mindfire', 'AI Lead / Founder', 'info@mindfire.global', '20-50', '5', 'High'],
+        ['AlpineAI', 'https://www.alpineai.swiss', 'Switzerland', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=AlpineAI', 'AI Lead', 'info@alpineai.swiss', '20-50', '5', 'High'],
+        ['Unit8', 'https://unit8.com', 'Switzerland', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=Unit8', 'AI Consulting Lead', 'info@unit8.com', '100-250', '5', 'High'],
+        ['SpinningBytes', 'https://www.spinningbytes.com', 'Switzerland', 'AI Consultancy', 'https://www.linkedin.com/search/results/companies/?keywords=SpinningBytes', 'AI Lead', 'info@spinningbytes.com', '20-50', '5', 'High'],
+        ['Webrepublic', 'https://www.webrepublic.com', 'Switzerland', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Webrepublic', 'Digital Strategy Lead', 'hello@webrepublic.com', '100-250', '4', 'Medium'],
+        ['Farner', 'https://www.farner.ch', 'Switzerland', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Farner', 'Digital Lead', 'info@farner.ch', '250-500', '4', 'Medium'],
+        ['Wirz Group', 'https://www.wirz.ch', 'Switzerland', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Wirz+Group', 'Digital Strategy Lead', 'info@wirz.ch', '50-100', '3', 'Medium'],
+        ['Hinderling Volkart', 'https://www.hinderlingvolkart.com', 'Switzerland', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Hinderling+Volkart', 'Digital Lead', 'hello@hinderlingvolkart.com', '20-50', '4', 'Medium'],
+        ['Feinheit', 'https://www.feinheit.ch', 'Switzerland', 'Marketing Agency', 'https://www.linkedin.com/search/results/companies/?keywords=Feinheit', 'Managing Director', 'info@feinheit.ch', '20-50', '3', 'Medium'],
+        ['Farmy', 'https://www.farmy.ch', 'Switzerland', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Farmy', 'Head of E-commerce', 'service@farmy.ch', '100-250', '3', 'Medium'],
+        ['QoQa', 'https://www.qoqa.ch', 'Switzerland', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=QoQa', 'Marketplace Lead', 'contact@qoqa.ch', '100-250', '3', 'Medium'],
+        ['Brack.ch', 'https://www.brack.ch', 'Switzerland', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Brack.ch', 'Head of E-commerce', 'info@brack.ch', '250-500', '4', 'Medium'],
+        ['Amorana', 'https://www.amorana.ch', 'Switzerland', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=Amorana', 'Head of E-commerce', 'info@amorana.ch', '20-50', '3', 'Medium'],
+        ['FREITAG', 'https://www.freitag.ch', 'Switzerland', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=FREITAG', 'Head of E-commerce', 'info@freitag.ch', '100-250', '3', 'Medium'],
+        ['namuk', 'https://www.namuk.com', 'Switzerland', 'E-commerce', 'https://www.linkedin.com/search/results/companies/?keywords=namuk', 'Head of E-commerce', 'hello@namuk.com', '20-50', '3', 'Medium'],
+        ['Distrelec', 'https://www.distrelec.ch', 'Switzerland', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Distrelec', 'Product Data Lead', 'service@distrelec.com', '250-500', '3', 'Medium'],
+        ['Alltron', 'https://www.alltron.ch', 'Switzerland', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Alltron', 'Digital Sales Lead', 'info@alltron.ch', '250-500', '3', 'Medium'],
+        ['Bächli Bergsport', 'https://www.baechli-bergsport.ch', 'Switzerland', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=Baechli+Bergsport', 'E-commerce Lead', 'info@baechli-bergsport.ch', '100-250', '3', 'Medium'],
+        ['SwissCommerce', 'https://www.swisscommerce.ch', 'Switzerland', 'Industrial Trading', 'https://www.linkedin.com/search/results/companies/?keywords=SwissCommerce', 'Marketplace Lead', 'info@swisscommerce.ch', '100-250', '3', 'Medium']
+      ];
+
+      const renderLeads = () => {
+        tbody.innerHTML = '';
+        leads.forEach((lead) => {
+          const row = document.createElement('tr');
+          lead.forEach((value) => {
+            const cell = document.createElement('td');
+            cell.contentEditable = 'true';
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+          tbody.appendChild(row);
+        });
+      };
+
+      const getRows = () => Array.from(tbody.querySelectorAll('tr'));
+      const cellText = (row, index) => row.cells[index].textContent.trim();
+
+      const populateFilter = (select, columnIndex) => {
+        const currentValue = select.value;
+        const values = new Set();
+
+        getRows().forEach((row) => {
+          const value = cellText(row, columnIndex);
+          if (value) values.add(value);
+        });
+
+        select.innerHTML = '<option value="">All ' + select.dataset.label + '</option>';
+        Array.from(values).sort().forEach((value) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+
+        select.value = values.has(currentValue) ? currentValue : '';
+      };
+
+      countryFilter.dataset.label = 'countries';
+      industryFilter.dataset.label = 'industries';
+      statusFilter.dataset.label = 'priorities';
+
+      const refreshFilters = () => {
+        populateFilter(countryFilter, columnIndexes.country);
+        populateFilter(industryFilter, columnIndexes.industry);
+        populateFilter(statusFilter, columnIndexes.priority);
+      };
+
+      const applyFilters = () => {
+        const query = searchInput.value.trim().toLowerCase();
+        const selectedCountry = countryFilter.value;
+        const selectedIndustry = industryFilter.value;
+        const selectedPriority = statusFilter.value;
+        let visibleRows = 0;
+
+        getRows().forEach((row) => {
+          const rowText = row.textContent.toLowerCase();
+          const matchesSearch = !query || rowText.includes(query);
+          const matchesCountry = !selectedCountry || cellText(row, columnIndexes.country) === selectedCountry;
+          const matchesIndustry = !selectedIndustry || cellText(row, columnIndexes.industry) === selectedIndustry;
+          const matchesPriority = !selectedPriority || cellText(row, columnIndexes.priority) === selectedPriority;
+          const isVisible = matchesSearch && matchesCountry && matchesIndustry && matchesPriority;
+
+          row.style.display = isVisible ? '' : 'none';
+          if (isVisible) visibleRows += 1;
+        });
+
+        emptyState.style.display = visibleRows ? 'none' : 'block';
+      };
+
+      const escapeCsv = (value) => {
+        const normalized = value.replace(/\s+/g, ' ').trim();
+        return '"' + normalized.replace(/"/g, '""') + '"';
+      };
+
+      const exportCsv = () => {
+        const headers = Array.from(table.querySelectorAll('thead th')).map((header) => escapeCsv(header.textContent));
+        const rows = getRows()
+          .filter((row) => row.style.display !== 'none')
+          .map((row) => Array.from(row.cells).map((cell) => escapeCsv(cell.textContent)).join(','));
+        const csv = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = 'zwima-ai-lead-database.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      };
+
+      searchInput.addEventListener('input', applyFilters);
+      countryFilter.addEventListener('change', applyFilters);
+      industryFilter.addEventListener('change', applyFilters);
+      statusFilter.addEventListener('change', applyFilters);
+      exportButton.addEventListener('click', exportCsv);
+      tbody.addEventListener('input', () => {
+        refreshFilters();
+        applyFilters();
+      });
+
+      renderLeads();
+      refreshFilters();
+      applyFilters();
+    });
+  </script>
+</body>
+</html>

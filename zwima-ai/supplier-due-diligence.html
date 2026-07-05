@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima Supplier Due Diligence | Intern</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge-ops">Due Diligence · Intern</span>
+        <a href="dashboard.html" class="arch-back">← Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Provider</span>
+        <a href="#openai">OpenAI</a>
+        <a href="#claude">Anthropic Claude</a>
+        <a href="#gemini">Google Gemini</a>
+        <a href="#deepseek">DeepSeek</a>
+        <a href="#qwen">Alibaba Qwen</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Interne Dokumentation</span>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="supplier-due-diligence.html" class="active">Supplier Due Diligence</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+        <a href="mvp.html">MVP V0.1</a>
+        <a href="architecture.html">Architecture V1</a>
+      </nav>
+      <div class="arch-meta"><span>Stand: Juni 2026</span></div>
+    </aside>
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menü"><span></span><span></span><span></span></button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Lieferantenbewertung</p>
+          <h1>Zwima Supplier Due Diligence</h1>
+          <p class="arch-subtitle">Interne Bewertung der Modell-Provider für Multi-Model AI Access</p>
+        </div>
+      </header>
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p>Bewertungsgrundlage für den Aufbau der <strong>unified API gateway</strong>-Infrastruktur. Fokus: API-Verfügbarkeit, kommerzielle Nutzung, DSGVO, Abrechnung und Integrationsrisiko. MVP V0.1: OpenAI only.</p>
+        </div>
+
+        <section id="openai" class="arch-section">
+          <div class="provider-diligence">
+            <div class="provider-diligence-header">
+              <h3>OpenAI</h3>
+              <div class="provider-badges">
+                <span class="badge badge-priority-high">Priorität: Hoch</span>
+                <span class="badge badge-risk-low">Risiko: Niedrig</span>
+                <span class="badge badge-rec-mvp">MVP V0.1</span>
+              </div>
+            </div>
+            <dl class="provider-diligence-body">
+              <div class="diligence-item"><dt>API-Verfügbarkeit</dt><dd>Öffentliche REST API, breite Dokumentation, hohe Verfügbarkeit. GPT-4o, GPT-4o-mini, GPT-3.5-turbo.</dd></div>
+              <div class="diligence-item"><dt>Kommerzielle Nutzung</dt><dd>Erlaubt unter API-Nutzungsbedingungen. B2B-Integration in Produkte und interne Workflows standardmäßig vorgesehen.</dd></div>
+              <div class="diligence-item"><dt>Datenverarbeitung</dt><dd>US-basierte Verarbeitung. DPA verfügbar. Keine dauerhafte Prompt-Speicherung durch Zwima. Kunden über Subprocessor informieren.</dd></div>
+              <div class="diligence-item"><dt>Abrechnung / Rechnung</dt><dd>Usage-based Billing direkt an OpenAI. Zwima aggregiert und stellt <strong>European business billing</strong> an Endkunden aus.</dd></div>
+              <div class="diligence-recommendation"><dt>Zwima-Empfehlung</dt><dd>Sofort integrieren – alleiniger Provider in MVP V0.1. Basis für ersten zahlenden Kunden und AI API access.</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <section id="claude" class="arch-section">
+          <div class="provider-diligence">
+            <div class="provider-diligence-header">
+              <h3>Anthropic Claude</h3>
+              <div class="provider-badges">
+                <span class="badge badge-priority-high">Priorität: Hoch</span>
+                <span class="badge badge-risk-low">Risiko: Niedrig</span>
+                <span class="badge badge-rec-later">Roadmap V0.3</span>
+              </div>
+            </div>
+            <dl class="provider-diligence-body">
+              <div class="diligence-item"><dt>API-Verfügbarkeit</dt><dd>Messages API stabil. Claude Sonnet, Opus. Gute Enterprise-Reputation in Europa.</dd></div>
+              <div class="diligence-item"><dt>Kommerzielle Nutzung</dt><dd>Ausdrücklich für kommerzielle API-Nutzung vorgesehen. Klare Nutzungsrichtlinien.</dd></div>
+              <div class="diligence-item"><dt>Datenverarbeitung</dt><dd>US/EU-Optionen je nach Vertrag. DPA verfügbar. Passt zu <strong>GDPR-conscious service</strong>-Positionierung.</dd></div>
+              <div class="diligence-item"><dt>Abrechnung / Rechnung</dt><dd>Token-basierte Abrechnung. Zwima Cost Sheet mit Platzhalter-Margen. In AI credits umrechnen.</dd></div>
+              <div class="diligence-recommendation"><dt>Zwima-Empfehlung</dt><dd>Zweiter Provider nach MVP – starker Fit für deutsche B2B-Kunden mit Compliance-Anforderungen.</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <section id="gemini" class="arch-section">
+          <div class="provider-diligence">
+            <div class="provider-diligence-header">
+              <h3>Google Gemini</h3>
+              <div class="provider-badges">
+                <span class="badge badge-priority-medium">Priorität: Mittel</span>
+                <span class="badge badge-risk-medium">Risiko: Mittel</span>
+                <span class="badge badge-rec-later">Roadmap V1.0</span>
+              </div>
+            </div>
+            <dl class="provider-diligence-body">
+              <div class="diligence-item"><dt>API-Verfügbarkeit</dt><dd>Google AI / Vertex API. Gemini Pro, Flash. Multimodale Funktionen.</dd></div>
+              <div class="diligence-item"><dt>Kommerzielle Nutzung</dt><dd>Kommerziell nutzbar. Unterschiedliche Tiers (Consumer vs. Cloud). Klärung für B2B-Reselling erforderlich.</dd></div>
+              <div class="diligence-item"><dt>Datenverarbeitung</dt><dd>EU-Regionen über Google Cloud wählbar. DPA über Google Cloud-Vertrag. GDPR-relevant für EU-Kunden.</dd></div>
+              <div class="diligence-item"><dt>Abrechnung / Rechnung</dt><dd>Komplexere Abrechnungsstruktur (Cloud Billing). Zwima-Adapter und Cost Sheet vor Launch validieren.</dd></div>
+              <div class="diligence-recommendation"><dt>Zwima-Empfehlung</dt><dd>Integrieren ab V1.0 – nach OpenAI und Claude. Multimodal als Differenzierungsmerkmal.</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <section id="deepseek" class="arch-section">
+          <div class="provider-diligence">
+            <div class="provider-diligence-header">
+              <h3>DeepSeek</h3>
+              <div class="provider-badges">
+                <span class="badge badge-priority-medium">Priorität: Mittel</span>
+                <span class="badge badge-risk-medium">Risiko: Mittel</span>
+                <span class="badge badge-rec-later">Roadmap V1.0</span>
+              </div>
+            </div>
+            <dl class="provider-diligence-body">
+              <div class="diligence-item"><dt>API-Verfügbarkeit</dt><dd>OpenAI-kompatibles API-Format. Gute Performance bei technischen Use Cases. Verfügbarkeit beobachten.</dd></div>
+              <div class="diligence-item"><dt>Kommerzielle Nutzung</dt><dd>Kommerzielle API-Nutzung angeboten. AGB und Exportkontrollen intern prüfen.</dd></div>
+              <div class="diligence-item"><dt>Datenverarbeitung</dt><dd>Datenverarbeitung primär außerhalb EU. Erhöhtes Due-Diligence-Risiko für GDPR-sensitive Kunden. Transparent kommunizieren.</dd></div>
+              <div class="diligence-item"><dt>Abrechnung / Rechnung</dt><dd>Token-basiert, kosteneffizient. Attraktiv für Cost-Optimization im Model Router.</dd></div>
+              <div class="diligence-recommendation"><dt>Zwima-Empfehlung</dt><dd>Optionales Modell in multi-model infrastructure. Nur nach rechtlicher Klärung und Kunden-Opt-in.</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <section id="qwen" class="arch-section">
+          <div class="provider-diligence">
+            <div class="provider-diligence-header">
+              <h3>Alibaba Qwen</h3>
+              <div class="provider-badges">
+                <span class="badge badge-priority-low">Priorität: Niedrig</span>
+                <span class="badge badge-risk-medium">Risiko: Mittel</span>
+                <span class="badge badge-rec-later">Roadmap V1.0+</span>
+              </div>
+            </div>
+            <dl class="provider-diligence-body">
+              <div class="diligence-item"><dt>API-Verfügbarkeit</dt><dd>DashScope API. Stark bei mehrsprachigen und chinesischsprachigen Anwendungsfällen.</dd></div>
+              <div class="diligence-item"><dt>Kommerzielle Nutzung</dt><dd>Kommerzielle API verfügbar. Internationale Vertrags- und Zahlungswege prüfen.</dd></div>
+              <div class="diligence-item"><dt>Datenverarbeitung</dt><dd>Verarbeitung in China möglich. Für EU-B2B nur mit explizitem Kunden-Consent und AVV-Erweiterung.</dd></div>
+              <div class="diligence-item"><dt>Abrechnung / Rechnung</dt><dd>Abrechnung über Alibaba Cloud. Währung und Rechnungsstellung für European business billing klären.</dd></div>
+              <div class="diligence-recommendation"><dt>Zwima-Empfehlung</dt><dd>Strategisch relevant für Cross-Border- und chinesische Outbound-Teams. Spätere Phase – nicht MVP.</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima Supplier Due Diligence · Intern</p>
+          <p class="arch-footer-links">
+            <a href="cost-sheet.html">Cost Sheet</a><span>·</span>
+            <a href="revenue-engine.html">Revenue Engine</a><span>·</span>
+            <a href="pricing-sheet.html">Pricing Sheet</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+  <script src="architecture.js"></script>
+</body>
+</html>

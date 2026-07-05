@@ -1,0 +1,46 @@
+{
+  "usageStatistics": {
+    "todayRequests": "1,248",
+    "monthlyRequests": "38,420",
+    "inputTokens": "1.2M",
+    "outputTokens": "890K",
+    "estimatedCost": "€1,840"
+  },
+  "transactions": [
+    { "date": "2026-06-13", "amount": "€595.00", "credits": "500", "provider": "Stripe", "status": "Completed", "invoice": "INV-2026-0613" },
+    { "date": "2026-06-01", "amount": "€1,190.00", "credits": "1,000", "provider": "Bank Transfer", "status": "Completed", "invoice": "INV-2026-0601" },
+    { "date": "2026-05-22", "amount": "€119.00", "credits": "100", "provider": "PayPal", "status": "Completed", "invoice": "INV-2026-0522" },
+    { "date": "2026-05-18", "amount": "€595.00", "credits": "500", "provider": "Visa", "status": "Pending", "invoice": "INV-2026-0518" },
+    { "date": "2026-05-10", "amount": "€119.00", "credits": "100", "provider": "Mastercard", "status": "Failed", "invoice": "—" },
+    { "date": "2026-04-28", "amount": "€119.00", "credits": "100", "provider": "Stripe", "status": "Refunded", "invoice": "INV-2026-0428-R" }
+  ],
+  "costBreakdown": [
+    { "label": "Input Tokens", "percent": 62 },
+    { "label": "Output Tokens", "percent": 28 },
+    { "label": "Embedding", "percent": 6 },
+    { "label": "Image", "percent": 3 },
+    { "label": "Audio", "percent": 1 }
+  ],
+  "providerUsage": [
+    { "name": "OpenAI", "percent": 42 },
+    { "name": "Claude", "percent": 22 },
+    { "name": "Gemini", "percent": 15 },
+    { "name": "DeepSeek", "percent": 8 },
+    { "name": "Qwen", "percent": 5 },
+    { "name": "Mistral", "percent": 4 },
+    { "name": "OpenRouter", "percent": 4 }
+  ],
+  "monthlySpending": [
+    { "month": "Jul", "amount": 1240 }, { "month": "Aug", "amount": 1380 }, { "month": "Sep", "amount": 1520 },
+    { "month": "Oct", "amount": 1410 }, { "month": "Nov", "amount": 1650 }, { "month": "Dec", "amount": 1780 },
+    { "month": "Jan", "amount": 1590 }, { "month": "Feb", "amount": 1720 }, { "month": "Mar", "amount": 1840 },
+    { "month": "Apr", "amount": 1760 }, { "month": "May", "amount": 1920 }, { "month": "Jun", "amount": 1840 }
+  ],
+  "paymentMethods": [
+    { "name": "Visa", "meta": "•••• 4242", "default": true },
+    { "name": "Mastercard", "meta": "•••• 8210", "default": false },
+    { "name": "PayPal", "meta": "hello@zwima-group.info", "default": false },
+    { "name": "Bank Transfer", "meta": "IBAN DE89 •••• 3000", "default": false },
+    { "name": "Stripe", "meta": "Connected account", "default": false }
+  ]
+}

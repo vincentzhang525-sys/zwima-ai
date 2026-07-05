@@ -1,0 +1,14 @@
+{
+  "mode": "mock",
+  "providers": {
+    "openai": { "enabled": true, "priority": 1, "weight": 100, "fallback": "anthropic", "retry": 2, "timeout": 30000 },
+    "anthropic": { "enabled": true, "priority": 2, "weight": 90, "fallback": "google", "retry": 2, "timeout": 30000 },
+    "google": { "enabled": true, "priority": 3, "weight": 85, "fallback": "openai", "retry": 2, "timeout": 25000 },
+    "deepseek": { "enabled": true, "priority": 4, "weight": 70, "fallback": "openrouter", "retry": 1, "timeout": 20000 },
+    "qwen": { "enabled": true, "priority": 5, "weight": 65, "fallback": "openrouter", "retry": 1, "timeout": 20000 },
+    "mistral": { "enabled": true, "priority": 6, "weight": 60, "fallback": "openai", "retry": 1, "timeout": 25000 },
+    "openrouter": { "enabled": true, "priority": 7, "weight": 50, "fallback": "deepseek", "retry": 1, "timeout": 35000 },
+    "openai_compatible": { "enabled": true, "priority": 8, "weight": 40, "fallback": "openai", "retry": 1, "timeout": 30000 }
+  },
+  "health": {}
+}

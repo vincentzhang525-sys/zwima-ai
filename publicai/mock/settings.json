@@ -1,0 +1,11 @@
+{
+  "gatewayEndpoint": "https://api.zwima.ai/v1/chat/completions",
+  "defaultProvider": "openai",
+  "defaultLanguage": "en",
+  "defaultCurrency": "EUR",
+  "vatRate": 0.19,
+  "creditRateEur": 0.1,
+  "providerOptions": ["OpenAI", "Claude", "Gemini", "DeepSeek", "Qwen", "Mistral", "OpenRouter"],
+  "topUpOptions": ["10", "25", "50", "100", "custom"],
+  "topUpCurrency": "EUR"
+}

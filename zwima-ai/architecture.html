@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima Gateway V1 Architecture | Interne Dokumentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge">Intern</span>
+        <a href="dashboard.html" class="arch-back">← Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Übersicht</span>
+        <a href="#diagram">Systemdiagramm</a>
+
+        <span class="toc-label">Kern-Domäne</span>
+        <a href="#customer-account">Customer Account</a>
+        <a href="#subscription-plan">Subscription Plan</a>
+        <a href="#zwima-api-key">Zwima API Key</a>
+        <a href="#api-gateway">API Gateway</a>
+
+        <span class="toc-label">Interne Module</span>
+        <a href="#auth-layer">Authentication Layer</a>
+        <a href="#credit-engine">Credit Engine</a>
+        <a href="#model-router">Model Router</a>
+        <a href="#provider-adapters">Provider Adapter Layer</a>
+        <a href="#audit-logging">Audit &amp; Logging</a>
+        <a href="#admin-console">Admin Console</a>
+
+        <span class="toc-label">Querschnitt</span>
+        <a href="#usage-billing">Usage &amp; Billing</a>
+        <a href="#gdpr">GDPR Data Handling</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Interne Dokumentation</span>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="supplier-due-diligence.html">Supplier Due Diligence</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+        <a href="mvp.html">MVP V0.1</a>
+        <a href="architecture.html" class="active">Architecture V1</a>
+      </nav>
+      <div class="arch-meta">
+        <span>Dokumentversion: V1.1</span>
+        <span>Stand: Juni 2026</span>
+      </div>
+    </aside>
+
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Inhaltsverzeichnis">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Technische Dokumentation</p>
+          <h1>Zwima Gateway V1 Architecture</h1>
+          <p class="arch-subtitle">Offizielles Architekturdesign · AI API Credits Platform</p>
+        </div>
+      </header>
+
+      <article class="arch-content">
+        <section id="diagram" class="arch-section arch-section-wide">
+          <h2>Systemdiagramm</h2>
+          <p class="section-lead">Vollständige Schichtenarchitektur von Zwima Gateway V1 – Request-Pfad, Querschnittsmodule und Verwaltungsebene.</p>
+
+          <div class="arch-diagram-v2">
+            <!-- Client Layer -->
+            <div class="zone zone-client">
+              <span class="zone-label">Kundenebene</span>
+              <div class="zone-row">
+                <div class="node node-client"><strong>Customer Account</strong><span>Unternehmenskonto</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-client"><strong>Subscription Plan</strong><span>API-Nutzungspaket</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-client"><strong>Zwima API Key</strong><span>Client-Authentifizierung</span></div>
+              </div>
+            </div>
+
+            <div class="connector-v" aria-hidden="true"></div>
+
+            <!-- API Gateway -->
+            <div class="zone zone-gateway">
+              <span class="zone-label">Eingang</span>
+              <div class="node node-gateway node-wide"><strong>API Gateway</strong><span>POST /v1/chat/completions · TLS · Request Validation</span></div>
+            </div>
+
+            <div class="connector-v" aria-hidden="true"></div>
+
+            <!-- Auth Layer -->
+            <div class="zone zone-module zone-auth">
+              <span class="zone-label">Modul · Authentication Layer</span>
+              <div class="zone-row">
+                <div class="node node-module"><strong>API Key Validation</strong><span>Hash-Prüfung · Widerruf-Cache</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-module"><strong>User Account Validation</strong><span>Status · Plan · Berechtigungen</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-module"><strong>Rate Limiting</strong><span>Pro Schlüssel · Pro Konto</span></div>
+              </div>
+            </div>
+
+            <div class="connector-v" aria-hidden="true"></div>
+
+            <!-- Credit Engine -->
+            <div class="zone zone-module zone-credit">
+              <span class="zone-label">Modul · Credit Engine</span>
+              <div class="zone-row">
+                <div class="node node-module"><strong>Credit Balance</strong><span>Echtzeit-Kontostand</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-module"><strong>Monthly Quota</strong><span>Plan-Kontingent</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-module"><strong>Credit Deduction</strong><span>Token → Credits</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-module"><strong>Overage Calculation</strong><span>Überverbrauch</span></div>
+              </div>
+            </div>
+
+            <div class="connector-v" aria-hidden="true"></div>
+
+            <!-- Model Router -->
+            <div class="zone zone-module zone-router">
+              <span class="zone-label">Modul · Model Router</span>
+              <div class="zone-row">
+                <div class="node node-module"><strong>Smart Routing Rules</strong><span>Modell → Provider</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-module"><strong>Cost Optimization</strong><span>Günstigstes Modell</span></div>
+                <div class="connector-h" aria-hidden="true"></div>
+                <div class="node node-module"><strong>Fallback Routing</strong><span>Failover · Retry</span></div>
+              </div>
+            </div>
+
+            <div class="connector-v" aria-hidden="true"></div>
+
+            <!-- Provider Adapter Layer -->
+            <div class="zone zone-adapters">
+              <span class="zone-label">Modul · Provider Adapter Layer</span>
+              <div class="zone-row zone-row-adapters">
+                <div class="node node-adapter"><strong>OpenAI</strong><span>Adapter</span></div>
+                <div class="node node-adapter"><strong>Claude</strong><span>Adapter</span></div>
+                <div class="node node-adapter"><strong>DeepSeek</strong><span>Adapter</span></div>
+                <div class="node node-adapter"><strong>Gemini</strong><span>Adapter</span></div>
+                <div class="node node-adapter"><strong>Qwen</strong><span>Adapter</span></div>
+              </div>
+            </div>
+
+            <div class="connector-v" aria-hidden="true"></div>
+
+            <!-- External Providers -->
+            <div class="zone zone-external">
+              <span class="zone-label">Externe Modell-APIs</span>
+              <div class="zone-row zone-row-external">
+                <div class="node node-external">OpenAI API</div>
+                <div class="node node-external">Anthropic API</div>
+                <div class="node node-external">DeepSeek API</div>
+                <div class="node node-external">Google AI API</div>
+                <div class="node node-external">Alibaba API</div>
+              </div>
+            </div>
+
+            <!-- Cross-cutting modules -->
+            <div class="cross-cutting">
+              <div class="cross-panel cross-audit">
+                <span class="cross-label">Querschnitt</span>
+                <div class="node node-cross node-cross-wide">
+                  <strong>Audit &amp; Logging</strong>
+                  <ul class="cross-list">
+                    <li>API Requests</li>
+                    <li>Billing Events</li>
+                    <li>Security Logs</li>
+                  </ul>
+                </div>
+                <div class="cross-arrows" aria-hidden="true">
+                  <span class="cross-arrow">← alle Schichten</span>
+                </div>
+              </div>
+              <div class="cross-panel cross-admin">
+                <span class="cross-label">Verwaltung</span>
+                <div class="node node-cross node-cross-wide">
+                  <strong>Admin Console</strong>
+                  <ul class="cross-list">
+                    <li>Customer Management</li>
+                    <li>Credit Management</li>
+                    <li>Billing Management</li>
+                    <li>Provider Monitoring</li>
+                  </ul>
+                </div>
+                <div class="cross-arrows" aria-hidden="true">
+                  <span class="cross-arrow">→ alle Module</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Foundation -->
+            <div class="zone zone-foundation">
+              <div class="node node-foundation"><strong>GDPR Data Handling</strong><span>Datenminimierung · AVV · EU-Infrastruktur · Keine Prompt-Speicherung</span></div>
+            </div>
+          </div>
+
+          <div class="diagram-legend diagram-legend-v2">
+            <span><i class="legend-dot legend-client"></i> Kundenebene</span>
+            <span><i class="legend-dot legend-gateway"></i> API Gateway</span>
+            <span><i class="legend-dot legend-module"></i> Interne Module</span>
+            <span><i class="legend-dot legend-adapter"></i> Provider Adapter</span>
+            <span><i class="legend-dot legend-external"></i> Externe APIs</span>
+            <span><i class="legend-dot legend-cross"></i> Querschnitt / Admin</span>
+          </div>
+
+          <div class="arch-card diagram-flow-card">
+            <h3>Request-Flow (V1)</h3>
+            <ol class="flow-steps">
+              <li>Kunde sendet Anfrage mit <code>Zwima API Key</code> an das API Gateway</li>
+              <li><strong>Authentication Layer</strong> validiert Schlüssel, Konto und Rate Limits</li>
+              <li><strong>Credit Engine</strong> prüft Credit Balance und Monthly Quota (Pre-Auth)</li>
+              <li><strong>Model Router</strong> wählt Provider via Smart Rules, Cost Optimization oder Fallback</li>
+              <li><strong>Provider Adapter</strong> transformiert Request und ruft externe API auf</li>
+              <li>Response wird normalisiert; <strong>Credit Engine</strong> führt Deduction und Overage Calculation durch</li>
+              <li><strong>Audit &amp; Logging</strong> protokolliert Metadaten asynchron (ohne Prompt-Inhalte)</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- Kern-Domäne -->
+        <section id="customer-account" class="arch-section">
+          <h2>Customer Account</h2>
+          <div class="arch-card">
+            <p>Zentrale Entität für jeden Geschäftskunden. Verknüpft Subscription Plan, API-Schlüssel, Credit Balance und Billing Records.</p>
+            <pre class="code-block"><code>CustomerAccount {
+  id: UUID
+  company_name: string
+  email: string
+  status: active | suspended | closed
+  subscription_plan_id: FK
+  credit_balance: int
+  created_at: timestamp
+}</code></pre>
+          </div>
+        </section>
+
+        <section id="subscription-plan" class="arch-section">
+          <h2>Subscription Plan</h2>
+          <div class="arch-card">
+            <p>Definiert monatliches API-Nutzungspaket, Credit-Kontingent (Monthly Quota), verfügbare Modelle und Overage-Regeln.</p>
+            <table class="arch-table">
+              <thead><tr><th>Plan</th><th>Monthly Quota</th><th>Overage</th></tr></thead>
+              <tbody>
+                <tr><td>Starter</td><td>10.000 Credits</td><td>Blockiert</td></tr>
+                <tr><td>Pro</td><td>50.000 Credits</td><td>Blockiert</td></tr>
+                <tr><td>Business</td><td>200.000 Credits</td><td>Erlaubt</td></tr>
+                <tr><td>Enterprise</td><td>Individuell</td><td>Individuell</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="zwima-api-key" class="arch-section">
+          <h2>Zwima API Key</h2>
+          <div class="arch-card">
+            <p>Client-seitige Authentifizierung. Validierung erfolgt in der Authentication Layer, nicht im Gateway selbst.</p>
+            <pre class="code-block"><code>zwima_sk_live_&lt;32 Zeichen&gt;
+zwima_sk_test_&lt;32 Zeichen&gt;</code></pre>
+            <p>Schlüssel werden gehasht gespeichert. Widerruf invalidiert den Cache innerhalb von 60 Sekunden.</p>
+          </div>
+        </section>
+
+        <section id="api-gateway" class="arch-section">
+          <h2>API Gateway</h2>
+          <div class="arch-card">
+            <p>Einziger öffentlicher Endpunkt. Delegiert Authentifizierung, Credit-Prüfung und Routing an interne Module.</p>
+            <pre class="code-block"><code>POST /v1/chat/completions
+Authorization: Bearer zwima_sk_live_...
+Content-Type: application/json</code></pre>
+            <p>Das Gateway führt TLS-Terminierung, Request-Schema-Validierung und Response-Normalisierung durch.</p>
+          </div>
+        </section>
+
+        <!-- Interne Module -->
+        <section id="auth-layer" class="arch-section">
+          <h2>Authentication Layer</h2>
+          <div class="arch-card">
+            <p>Erste interne Schicht nach dem API Gateway. Jede Anfrage muss alle drei Prüfungen bestehen, bevor sie weitergeleitet wird.</p>
+            <div class="module-grid">
+              <div class="module-item">
+                <h3>API Key Validation</h3>
+                <ul>
+                  <li>Bearer-Token extrahieren und Format prüfen</li>
+                  <li>Hash-Vergleich gegen Datenbank</li>
+                  <li>Widerrufsstatus aus Redis-Cache lesen</li>
+                  <li>API Key → Customer Account auflösen</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>User Account Validation</h3>
+                <ul>
+                  <li>Kontostatus <code>active</code> erforderlich</li>
+                  <li>Subscription Plan gültig und nicht abgelaufen</li>
+                  <li>Modell-Berechtigung gemäß Plan prüfen</li>
+                  <li>Test-Schlüssel nur auf Test-Modelle</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>Rate Limiting</h3>
+                <ul>
+                  <li>Token-Bucket pro API Key (Standard: 60 req/min)</li>
+                  <li>Konto-weites Tageslimit gemäß Plan</li>
+                  <li>HTTP 429 bei Überschreitung mit <code>Retry-After</code></li>
+                  <li>Enterprise: konfigurierbare Limits</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="credit-engine" class="arch-section">
+          <h2>Credit Engine</h2>
+          <div class="arch-card">
+            <p>Zentrale Verbrauchs- und Kontingentverwaltung. Ersetzt die isolierten Module „Usage Tracking" und „Credits Deduction" als einheitliche Engine.</p>
+            <div class="module-grid">
+              <div class="module-item">
+                <h3>Credit Balance</h3>
+                <p>Echtzeit-Saldo des Kunden. Wird nach jeder Deduction atomar aktualisiert (optimistic locking).</p>
+              </div>
+              <div class="module-item">
+                <h3>Monthly Quota</h3>
+                <p>Monatliches Kontingent aus Subscription Plan. Reset am ersten Tag des Abrechnungszeitraums.</p>
+              </div>
+              <div class="module-item">
+                <h3>Credit Deduction</h3>
+                <p>Post-Request: <code>credits = f(input_tokens, output_tokens, model_factor)</code>. Asynchron via Event Queue.</p>
+              </div>
+              <div class="module-item">
+                <h3>Overage Calculation</h3>
+                <p>Bei Business+/Enterprise: Verbrauch über Quota wird erfasst und für Overage Invoice vorbereitet.</p>
+              </div>
+            </div>
+            <pre class="code-block"><code>CreditTransaction {
+  id: UUID
+  account_id: FK
+  type: deduction | topup | refund | overage
+  amount: int
+  balance_after: int
+  usage_event_id: FK?
+  created_at: timestamp
+}</code></pre>
+          </div>
+        </section>
+
+        <section id="model-router" class="arch-section">
+          <h2>Model Router</h2>
+          <div class="arch-card">
+            <p>Intelligente Weiterleitung von Anfragen an den optimalen Provider. Ersetzt den früheren „Provider Router" als eigenständiges Modul mit erweiterter Logik.</p>
+            <div class="module-grid">
+              <div class="module-item">
+                <h3>Smart Routing Rules</h3>
+                <ul>
+                  <li>Explizites Modell im Request → direktes Mapping</li>
+                  <li>Alias-Auflösung (<code>gpt-4</code> → <code>gpt-4o</code>)</li>
+                  <li>Plan-basierte Modell-Whitelist</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>Cost Optimization</h3>
+                <ul>
+                  <li>Bei <code>model: auto</code>: günstigstes Modell für Task-Typ</li>
+                  <li>Interne Kosten-Matrix (nicht öffentlich)</li>
+                  <li>Enterprise: kundenspezifische Optimierungsprofile</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>Fallback Routing</h3>
+                <ul>
+                  <li>Provider-Health-Check alle 30s</li>
+                  <li>Automatischer Failover auf konfiguriertes Backup-Modell</li>
+                  <li>Max. 2 Retries mit exponentiellem Backoff</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="provider-adapters" class="arch-section">
+          <h2>Provider Adapter Layer</h2>
+          <div class="arch-card">
+            <p>Ein Adapter pro externem Provider. Übersetzt das einheitliche Zwima-Request-Format in provider-spezifische API-Aufrufe und normalisiert Responses.</p>
+            <div class="adapter-grid">
+              <div class="adapter-item">
+                <h3>OpenAI Adapter</h3>
+                <p>Chat Completions, Embeddings. Mapping: Zwima → OpenAI <code>/v1/chat/completions</code></p>
+              </div>
+              <div class="adapter-item">
+                <h3>Claude Adapter</h3>
+                <p>Messages API. Mapping: Zwima Messages → Anthropic <code>/v1/messages</code></p>
+              </div>
+              <div class="adapter-item">
+                <h3>DeepSeek Adapter</h3>
+                <p>OpenAI-kompatibles Format. Endpoint-Routing nach Region.</p>
+              </div>
+              <div class="adapter-item">
+                <h3>Gemini Adapter</h3>
+                <p>Google Generative AI. Multimodal-Parameter-Transformation.</p>
+              </div>
+              <div class="adapter-item">
+                <h3>Qwen Adapter</h3>
+                <p>DashScope API. Mehrsprachige Token-Zählung.</p>
+              </div>
+            </div>
+            <h3>Adapter-Interface (V1)</h3>
+            <pre class="code-block"><code>interface ProviderAdapter {
+  provider_id: string
+  send(request: ZwimaRequest): Promise&lt;ZwimaResponse&gt;
+  healthCheck(): Promise&lt;boolean&gt;
+  estimateTokens(request: ZwimaRequest): int
+}</code></pre>
+          </div>
+        </section>
+
+        <section id="audit-logging" class="arch-section">
+          <h2>Audit &amp; Logging</h2>
+          <div class="arch-card">
+            <p>Querschnittsmodul. Empfängt Events aus allen Schichten asynchron. Keine Prompt-Inhalte in Logs (GDPR).</p>
+            <div class="module-grid">
+              <div class="module-item">
+                <h3>API Requests</h3>
+                <ul>
+                  <li>Request-ID, Timestamp, Account, API Key, Modell</li>
+                  <li>Input/Output Token-Anzahl, Latenz, HTTP-Status</li>
+                  <li>Retention: 13 Monate</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>Billing Events</h3>
+                <ul>
+                  <li>Credit Deductions, Overage, Invoice-Erstellung</li>
+                  <li>Immutable Audit Trail für Abrechnungsstreitigkeiten</li>
+                  <li>Retention: 7 Jahre (gesetzlich)</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>Security Logs</h3>
+                <ul>
+                  <li>Fehlgeschlagene Authentifizierung, Rate-Limit-Hits</li>
+                  <li>API-Key-Widerrufe, Admin-Aktionen</li>
+                  <li>Retention: 90 Tage</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="admin-console" class="arch-section">
+          <h2>Admin Console</h2>
+          <div class="arch-card">
+            <p>Interne Verwaltungsoberfläche für Zwima-Mitarbeiter. Nicht öffentlich zugänglich. Authentifizierung via SSO + RBAC.</p>
+            <div class="module-grid module-grid-2">
+              <div class="module-item">
+                <h3>Customer Management</h3>
+                <ul>
+                  <li>Konten anlegen, sperren, schließen</li>
+                  <li>Plan-Zuweisung und Upgrade/Downgrade</li>
+                  <li>API-Key-Übersicht (nur Prefix sichtbar)</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>Credit Management</h3>
+                <ul>
+                  <li>Manuelle Credit-Topups und Gutschriften</li>
+                  <li>Quota-Anpassungen für Enterprise</li>
+                  <li>Verbrauchshistorie pro Kunde</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>Billing Management</h3>
+                <ul>
+                  <li>Rechnungen erstellen und freigeben</li>
+                  <li>Overage-Review vor Rechnungsstellung</li>
+                  <li>Zahlungsstatus und Mahnwesen</li>
+                </ul>
+              </div>
+              <div class="module-item">
+                <h3>Provider Monitoring</h3>
+                <ul>
+                  <li>Live-Status aller Provider und Adapter</li>
+                  <li>Latenz- und Fehlerrate-Dashboards</li>
+                  <li>Failover-Events und Incident-Log</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Querschnitt -->
+        <section id="usage-billing" class="arch-section">
+          <h2>Usage &amp; Billing</h2>
+          <div class="arch-card">
+            <p>Usage Events werden von der Credit Engine erzeugt und von Audit &amp; Logging persistiert. Billing Records entstehen am Periodenende.</p>
+            <pre class="code-block"><code>UsageEvent → CreditTransaction → BillingRecord
+
+BillingRecord {
+  id: UUID
+  account_id: FK
+  type: subscription | overage | credit_note
+  amount_eur: decimal
+  period_start / period_end: date
+  status: draft | issued | paid
+}</code></pre>
+          </div>
+        </section>
+
+        <section id="gdpr" class="arch-section">
+          <h2>GDPR Data Handling</h2>
+          <div class="arch-card">
+            <p>Architektonische Grundlage unter allen Schichten. Gilt für Gateway, interne Module, Audit &amp; Logging und Admin Console.</p>
+            <table class="arch-table">
+              <thead><tr><th>Prinzip</th><th>Umsetzung V1</th></tr></thead>
+              <tbody>
+                <tr><td>Datenminimierung</td><td>Nur Metadaten in Logs; keine Prompt-Speicherung</td></tr>
+                <tr><td>Transit-only</td><td>Prompts In-Memory; max. 24h anonymisiert bei Fehleranalyse</td></tr>
+                <tr><td>EU-Infrastruktur</td><td>Primäre Verarbeitung in EU-Rechenzentren</td></tr>
+                <tr><td>AVV (DPA)</td><td>Auf Anfrage für alle Geschäftskunden</td></tr>
+                <tr><td>Löschung</td><td>Kontolöschung innerhalb 30 Tage</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima Gateway V1 Architecture · V1.1 · Interne Dokumentation</p>
+          <p class="arch-footer-links">
+            <a href="supplier-due-diligence.html">Due Diligence</a><span>·</span>
+            <a href="revenue-engine.html">Revenue</a><span>·</span>
+            <a href="pricing-sheet.html">Pricing</a><span>·</span>
+            <a href="dashboard.html">Dashboard</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+
+  <script src="architecture.js"></script>
+</body>
+</html>

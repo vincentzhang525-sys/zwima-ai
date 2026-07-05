@@ -1,0 +1,21 @@
+{
+  "payments": [
+    {
+      "id": "pay-seed-1",
+      "sessionId": "cs_mock_seed_1",
+      "paymentIntentId": "pi_mock_seed_1",
+      "userId": "user-admin-1",
+      "amountEur": 11.9,
+      "baseAmountEur": 10,
+      "vatEur": 1.9,
+      "credits": 100,
+      "currency": "EUR",
+      "status": "succeeded",
+      "provider": "Stripe",
+      "mode": "mock",
+      "invoiceId": "INV-2026-0613",
+      "createdAt": "2026-06-13T10:00:00.000Z",
+      "completedAt": "2026-06-13T10:01:00.000Z"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "invoices": [
+    {
+      "id": "INV-2026-0613",
+      "paymentId": "pay-seed-1",
+      "userId": "user-admin-1",
+      "date": "2026-06-13",
+      "amountEur": 11.9,
+      "baseAmountEur": 10,
+      "vatEur": 1.9,
+      "credits": 100,
+      "currency": "EUR",
+      "status": "paid",
+      "provider": "Stripe",
+      "createdAt": "2026-06-13T10:01:00.000Z"
+    },
+    {
+      "id": "INV-2026-0601",
+      "paymentId": null,
+      "userId": "user-admin-1",
+      "date": "2026-06-01",
+      "amountEur": 1190,
+      "baseAmountEur": 1000,
+      "vatEur": 190,
+      "credits": 1000,
+      "currency": "EUR",
+      "status": "paid",
+      "provider": "Bank Transfer",
+      "createdAt": "2026-06-01T09:00:00.000Z"
+    }
+  ]
+}

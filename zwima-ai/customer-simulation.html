@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima AI Revenue Simulation | Internal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+  <style>
+    .simulation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 16px 0 24px;
+    }
+
+    .simulation-plan {
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      padding: 22px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .simulation-plan h3 {
+      color: var(--blue-dark);
+      font-size: 1rem;
+      margin: 0 0 8px;
+    }
+
+    .simulation-price {
+      color: var(--blue-dark);
+      display: block;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .simulation-price span {
+      color: var(--gray-400);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .simulation-note {
+      color: var(--gray-600);
+      font-size: 13px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .simulation-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .simulation-kpi {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .simulation-kpi span {
+      color: var(--gray-400);
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .simulation-kpi strong {
+      color: var(--blue-dark);
+      display: block;
+      font-size: 1.45rem;
+      line-height: 1.2;
+    }
+
+    .simulation-kpi small {
+      color: var(--gray-600);
+      display: block;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .chart-card {
+      margin-top: 18px;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 110px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .bar-label,
+    .bar-value {
+      color: var(--gray-600);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .bar-value {
+      color: var(--blue-dark);
+      text-align: right;
+    }
+
+    .bar-track {
+      background: var(--gray-50);
+      border-radius: 999px;
+      height: 14px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      background: linear-gradient(90deg, var(--blue-mid), var(--blue-dark));
+      border-radius: inherit;
+      display: block;
+      height: 100%;
+    }
+
+    .bar-fill.profit {
+      background: linear-gradient(90deg, #2d7a52, #1f5a3c);
+    }
+
+    .assumption-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .assumption-list li {
+      background: var(--gray-50);
+      border-radius: var(--radius);
+      color: var(--gray-600);
+      font-size: 13px;
+      line-height: 1.55;
+      padding: 14px;
+    }
+
+    .assumption-list strong {
+      color: var(--blue-dark);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 1024px) {
+      .simulation-grid,
+      .simulation-kpis,
+      .assumption-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .simulation-grid,
+      .simulation-kpis,
+      .assumption-list {
+        grid-template-columns: 1fr;
+      }
+
+      .bar-row {
+        grid-template-columns: 1fr;
+      }
+
+      .bar-value {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge-finance">Revenue · Internal</span>
+        <a href="dashboard.html" class="arch-back">Back to Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Simulation</span>
+        <a href="#plans">Plans</a>
+        <a href="#kpis">KPI Cards</a>
+        <a href="#scenarios">Scenarios</a>
+        <a href="#charts">Charts</a>
+        <a href="#assumptions">Assumptions</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Internal Documentation</span>
+        <a href="customer-simulation.html" class="active">Revenue Simulation</a>
+        <a href="outreach-kit.html">Outreach Kit</a>
+        <a href="lead-database.html">Lead Database</a>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-10-customers.html">First 10 Customers</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+      </nav>
+      <div class="arch-meta">
+        <span>Internal document only</span>
+        <span>Robots: noindex, nofollow</span>
+      </div>
+    </aside>
+
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Revenue Planning</p>
+          <h1>Zwima AI Revenue Simulation</h1>
+          <p class="arch-subtitle">Internal customer scenario model for plan mix, monthly revenue, monthly cost, gross profit, and annual totals.</p>
+        </div>
+      </header>
+
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p>Revenue simulation for the first growth stages of Zwima AI. The model uses Starter, Business, and Pro plan mixes with estimated monthly cost per plan to show gross profit potential.</p>
+        </div>
+
+        <section id="plans" class="arch-section">
+          <h2>Plans</h2>
+          <div class="simulation-grid">
+            <div class="simulation-plan">
+              <h3>Starter</h3>
+              <span class="simulation-price">49€ <span>/ month</span></span>
+              <p class="simulation-note">Entry plan for pilots, first API usage, small internal workflows, and low-risk trial conversions.</p>
+            </div>
+            <div class="simulation-plan">
+              <h3>Pro</h3>
+              <span class="simulation-price">199€ <span>/ month</span></span>
+              <p class="simulation-note">Core growth plan for teams using AI in active operations, internal tools, or client-facing workflows.</p>
+            </div>
+            <div class="simulation-plan">
+              <h3>Business</h3>
+              <span class="simulation-price">499€ <span>/ month</span></span>
+              <p class="simulation-note">Higher-volume plan for companies with multiple users, heavier API usage, and stronger support needs.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="kpis" class="arch-section">
+          <h2>KPI Cards</h2>
+          <p class="section-lead">Headline metrics from the 100-customer scenario.</p>
+          <div class="simulation-kpis">
+            <div class="simulation-kpi">
+              <span>Customers</span>
+              <strong>100</strong>
+              <small>Target scenario</small>
+            </div>
+            <div class="simulation-kpi">
+              <span>Monthly Revenue</span>
+              <strong>17,650€</strong>
+              <small>MRR estimate</small>
+            </div>
+            <div class="simulation-kpi">
+              <span>Gross Profit</span>
+              <strong>11,475€</strong>
+              <small>Monthly estimate</small>
+            </div>
+            <div class="simulation-kpi">
+              <span>Gross Margin</span>
+              <strong>65%</strong>
+              <small>After API cost</small>
+            </div>
+          </div>
+        </section>
+
+        <section id="scenarios" class="arch-section">
+          <h2>Scenarios</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead>
+                <tr>
+                  <th>Scenario</th>
+                  <th>Plan Mix</th>
+                  <th>Monthly Revenue</th>
+                  <th>Monthly Cost</th>
+                  <th>Monthly Gross Profit</th>
+                  <th>Annual Revenue</th>
+                  <th>Annual Gross Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>10 customers</td>
+                  <td>6 Starter / 1 Business / 3 Pro</td>
+                  <td>1,390€</td>
+                  <td>480€</td>
+                  <td>910€</td>
+                  <td>16,680€</td>
+                  <td>10,920€</td>
+                </tr>
+                <tr>
+                  <td>50 customers</td>
+                  <td>25 Starter / 7 Business / 18 Pro</td>
+                  <td>8,300€</td>
+                  <td>2,895€</td>
+                  <td>5,405€</td>
+                  <td>99,600€</td>
+                  <td>64,860€</td>
+                </tr>
+                <tr>
+                  <td>100 customers</td>
+                  <td>45 Starter / 15 Business / 40 Pro</td>
+                  <td>17,650€</td>
+                  <td>6,175€</td>
+                  <td>11,475€</td>
+                  <td>211,800€</td>
+                  <td>137,700€</td>
+                </tr>
+                <tr>
+                  <td>500 customers</td>
+                  <td>200 Starter / 80 Business / 220 Pro</td>
+                  <td>93,500€</td>
+                  <td>32,800€</td>
+                  <td>60,700€</td>
+                  <td>1,122,000€</td>
+                  <td>728,400€</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="charts" class="arch-section">
+          <h2>Charts</h2>
+          <div class="arch-card chart-card">
+            <h3>Monthly Revenue by Scenario</h3>
+            <div class="bar-chart">
+              <div class="bar-row">
+                <span class="bar-label">10 customers</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 1.5%"></span></span>
+                <span class="bar-value">1,390€</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">50 customers</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 8.9%"></span></span>
+                <span class="bar-value">8,300€</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">100 customers</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 18.9%"></span></span>
+                <span class="bar-value">17,650€</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">500 customers</span>
+                <span class="bar-track"><span class="bar-fill" style="width: 100%"></span></span>
+                <span class="bar-value">93,500€</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-card chart-card">
+            <h3>Monthly Gross Profit by Scenario</h3>
+            <div class="bar-chart">
+              <div class="bar-row">
+                <span class="bar-label">10 customers</span>
+                <span class="bar-track"><span class="bar-fill profit" style="width: 1.5%"></span></span>
+                <span class="bar-value">910€</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">50 customers</span>
+                <span class="bar-track"><span class="bar-fill profit" style="width: 8.9%"></span></span>
+                <span class="bar-value">5,405€</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">100 customers</span>
+                <span class="bar-track"><span class="bar-fill profit" style="width: 18.9%"></span></span>
+                <span class="bar-value">11,475€</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">500 customers</span>
+                <span class="bar-track"><span class="bar-fill profit" style="width: 100%"></span></span>
+                <span class="bar-value">60,700€</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="assumptions" class="arch-section">
+          <h2>Assumptions</h2>
+          <div class="arch-card">
+            <ul class="assumption-list">
+              <li><strong>Starter API cost</strong>15€ estimated monthly provider cost per customer.</li>
+              <li><strong>Pro API cost</strong>70€ estimated monthly provider cost per customer.</li>
+              <li><strong>Business API cost</strong>180€ estimated monthly provider cost per customer.</li>
+            </ul>
+            <p class="spec-note">Estimated gross profit = monthly revenue minus estimated API cost. This excludes payroll, marketing, payment fees, support cost, tax, and infrastructure outside API usage.</p>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima AI Revenue Simulation · Internal Document · Noindex</p>
+          <p class="arch-footer-links">
+            <a href="revenue-engine.html">Revenue Engine</a><span>|</span>
+            <a href="pricing-sheet.html">Pricing Sheet</a><span>|</span>
+            <a href="first-100-customers.html">First 100 Customers</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+
+  <script src="architecture.js"></script>
+</body>
+</html>

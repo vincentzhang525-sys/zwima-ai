@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima Revenue Engine V1 | Intern</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge-finance">Finance · Intern</span>
+        <a href="dashboard.html" class="arch-back">← Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Revenue Engine</span>
+        <a href="#funnel">Acquisition Funnel</a>
+        <a href="#plans">Pricing Plans</a>
+        <a href="#scenarios">Revenue Scenarios</a>
+        <a href="#mrr">MRR</a>
+        <a href="#margin">Gross Margin</a>
+        <a href="#roadmap">Revenue Roadmap</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Interne Dokumentation</span>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="supplier-due-diligence.html">Supplier Due Diligence</a>
+        <a href="revenue-engine.html" class="active">Revenue Engine</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+        <a href="mvp.html">MVP V0.1</a>
+        <a href="architecture.html">Architecture V1</a>
+      </nav>
+      <div class="arch-meta"><span>V1 · Juni 2026</span></div>
+    </aside>
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menü"><span></span><span></span><span></span></button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Umsatzmodell</p>
+          <h1>Zwima Revenue Engine V1</h1>
+          <p class="arch-subtitle">Monetarisierung über AI credits und API-Nutzungspakete</p>
+        </div>
+      </header>
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p>Umsatz basiert auf monatlichen API-Nutzungspaketen (<strong>AI credits</strong>), nicht auf Handel oder Spekulation. Zwima erzielt Erlöse durch <strong>AI API access</strong>, <strong>European business billing</strong> und <strong>multi-model infrastructure</strong> ab V1.0.</p>
+        </div>
+
+        <section id="funnel" class="arch-section">
+          <h2>Customer Acquisition Funnel</h2>
+          <div class="arch-card">
+            <div class="funnel">
+              <div class="funnel-step"><strong>Awareness</strong><span>Website, LinkedIn, Developer Content, Partner-Netzwerk</span></div>
+              <div class="funnel-step"><strong>Interest</strong><span>„Request API Access", Pricing Sheet, First Customer Case Studies</span></div>
+              <div class="funnel-step"><strong>Trial / Pilot</strong><span>Registrierung, Starter-Plan, erster API-Aufruf &lt; 24h</span></div>
+              <div class="funnel-step"><strong>Paid Customer</strong><span>Erste Rechnung, aktive monatliche Nutzung</span></div>
+              <div class="funnel-step"><strong>Expansion</strong><span>Upgrade Pro/Business, höheres Credit-Volumen, Multi-Model</span></div>
+            </div>
+            <p class="spec-note">Ziel-Conversion Awareness → Paid: 2–5% (B2B Direct). Activation (Registrierung → API Call): 65%+.</p>
+          </div>
+        </section>
+
+        <section id="plans" class="arch-section">
+          <h2>Pricing Plans</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Plan</th><th>Preis</th><th>AI Credits</th><th>Anteil am Mix (Ziel)</th></tr></thead>
+              <tbody>
+                <tr><td>Starter</td><td>49 EUR</td><td>10.000</td><td>40%</td></tr>
+                <tr><td>Pro</td><td>199 EUR</td><td>50.000</td><td>35%</td></tr>
+                <tr><td>Business</td><td>499 EUR</td><td>200.000</td><td>20%</td></tr>
+                <tr><td>Enterprise</td><td>Custom</td><td>Individuell</td><td>5%</td></tr>
+              </tbody>
+            </table>
+            <p>Details: <a href="pricing-sheet.html">Pricing Sheet V1 →</a></p>
+          </div>
+        </section>
+
+        <section id="scenarios" class="arch-section">
+          <h2>Revenue Scenarios</h2>
+          <p class="section-lead">Annahmen: durchschnittlicher Plan-Mix, keine Overage in konservativem Szenario.</p>
+          <div class="scenario-grid">
+            <div class="scenario-card">
+              <h3>10</h3>
+              <p class="scenario-label">Kunden</p>
+              <div class="scenario-metric"><span>MRR (konservativ)</span><strong>~1.200 EUR</strong></div>
+              <div class="scenario-metric"><span>Mix</span><strong>6 Starter, 3 Pro, 1 Business</strong></div>
+              <div class="scenario-metric"><span>Zeithorizont</span><strong>Monat 4–6</strong></div>
+            </div>
+            <div class="scenario-card featured">
+              <h3>50</h3>
+              <p class="scenario-label">Kunden</p>
+              <div class="scenario-metric"><span>MRR (konservativ)</span><strong>~8.500 EUR</strong></div>
+              <div class="scenario-metric"><span>Mix</span><strong>20 / 18 / 10 / 2 Ent.</strong></div>
+              <div class="scenario-metric"><span>Zeithorizont</span><strong>Monat 12–18</strong></div>
+            </div>
+            <div class="scenario-card">
+              <h3>100</h3>
+              <p class="scenario-label">Kunden</p>
+              <div class="scenario-metric"><span>MRR (konservativ)</span><strong>~18.000 EUR</strong></div>
+              <div class="scenario-metric"><span>Mix</span><strong>40 / 35 / 20 / 5 Ent.</strong></div>
+              <div class="scenario-metric"><span>Zeithorizont</span><strong>Monat 18–24</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="mrr" class="arch-section">
+          <h2>Monthly Recurring Revenue</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Meilenstein</th><th>MRR Ziel</th><th>Kunden</th><th>Maßnahme</th></tr></thead>
+              <tbody>
+                <tr><td>MVP Launch</td><td>0 EUR</td><td>0</td><td>Gateway live, erster Pilot</td></tr>
+                <tr><td>Monat 2</td><td>150 EUR</td><td>1–3</td><td>Design Partner closen</td></tr>
+                <tr><td>Monat 6</td><td>1.500 EUR</td><td>10</td><td>Repeatable outbound</td></tr>
+                <tr><td>Monat 12</td><td>8.500 EUR</td><td>50</td><td>Multi-Model, Inbound</td></tr>
+                <tr><td>Monat 24</td><td>18.000 EUR</td><td>100</td><td>Enterprise-Pipeline</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="margin" class="arch-section">
+          <h2>Gross Margin Assumptions</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Posten</th><th>Annahme</th></tr></thead>
+              <tbody>
+                <tr><td>Provider API-Kosten</td><td>40–55% des Planpreises (je nach Modell-Mix)</td></tr>
+                <tr><td>Infrastruktur (Hosting, DB)</td><td>5–8%</td></tr>
+                <tr><td>Support &amp; Betrieb</td><td>10–15%</td></tr>
+                <tr><td><strong>Ziel Gross Margin</strong></td><td><strong>30–45%</strong> (nach Provider-Kosten)</td></tr>
+              </tbody>
+            </table>
+            <p class="spec-note">Exakte Margen nach Aktualisierung des <a href="cost-sheet.html">Cost Sheet</a>. Credit-Faktoren intern so kalkulieren, dass Starter-Plan mindestens 30% Deckungsbeitrag liefert.</p>
+          </div>
+        </section>
+
+        <section id="roadmap" class="arch-section">
+          <h2>First Revenue Roadmap</h2>
+          <div class="arch-card">
+            <ol class="flow-steps">
+              <li><strong>Phase 0:</strong> MVP V0.1 – OpenAI, manuelle Rechnung, 1 zahlender Kunde</li>
+              <li><strong>Phase 1:</strong> 10 Kunden, 1.500 EUR MRR, Stripe-Integration</li>
+              <li><strong>Phase 2:</strong> Claude-Adapter, Pro-Upgrades, Inbound-Leads</li>
+              <li><strong>Phase 3:</strong> 50 Kunden, multi-model infrastructure, Business-Plan Push</li>
+              <li><strong>Phase 4:</strong> 100 Kunden, Enterprise, vollständiger unified API gateway</li>
+            </ol>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima Revenue Engine V1 · Intern</p>
+          <p class="arch-footer-links">
+            <a href="pricing-sheet.html">Pricing Sheet</a><span>·</span>
+            <a href="cost-sheet.html">Cost Sheet</a><span>·</span>
+            <a href="first-100-customers.html">First 100 Customers</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+  <script src="architecture.js"></script>
+</body>
+</html>

@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima AI Outreach Kit | Internal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+  <style>
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .template-card {
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      overflow: hidden;
+    }
+
+    .template-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .template-header h3 {
+      color: var(--blue-dark);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .copy-button {
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--blue-dark);
+      color: var(--white);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 10px;
+      white-space: nowrap;
+    }
+
+    .copy-button:hover {
+      background: var(--blue-mid);
+    }
+
+    .template-body {
+      color: var(--gray-600);
+      font-size: 13px;
+      line-height: 1.65;
+      margin: 0;
+      min-height: 220px;
+      padding: 18px;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 900px) {
+      .template-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge">Outreach · Internal</span>
+        <a href="dashboard.html" class="arch-back">Back to Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Outreach Kit</span>
+        <a href="#cold-email">1. Cold Email</a>
+        <a href="#linkedin">2. LinkedIn</a>
+        <a href="#meeting-booking">3. Meeting Booking</a>
+        <a href="#follow-up">4. Follow Up</a>
+        <a href="#trial-invitation">5. Trial Invitation</a>
+        <a href="#closing-message">6. Closing Message</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Internal Documentation</span>
+        <a href="outreach-kit.html" class="active">Outreach Kit</a>
+        <a href="lead-database.html">Lead Database</a>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-10-customers.html">First 10 Customers</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="supplier-due-diligence.html">Supplier Due Diligence</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+        <a href="mvp.html">MVP V0.1</a>
+        <a href="architecture.html">Architecture V1</a>
+      </nav>
+      <div class="arch-meta">
+        <span>Internal document only</span>
+        <span>Robots: noindex, nofollow</span>
+      </div>
+    </aside>
+
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Sales Enablement</p>
+          <h1>Zwima AI Outreach Kit</h1>
+          <p class="arch-subtitle">Internal bilingual outreach templates for Email, LinkedIn, and Cold Call channels.</p>
+        </div>
+      </header>
+
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p>Copy-ready outreach templates for Zwima AI. Each template covers the core offer: AI API Access, Multi-model Platform, Credits Billing, European Invoice, and German Support.</p>
+        </div>
+
+        <section id="cold-email" class="arch-section">
+          <h2>1. Email Templates</h2>
+          <div class="template-grid">
+            <div class="template-card">
+              <div class="template-header">
+                <h3>German Version</h3>
+                <button class="copy-button" type="button" data-copy-target="cold-email-de">Copy</button>
+              </div>
+              <pre class="template-body" id="cold-email-de">Betreff: KI-API-Zugang mit Credits und deutscher Betreuung
+
+Hallo [Name],
+
+ich habe gesehen, dass [Unternehmen] im Bereich [Branche] aktiv ist. Viele Teams möchten KI produktiv nutzen, aber direkter API-Zugang, Kostenkontrolle und Abrechnung über mehrere Provider werden schnell unübersichtlich.
+
+Zwima AI bietet:
+- AI API Access für Unternehmens-Workflows
+- Multi-model Platform für OpenAI, Claude, Gemini, DeepSeek und Qwen
+- Credits Billing statt schwer planbarer Token-Rechnungen
+- Europäische Rechnung für Finance und Einkauf
+- Deutschen Support für Setup und Betrieb
+
+Wäre ein kurzer 20-Minuten-Termin sinnvoll, um zu prüfen, ob Zwima AI für [Unternehmen] relevant ist?
+
+Viele Grüße
+[Dein Name]</pre>
+            </div>
+
+            <div class="template-card">
+              <div class="template-header">
+                <h3>English Version</h3>
+                <button class="copy-button" type="button" data-copy-target="cold-email-en">Copy</button>
+              </div>
+              <pre class="template-body" id="cold-email-en">Subject: AI API access with credits billing and EU invoice
+
+Hi [Name],
+
+I saw that [Company] works in [industry]. Many teams want to use AI in production, but direct API access, cost control, and billing across multiple providers can become messy quickly.
+
+Zwima AI offers:
+- AI API Access for business workflows
+- Multi-model Platform for OpenAI, Claude, Gemini, DeepSeek, and Qwen
+- Credits Billing instead of unpredictable token invoices
+- European Invoice for finance and procurement
+- German Support for setup and operations
+
+Would a short 20-minute call be useful to see whether Zwima AI is relevant for [Company]?
+
+Best regards,
+[Your Name]</pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="linkedin" class="arch-section">
+          <h2>2. LinkedIn Templates</h2>
+          <div class="template-grid">
+            <div class="template-card">
+              <div class="template-header">
+                <h3>German Version</h3>
+                <button class="copy-button" type="button" data-copy-target="linkedin-de">Copy</button>
+              </div>
+              <pre class="template-body" id="linkedin-de">Hallo [Name],
+
+ich baue Zwima AI für Unternehmen, die KI-Modelle per API nutzen möchten, ohne mehrere Provider-Verträge, unklare Token-Kosten oder komplizierte Abrechnung.
+
+Unser Angebot: AI API Access, Multi-model Platform, Credits Billing, europäische Rechnung und deutscher Support.
+
+Da [Unternehmen] in [Branche] aktiv ist: Wäre ein kurzer Austausch sinnvoll?</pre>
+            </div>
+
+            <div class="template-card">
+              <div class="template-header">
+                <h3>English Version</h3>
+                <button class="copy-button" type="button" data-copy-target="linkedin-en">Copy</button>
+              </div>
+              <pre class="template-body" id="linkedin-en">Hi [Name],
+
+I am building Zwima AI for companies that want AI API access without multiple provider contracts, unclear token costs, or messy billing.
+
+The offer: AI API Access, Multi-model Platform, Credits Billing, European Invoice, and German Support.
+
+Since [Company] works in [industry], would a quick exchange make sense?</pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="meeting-booking" class="arch-section">
+          <h2>3. Cold Call Templates</h2>
+          <div class="template-grid">
+            <div class="template-card">
+              <div class="template-header">
+                <h3>German Version</h3>
+                <button class="copy-button" type="button" data-copy-target="meeting-de">Copy</button>
+              </div>
+              <pre class="template-body" id="meeting-de">Guten Tag [Name], hier ist [Dein Name] von Zwima AI.
+
+Ich rufe an, weil wir Unternehmen beim strukturierten Zugang zu KI-Modellen unterstützen.
+
+Kurz gesagt:
+- AI API Access über eine zentrale Plattform
+- Multi-model Platform statt einzelner Provider-Setups
+- Credits Billing für planbare Nutzung
+- Europäische Rechnung für B2B-Abrechnung
+- Deutscher Support beim Setup
+
+Ist KI-API-Zugang oder Automatisierung bei [Unternehmen] aktuell ein Thema?
+
+Wenn ja: Ich würde gern einen 20-Minuten-Termin vorschlagen, um zu prüfen, ob Zwima AI passt.
+
+Passt [Terminoption] oder wer wäre bei Ihnen der richtige Ansprechpartner?</pre>
+            </div>
+
+            <div class="template-card">
+              <div class="template-header">
+                <h3>English Version</h3>
+                <button class="copy-button" type="button" data-copy-target="meeting-en">Copy</button>
+              </div>
+              <pre class="template-body" id="meeting-en">Hi [Name], this is [Your Name] from Zwima AI.
+
+I am calling because we help companies get structured access to AI models.
+
+In short:
+- AI API Access through one central platform
+- Multi-model Platform instead of separate provider setups
+- Credits Billing for predictable usage
+- European Invoice for B2B finance
+- German Support for setup and operations
+
+Is AI API access or automation currently relevant for [Company]?
+
+If yes, I would suggest a 20-minute call to see whether Zwima AI is a fit.
+
+Would [time option] work, or who would be the right person to speak with?</pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="follow-up" class="arch-section">
+          <h2>4. Follow Up Templates</h2>
+          <div class="template-grid">
+            <div class="template-card">
+              <div class="template-header">
+                <h3>German Version</h3>
+                <button class="copy-button" type="button" data-copy-target="follow-up-de">Copy</button>
+              </div>
+              <pre class="template-body" id="follow-up-de">Hallo [Name],
+
+ich wollte kurz nachfassen, ob das Thema KI-Modellzugang und Kostenkontrolle bei [Unternehmen] aktuell relevant ist.
+
+Zwima AI eignet sich besonders, wenn Sie erste KI-Workflows testen oder mehreren Teams einen strukturierten Zugang geben möchten.
+
+Soll ich Ihnen eine kurze Demo oder Testzugang vorbereiten?
+
+Viele Grüße
+[Dein Name]</pre>
+            </div>
+
+            <div class="template-card">
+              <div class="template-header">
+                <h3>English Version</h3>
+                <button class="copy-button" type="button" data-copy-target="follow-up-en">Copy</button>
+              </div>
+              <pre class="template-body" id="follow-up-en">Hi [Name],
+
+I wanted to quickly follow up and ask whether AI model access and usage cost control are currently relevant for [Company].
+
+Zwima AI is especially useful if you are testing first AI workflows or want to give multiple teams structured access.
+
+Should I prepare a short demo or trial access for you?
+
+Best regards,
+[Your Name]</pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="trial-invitation" class="arch-section">
+          <h2>5. Trial Invitation Templates</h2>
+          <div class="template-grid">
+            <div class="template-card">
+              <div class="template-header">
+                <h3>German Version</h3>
+                <button class="copy-button" type="button" data-copy-target="trial-de">Copy</button>
+              </div>
+              <pre class="template-body" id="trial-de">Hallo [Name],
+
+ich habe den Testzugang für [Unternehmen] vorbereitet.
+
+Ziel des Trials:
+- KI-Modellzugang testen
+- Nutzung im Dashboard prüfen
+- ersten konkreten Workflow validieren
+
+Zugang: [Trial Link]
+Dauer: [Trial Duration]
+Nächster Check-in: [Date]
+
+Wenn Sie Fragen beim Setup haben, melden Sie sich jederzeit.
+
+Viele Grüße
+[Dein Name]</pre>
+            </div>
+
+            <div class="template-card">
+              <div class="template-header">
+                <h3>English Version</h3>
+                <button class="copy-button" type="button" data-copy-target="trial-en">Copy</button>
+              </div>
+              <pre class="template-body" id="trial-en">Hi [Name],
+
+I prepared trial access for [Company].
+
+Trial goals:
+- Test AI model access
+- Review usage in the dashboard
+- Validate one concrete workflow
+
+Access: [Trial Link]
+Duration: [Trial Duration]
+Next check-in: [Date]
+
+If you have any setup questions, feel free to reach out.
+
+Best regards,
+[Your Name]</pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="closing-message" class="arch-section">
+          <h2>6. Closing Message Templates</h2>
+          <div class="template-grid">
+            <div class="template-card">
+              <div class="template-header">
+                <h3>German Version</h3>
+                <button class="copy-button" type="button" data-copy-target="closing-de">Copy</button>
+              </div>
+              <pre class="template-body" id="closing-de">Hallo [Name],
+
+vielen Dank für den Test von Zwima AI. Basierend auf unserem Gespräch passt für [Unternehmen] am besten der [Plan Name]-Plan.
+
+Enthalten sind:
+- KI-Modellzugang für Ihr Team
+- Nutzungsdashboard
+- planbare Abrechnung
+- Support beim Setup
+
+Wenn Sie starten möchten, aktiviere ich den Plan ab [Start Date].
+
+Soll ich die Freischaltung vorbereiten?
+
+Viele Grüße
+[Dein Name]</pre>
+            </div>
+
+            <div class="template-card">
+              <div class="template-header">
+                <h3>English Version</h3>
+                <button class="copy-button" type="button" data-copy-target="closing-en">Copy</button>
+              </div>
+              <pre class="template-body" id="closing-en">Hi [Name],
+
+Thank you for testing Zwima AI. Based on our discussion, the best fit for [Company] is the [Plan Name] plan.
+
+It includes:
+- AI model access for your team
+- Usage dashboard
+- Predictable billing
+- Setup support
+
+If you would like to move forward, I can activate the plan from [Start Date].
+
+Should I prepare the activation?
+
+Best regards,
+[Your Name]</pre>
+            </div>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima AI Outreach Kit · Internal Document · Noindex</p>
+          <p class="arch-footer-links">
+            <a href="lead-database.html">Lead Database</a><span>|</span>
+            <a href="first-10-customers.html">First 10 Customers</a><span>|</span>
+            <a href="first-100-customers.html">First 100 Customers</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+
+  <script src="architecture.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const buttons = document.querySelectorAll('[data-copy-target]');
+
+      const copyText = async (text) => {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      };
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', async () => {
+          const target = document.getElementById(button.dataset.copyTarget);
+          if (!target) return;
+
+          await copyText(target.textContent.trim());
+          button.textContent = 'Copied';
+          setTimeout(() => {
+            button.textContent = 'Copy';
+          }, 1600);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

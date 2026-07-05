@@ -1,0 +1,500 @@
+{
+  "marketplace": [
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "status": "Active",
+      "statusClass": "active",
+      "description": "Frontier models for premium reasoning, coding and multimodal workloads.",
+      "routingLevel": "Premium",
+      "routingRole": "Premium reasoning and complex coding",
+      "latency": "Low",
+      "region": "Global",
+      "availability": "99.9%",
+      "models": [
+        {
+          "name": "GPT-5",
+          "context": "128K tokens",
+          "inputPrice": "€2.50 / 1M tokens",
+          "outputPrice": "€10.00 / 1M tokens",
+          "tags": [
+            "Premium reasoning",
+            "Coding",
+            "Multimodal"
+          ]
+        },
+        {
+          "name": "GPT-4.1",
+          "context": "128K tokens",
+          "inputPrice": "€2.00 / 1M tokens",
+          "outputPrice": "€8.00 / 1M tokens",
+          "tags": [
+            "Reasoning",
+            "Coding"
+          ]
+        },
+        {
+          "name": "GPT-4o",
+          "context": "128K tokens",
+          "inputPrice": "€1.50 / 1M tokens",
+          "outputPrice": "€6.00 / 1M tokens",
+          "tags": [
+            "Multimodal",
+            "Fast"
+          ]
+        }
+      ],
+      "tags": [
+        "Premium reasoning",
+        "Coding",
+        "Multimodal"
+      ],
+      "firstModelSlug": "gpt-5"
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "status": "Active",
+      "statusClass": "active",
+      "description": "Enterprise-grade writing and reasoning models with long context support.",
+      "routingLevel": "Enterprise",
+      "routingRole": "Enterprise writing and document workflows",
+      "latency": "Low",
+      "region": "Global",
+      "availability": "99.8%",
+      "models": [
+        {
+          "name": "Claude 4 Opus",
+          "context": "200K tokens",
+          "inputPrice": "€3.00 / 1M tokens",
+          "outputPrice": "€15.00 / 1M tokens",
+          "tags": [
+            "Enterprise writing",
+            "Reasoning",
+            "Long context"
+          ]
+        },
+        {
+          "name": "Claude 4 Sonnet",
+          "context": "200K tokens",
+          "inputPrice": "€1.80 / 1M tokens",
+          "outputPrice": "€9.00 / 1M tokens",
+          "tags": [
+            "Reasoning",
+            "Long context"
+          ]
+        }
+      ],
+      "tags": [
+        "Enterprise writing",
+        "Reasoning",
+        "Long context"
+      ],
+      "firstModelSlug": "claude-4-opus"
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "status": "Active",
+      "statusClass": "active",
+      "description": "Multimodal Gemini models for fast inference and cost-efficient production use.",
+      "routingLevel": "Standard",
+      "routingRole": "Multimodal and high-throughput workloads",
+      "latency": "Low",
+      "region": "Global",
+      "availability": "99.7%",
+      "models": [
+        {
+          "name": "Gemini 2.5 Pro",
+          "context": "1M tokens",
+          "inputPrice": "€1.25 / 1M tokens",
+          "outputPrice": "€5.00 / 1M tokens",
+          "tags": [
+            "Multimodal",
+            "Long context"
+          ]
+        },
+        {
+          "name": "Gemini 2.5 Flash",
+          "context": "1M tokens",
+          "inputPrice": "€0.35 / 1M tokens",
+          "outputPrice": "€1.40 / 1M tokens",
+          "tags": [
+            "Fast",
+            "Cost efficient"
+          ]
+        }
+      ],
+      "tags": [
+        "Multimodal",
+        "Long context",
+        "Fast"
+      ],
+      "firstModelSlug": "gemini-2-5-pro"
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek",
+      "status": "Ready",
+      "statusClass": "ready",
+      "description": "Cost-efficient reasoning models with strong performance for analytical tasks.",
+      "routingLevel": "Cost optimized",
+      "routingRole": "Cost-efficient reasoning and batch workloads",
+      "latency": "Medium",
+      "region": "Asia / Global",
+      "availability": "99.5%",
+      "models": [
+        {
+          "name": "DeepSeek R1",
+          "context": "64K tokens",
+          "inputPrice": "€0.55 / 1M tokens",
+          "outputPrice": "€2.20 / 1M tokens",
+          "tags": [
+            "Low cost",
+            "Reasoning"
+          ]
+        },
+        {
+          "name": "DeepSeek V3",
+          "context": "64K tokens",
+          "inputPrice": "€0.40 / 1M tokens",
+          "outputPrice": "€1.60 / 1M tokens",
+          "tags": [
+            "Low cost",
+            "China provider"
+          ]
+        }
+      ],
+      "tags": [
+        "Low cost",
+        "Reasoning",
+        "China provider"
+      ],
+      "firstModelSlug": "deepseek-r1"
+    },
+    {
+      "id": "qwen",
+      "name": "Qwen",
+      "status": "Planned",
+      "statusClass": "planned",
+      "description": "Alibaba Cloud models planned for China market and coding-focused use cases.",
+      "routingLevel": "Regional",
+      "routingRole": "China market and regional routing",
+      "latency": "Medium",
+      "region": "China / Asia",
+      "availability": "Planned Q3 2026",
+      "models": [
+        {
+          "name": "Qwen Max",
+          "context": "32K tokens",
+          "inputPrice": "€0.80 / 1M tokens",
+          "outputPrice": "€3.20 / 1M tokens",
+          "tags": [
+            "China market",
+            "Reasoning"
+          ]
+        },
+        {
+          "name": "Qwen Plus",
+          "context": "32K tokens",
+          "inputPrice": "€0.50 / 1M tokens",
+          "outputPrice": "€2.00 / 1M tokens",
+          "tags": [
+            "Cost efficient"
+          ]
+        },
+        {
+          "name": "Qwen Coder",
+          "context": "32K tokens",
+          "inputPrice": "€0.60 / 1M tokens",
+          "outputPrice": "€2.40 / 1M tokens",
+          "tags": [
+            "Coding",
+            "China market"
+          ]
+        }
+      ],
+      "tags": [
+        "China market",
+        "Reasoning",
+        "Cost efficient"
+      ],
+      "firstModelSlug": "qwen-max"
+    },
+    {
+      "id": "glm",
+      "name": "GLM",
+      "status": "Planned",
+      "statusClass": "planned",
+      "description": "Zhipu AI models for enterprise multilingual and regional deployment.",
+      "routingLevel": "Regional",
+      "routingRole": "Enterprise multilingual and China market",
+      "latency": "Medium",
+      "region": "China / Asia",
+      "availability": "Planned Q3 2026",
+      "models": [
+        {
+          "name": "GLM-4.5",
+          "context": "128K tokens",
+          "inputPrice": "€0.70 / 1M tokens",
+          "outputPrice": "€2.80 / 1M tokens",
+          "tags": [
+            "Enterprise",
+            "Multilingual"
+          ]
+        },
+        {
+          "name": "GLM-Z1",
+          "context": "128K tokens",
+          "inputPrice": "€0.55 / 1M tokens",
+          "outputPrice": "€2.20 / 1M tokens",
+          "tags": [
+            "China market",
+            "Reasoning"
+          ]
+        }
+      ],
+      "tags": [
+        "Enterprise",
+        "Multilingual",
+        "China market"
+      ],
+      "firstModelSlug": "glm-4-5"
+    },
+    {
+      "id": "mistral",
+      "name": "Mistral",
+      "status": "Planned",
+      "statusClass": "planned",
+      "description": "European provider option for enterprise and coding-focused deployments.",
+      "routingLevel": "Europe",
+      "routingRole": "Europe option and coding workloads",
+      "latency": "Low",
+      "region": "Europe",
+      "availability": "Planned Q4 2026",
+      "models": [
+        {
+          "name": "Mistral Large",
+          "context": "128K tokens",
+          "inputPrice": "€1.20 / 1M tokens",
+          "outputPrice": "€4.80 / 1M tokens",
+          "tags": [
+            "Europe option",
+            "Enterprise"
+          ]
+        },
+        {
+          "name": "Codestral",
+          "context": "32K tokens",
+          "inputPrice": "€0.90 / 1M tokens",
+          "outputPrice": "€3.60 / 1M tokens",
+          "tags": [
+            "Coding",
+            "Europe option"
+          ]
+        }
+      ],
+      "tags": [
+        "Europe option",
+        "Enterprise",
+        "Coding"
+      ],
+      "firstModelSlug": "mistral-large"
+    }
+  ],
+  "catalog": [
+    {
+      "providerId": "openai",
+      "providerName": "OpenAI",
+      "name": "GPT-5",
+      "context": "128K tokens",
+      "inputPrice": "€2.50 / 1M tokens",
+      "outputPrice": "€10.00 / 1M tokens",
+      "tags": [
+        "Premium reasoning",
+        "Coding",
+        "Multimodal"
+      ]
+    },
+    {
+      "providerId": "openai",
+      "providerName": "OpenAI",
+      "name": "GPT-4.1",
+      "context": "128K tokens",
+      "inputPrice": "€2.00 / 1M tokens",
+      "outputPrice": "€8.00 / 1M tokens",
+      "tags": [
+        "Reasoning",
+        "Coding"
+      ]
+    },
+    {
+      "providerId": "openai",
+      "providerName": "OpenAI",
+      "name": "GPT-4o",
+      "context": "128K tokens",
+      "inputPrice": "€1.50 / 1M tokens",
+      "outputPrice": "€6.00 / 1M tokens",
+      "tags": [
+        "Multimodal",
+        "Fast"
+      ]
+    },
+    {
+      "providerId": "anthropic",
+      "providerName": "Anthropic",
+      "name": "Claude 4 Opus",
+      "context": "200K tokens",
+      "inputPrice": "€3.00 / 1M tokens",
+      "outputPrice": "€15.00 / 1M tokens",
+      "tags": [
+        "Enterprise writing",
+        "Reasoning",
+        "Long context"
+      ]
+    },
+    {
+      "providerId": "anthropic",
+      "providerName": "Anthropic",
+      "name": "Claude 4 Sonnet",
+      "context": "200K tokens",
+      "inputPrice": "€1.80 / 1M tokens",
+      "outputPrice": "€9.00 / 1M tokens",
+      "tags": [
+        "Reasoning",
+        "Long context"
+      ]
+    },
+    {
+      "providerId": "google",
+      "providerName": "Google",
+      "name": "Gemini 2.5 Pro",
+      "context": "1M tokens",
+      "inputPrice": "€1.25 / 1M tokens",
+      "outputPrice": "€5.00 / 1M tokens",
+      "tags": [
+        "Multimodal",
+        "Long context"
+      ]
+    },
+    {
+      "providerId": "google",
+      "providerName": "Google",
+      "name": "Gemini 2.5 Flash",
+      "context": "1M tokens",
+      "inputPrice": "€0.35 / 1M tokens",
+      "outputPrice": "€1.40 / 1M tokens",
+      "tags": [
+        "Fast",
+        "Cost efficient"
+      ]
+    },
+    {
+      "providerId": "deepseek",
+      "providerName": "DeepSeek",
+      "name": "DeepSeek R1",
+      "context": "64K tokens",
+      "inputPrice": "€0.55 / 1M tokens",
+      "outputPrice": "€2.20 / 1M tokens",
+      "tags": [
+        "Low cost",
+        "Reasoning"
+      ]
+    },
+    {
+      "providerId": "deepseek",
+      "providerName": "DeepSeek",
+      "name": "DeepSeek V3",
+      "context": "64K tokens",
+      "inputPrice": "€0.40 / 1M tokens",
+      "outputPrice": "€1.60 / 1M tokens",
+      "tags": [
+        "Low cost",
+        "China provider"
+      ]
+    },
+    {
+      "providerId": "qwen",
+      "providerName": "Qwen",
+      "name": "Qwen Max",
+      "context": "32K tokens",
+      "inputPrice": "€0.80 / 1M tokens",
+      "outputPrice": "€3.20 / 1M tokens",
+      "tags": [
+        "China market",
+        "Reasoning"
+      ]
+    },
+    {
+      "providerId": "qwen",
+      "providerName": "Qwen",
+      "name": "Qwen Plus",
+      "context": "32K tokens",
+      "inputPrice": "€0.50 / 1M tokens",
+      "outputPrice": "€2.00 / 1M tokens",
+      "tags": [
+        "Cost efficient"
+      ]
+    },
+    {
+      "providerId": "qwen",
+      "providerName": "Qwen",
+      "name": "Qwen Coder",
+      "context": "32K tokens",
+      "inputPrice": "€0.60 / 1M tokens",
+      "outputPrice": "€2.40 / 1M tokens",
+      "tags": [
+        "Coding",
+        "China market"
+      ]
+    },
+    {
+      "providerId": "glm",
+      "providerName": "GLM",
+      "name": "GLM-4.5",
+      "context": "128K tokens",
+      "inputPrice": "€0.70 / 1M tokens",
+      "outputPrice": "€2.80 / 1M tokens",
+      "tags": [
+        "Enterprise",
+        "Multilingual"
+      ]
+    },
+    {
+      "providerId": "glm",
+      "providerName": "GLM",
+      "name": "GLM-Z1",
+      "context": "128K tokens",
+      "inputPrice": "€0.55 / 1M tokens",
+      "outputPrice": "€2.20 / 1M tokens",
+      "tags": [
+        "China market",
+        "Reasoning"
+      ]
+    },
+    {
+      "providerId": "mistral",
+      "providerName": "Mistral",
+      "name": "Mistral Large",
+      "context": "128K tokens",
+      "inputPrice": "€1.20 / 1M tokens",
+      "outputPrice": "€4.80 / 1M tokens",
+      "tags": [
+        "Europe option",
+        "Enterprise"
+      ]
+    },
+    {
+      "providerId": "mistral",
+      "providerName": "Mistral",
+      "name": "Codestral",
+      "context": "32K tokens",
+      "inputPrice": "€0.90 / 1M tokens",
+      "outputPrice": "€3.60 / 1M tokens",
+      "tags": [
+        "Coding",
+        "Europe option"
+      ]
+    }
+  ]
+}

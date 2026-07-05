@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | ZWIMA AI</title>
+  <meta name="description" content="ZWIMA AI platform console. Manage API keys, credits, usage, billing and model routing.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body class="dashboard-body" data-page="dashboard">
+  <div class="dashboard-layout">
+    <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation">
+      <a class="sidebar-logo" href="index.html">
+        <span class="logo-mark">Z</span>
+        <span>ZWIMA AI</span>
+      </a>
+      <nav class="sidebar-nav">
+        <a href="#overview" class="sidebar-link active" data-section="overview">Overview</a>
+        <a href="models.html" class="sidebar-link">Models</a>
+        <a href="apikeys.html" class="sidebar-link">API Keys</a>
+        <a href="playground.html" class="sidebar-link">Playground</a>
+        <a href="routing.html" class="sidebar-link">Intelligent Routing</a>
+        <a href="gateway.html" class="sidebar-link">API Gateway</a>
+        <a href="credits.html" class="sidebar-link">Credits</a>
+        <a href="#usage" class="sidebar-link" data-section="usage">Usage</a>
+        <a href="#billing" class="sidebar-link" data-section="billing">Billing</a>
+        <a href="models.html" class="sidebar-link">Models</a>
+        <a href="#settings" class="sidebar-link" data-section="settings">Settings</a>
+        <a href="documentation.html" class="sidebar-link">Documentation</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="index.html" class="sidebar-back">← Back to website</a>
+      </div>
+    </aside>
+
+    <div class="dashboard-main-wrap">
+      <header class="dashboard-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="dashboardSidebar">
+          <span class="sr-only">Toggle sidebar</span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="topbar-heading">
+          <h1>Dashboard</h1>
+          <p>Welcome to ZWIMA AI Platform</p>
+        </div>
+        <div class="topbar-user" id="topbarUserPanel"></div>
+      </header>
+
+      <main class="dashboard-content">
+        <section id="overview" class="dash-section">
+          <div class="dash-section-header">
+            <h2>Overview</h2>
+          </div>
+          <div class="overview-grid">
+            <article class="overview-card">
+              <span>Current Credit Balance</span>
+              <strong>12,450 API credits</strong>
+            </article>
+            <article class="overview-card">
+              <span>Monthly Token Usage</span>
+              <strong>3.2M model tokens</strong>
+            </article>
+            <article class="overview-card">
+              <span>Active API Keys</span>
+              <strong>4 business keys</strong>
+            </article>
+            <article class="overview-card">
+              <span>Estimated Cost</span>
+              <strong>€1,840 this period</strong>
+            </article>
+            <article class="overview-card">
+              <span>Billing Status</span>
+              <strong>Invoice ready</strong>
+            </article>
+          </div>
+
+          <div class="dash-section-header" style="margin-top: 28px;">
+            <h2>Recent Activity</h2>
+          </div>
+          <div class="activity-list">
+            <article class="activity-item">
+              <span class="activity-type">API Key Created</span>
+              <p>Production Key added for OpenAI routing.</p>
+              <time class="activity-time">Today, 09:14</time>
+            </article>
+            <article class="activity-item">
+              <span class="activity-type">Credits Purchased</span>
+              <p>€500 credit top-up recorded on account.</p>
+              <time class="activity-time">Yesterday, 16:42</time>
+            </article>
+            <article class="activity-item">
+              <span class="activity-type">Provider Updated</span>
+              <p>DeepSeek routing status changed to Ready.</p>
+              <time class="activity-time">Jun 12, 2026</time>
+            </article>
+            <article class="activity-item">
+              <span class="activity-type">New Model Released</span>
+              <p>GPT-5 now available in Models Marketplace.</p>
+              <time class="activity-time">Jun 10, 2026</time>
+            </article>
+          </div>
+        </section>
+
+        <section id="quick-start" class="dash-section">
+          <div class="dash-section-header">
+            <h2>Quick Start</h2>
+          </div>
+          <div class="quick-start-grid">
+            <a class="quick-start-card" href="models.html">
+              <span class="quick-start-step">Step 1</span>
+              <strong>Choose a model</strong>
+              <p>Browse the Models Marketplace and select a provider.</p>
+            </a>
+            <a class="quick-start-card" href="apikeys.html">
+              <span class="quick-start-step">Step 2</span>
+              <strong>Generate an API key</strong>
+              <p>Create a business key for production or testing environments.</p>
+            </a>
+            <a class="quick-start-card" href="credits.html">
+              <span class="quick-start-step">Step 3</span>
+              <strong>Add credits</strong>
+              <p>Top up your unified API credit balance through your account contact.</p>
+            </a>
+            <a class="quick-start-card" href="playground.html">
+              <span class="quick-start-step">Step 4</span>
+              <strong>Start calling the API</strong>
+              <p>Test models in the Playground or send requests via the ZWIMA API.</p>
+            </a>
+          </div>
+        </section>
+
+        <section id="api-keys" class="dash-section">
+          <div class="dash-section-header">
+            <h2>API Keys</h2>
+            <a class="button button-primary" href="apikeys.html?create=1">Create API Key</a>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Key Prefix</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Last Used</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Production Key</td>
+                  <td class="muted">zwima_live_8f29...</td>
+                  <td><span class="status-pill active">Active</span></td>
+                  <td class="muted">2026-06-14</td>
+                  <td class="muted">Today</td>
+                </tr>
+                <tr>
+                  <td>Testing Key</td>
+                  <td class="muted">zwima_live_3c91...</td>
+                  <td><span class="status-pill active">Active</span></td>
+                  <td class="muted">2026-06-13</td>
+                  <td class="muted">Yesterday</td>
+                </tr>
+                <tr>
+                  <td>Development Key</td>
+                  <td class="muted">zwima_live_a4d8...</td>
+                  <td><span class="status-pill active">Active</span></td>
+                  <td class="muted">2026-06-10</td>
+                  <td class="muted">2 days ago</td>
+                </tr>
+                <tr>
+                  <td>Legacy Key</td>
+                  <td class="muted">zwima_live_7b42...</td>
+                  <td><span class="status-pill disabled">Disabled</span></td>
+                  <td class="muted">2026-06-01</td>
+                  <td class="muted">7 days ago</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="apikeys-dashboard-link"><a href="apikeys.html">Manage all API keys →</a></p>
+        </section>
+
+        <section id="credits" class="dash-section">
+          <div class="dash-section-header">
+            <h2>Credits</h2>
+          </div>
+          <div class="placeholder-panel">
+            <p>Your prepaid API credit balance is managed centrally. Current balance: <strong>12,450 API credits</strong>. <a href="credits.html">Manage credits</a> or contact your ZWIMA AI account representative.</p>
+          </div>
+        </section>
+
+        <section id="usage" class="dash-section">
+          <div class="dash-section-header">
+            <h2>Usage</h2>
+          </div>
+          <div class="placeholder-panel">
+            <p>Monthly token usage: <strong>3.2M model tokens</strong>. Detailed usage breakdown by provider and model will be available in the next console release.</p>
+          </div>
+        </section>
+
+        <section id="billing" class="dash-section">
+          <div class="dash-section-header">
+            <h2>Billing Preview</h2>
+          </div>
+          <div class="billing-panel">
+            <div class="billing-row">
+              <span>Current plan</span>
+              <strong>Early Access</strong>
+            </div>
+            <div class="billing-row">
+              <span>Payment method</span>
+              <strong>Manual invoice</strong>
+            </div>
+            <div class="billing-row">
+              <span>Next invoice</span>
+              <strong>Not generated</strong>
+            </div>
+            <div class="billing-row">
+              <span>Billing email</span>
+              <strong>hello@zwima-group.info</strong>
+            </div>
+            <div class="billing-actions">
+            <a class="button button-secondary" href="credits.html">Manage Credits</a>
+            </div>
+          </div>
+        </section>
+
+        <section id="models" class="dash-section">
+          <div class="dash-section-header">
+            <h2>Supported Models</h2>
+          </div>
+          <div class="models-grid">
+            <article class="model-card">
+              <h3>OpenAI</h3>
+              <div class="model-meta">
+                <span class="status-pill active">Active</span>
+                <span>Premium reasoning</span>
+              </div>
+            </article>
+            <article class="model-card">
+              <h3>Anthropic Claude</h3>
+              <div class="model-meta">
+                <span class="status-pill active">Active</span>
+                <span>Enterprise writing</span>
+              </div>
+            </article>
+            <article class="model-card">
+              <h3>Google Gemini</h3>
+              <div class="model-meta">
+                <span class="status-pill active">Active</span>
+                <span>Multimodal</span>
+              </div>
+            </article>
+            <article class="model-card">
+              <h3>DeepSeek</h3>
+              <div class="model-meta">
+                <span class="status-pill ready">Ready</span>
+                <span>Cost efficient</span>
+              </div>
+            </article>
+            <article class="model-card">
+              <h3>Qwen</h3>
+              <div class="model-meta">
+                <span class="status-pill planned">Planned</span>
+                <span>China market</span>
+              </div>
+            </article>
+            <article class="model-card">
+              <h3>GLM</h3>
+              <div class="model-meta">
+                <span class="status-pill planned">Planned</span>
+                <span>China market</span>
+              </div>
+            </article>
+            <article class="model-card">
+              <h3>Mistral</h3>
+              <div class="model-meta">
+                <span class="status-pill planned">Planned</span>
+                <span>Europe option</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="settings" class="dash-section">
+          <div class="dash-section-header">
+            <h2>Settings</h2>
+          </div>
+          <div class="placeholder-panel">
+            <p>Account settings, notification preferences and team access controls will be available in a future release.</p>
+          </div>
+        </section>
+
+        <section id="documentation" class="dash-section">
+          <div class="dash-section-header">
+            <h2>Documentation</h2>
+            <a class="button button-secondary" href="documentation.html">View API Docs</a>
+          </div>
+          <div class="placeholder-panel">
+            <p>API reference, integration guides and routing documentation are available in the <a href="documentation.html">API Documentation</a>. For early access support, contact <a href="mailto:hello@zwima-group.info">hello@zwima-group.info</a>.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth/permissionManager.js"></script>
+  <script src="auth/jwtManager.js"></script>
+  <script src="auth/sessionManager.js"></script>
+  <script src="auth/authEngine.js"></script>
+  <script src="auth/authGuard.js"></script>
+  <script src="gateway/gatewayConfig.js"></script>
+  <script src="gateway/adapters/BaseProviderAdapter.js"></script>
+  <script src="gateway/adapters/OpenAIAdapter.js"></script>
+  <script src="gateway/adapters/AnthropicAdapter.js"></script>
+  <script src="gateway/adapters/GoogleGeminiAdapter.js"></script>
+  <script src="gateway/adapters/DeepSeekAdapter.js"></script>
+  <script src="gateway/adapters/QwenAdapter.js"></script>
+  <script src="gateway/adapters/MistralAdapter.js"></script>
+  <script src="gateway/adapters/OpenRouterAdapter.js"></script>
+  <script src="gateway/adapters/OpenAICompatibleAdapter.js"></script>
+  <script src="gateway/adapters/index.js"></script>
+  <script src="gateway/providerManager.js"></script>
+  <script src="gateway/routingEngine.js"></script>
+  <script src="gateway/healthMonitor.js"></script>
+  <script src="gateway/gateway.js"></script>
+  <script src="utils/apiClient.js"></script>
+  <script src="database/seed.js"></script>
+  <script src="database/adapters/MockAdapter.js"></script>
+  <script src="database/adapters/SQLiteAdapter.js"></script>
+  <script src="database/adapters/PostgresAdapter.js"></script>
+  <script src="database/DatabaseAdapter.js"></script>
+  <script src="database/health.js"></script>
+  <script src="database/repositories/BaseRepository.js"></script>
+  <script src="database/repositories/ProviderRepository.js"></script>
+  <script src="database/repositories/ModelRepository.js"></script>
+  <script src="database/repositories/ApiKeyRepository.js"></script>
+  <script src="database/repositories/CreditRepository.js"></script>
+  <script src="database/repositories/BillingRepository.js"></script>
+  <script src="database/repositories/UserRepository.js"></script>
+  <script src="database/repositories/AuthRepository.js"></script>
+  <script src="database/repositories/RoutingRepository.js"></script>
+  <script src="database/repositories/LogRepository.js"></script>
+  <script src="database/repositories/SettingsRepository.js"></script>
+  <script src="database/repositories/GatewayRepository.js"></script>
+  <script src="database/models/index.js"></script>
+  <script src="database/index.js"></script>
+  <script src="utils/constants.js"></script>
+  <script src="utils/storage.js"></script>
+  <script src="utils/format.js"></script>
+  <script src="utils/validators.js"></script>
+  <script src="components/modal.js"></script>
+  <script src="components/toast.js"></script>
+  <script src="components/table.js"></script>
+  <script src="components/loading.js"></script>
+  <script src="components/empty.js"></script>
+  <script src="layouts/sidebar.js"></script>
+  <script src="layouts/header.js"></script>
+  <script src="layouts/footer.js"></script>
+  <script src="services/providerService.js"></script>
+  <script src="services/userService.js"></script>
+  <script src="services/authService.js"></script>
+  <script src="services/billingService.js"></script>
+  <script src="services/routingService.js"></script>
+  <script src="services/apiService.js"></script>
+  <script src="services/gatewayService.js"></script>
+  <script src="platform-data.js"></script>
+  <script src="platform.js"></script>
+  <script src="user-session.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

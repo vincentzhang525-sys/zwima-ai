@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Gateway | ZWIMA AI</title>
+  <meta name="description" content="ZWIMA AI unified API gateway. One API, multiple providers, smart routing.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="gateway.css">
+</head>
+<body class="dashboard-body" data-page="gateway">
+  <div class="dashboard-layout">
+    <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation">
+      <a class="sidebar-logo" href="index.html">
+        <span class="logo-mark">Z</span>
+        <span>ZWIMA AI</span>
+      </a>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html#overview" class="sidebar-link">Overview</a>
+        <a href="models.html" class="sidebar-link">Models</a>
+        <a href="apikeys.html" class="sidebar-link">API Keys</a>
+        <a href="playground.html" class="sidebar-link">Playground</a>
+        <a href="routing.html" class="sidebar-link">Intelligent Routing</a>
+        <a href="gateway.html" class="sidebar-link active" aria-current="page">API Gateway</a>
+        <a href="credits.html" class="sidebar-link">Credits</a>
+        <a href="dashboard.html#usage" class="sidebar-link">Usage</a>
+        <a href="dashboard.html#billing" class="sidebar-link">Billing</a>
+        <a href="dashboard.html#settings" class="sidebar-link">Settings</a>
+        <a href="documentation.html" class="sidebar-link">Documentation</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="index.html" class="sidebar-back">??Back to website</a>
+      </div>
+    </aside>
+
+    <div class="dashboard-main-wrap">
+      <header class="dashboard-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="dashboardSidebar">
+          <span class="sr-only">Toggle sidebar</span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="topbar-heading">
+          <h1>Unified AI Gateway</h1>
+          <p>One API ? Multiple Providers ? Smart Routing</p>
+        </div>
+        <div class="topbar-user" id="topbarUserPanel"></div>
+      </header>
+
+      <main class="dashboard-content gateway-content">
+        <section class="dash-section gateway-panel">
+          <h2>Gateway Endpoint</h2>
+          <div class="endpoint-row">
+            <code id="gatewayEndpoint">https://api.zwima.ai/v1/chat/completions</code>
+            <button class="button button-secondary button-sm" type="button" id="copyEndpointBtn">Copy</button>
+          </div>
+        </section>
+
+        <div class="gateway-grid">
+          <section class="dash-section gateway-panel">
+            <h2>API Request Example</h2>
+            <dl class="request-spec">
+              <div><dt>Method</dt><dd><code>POST</code></dd></div>
+              <div><dt>Authorization</dt><dd><code>Bearer xxxxxxxxx</code></dd></div>
+              <div><dt>Content-Type</dt><dd><code>application/json</code></dd></div>
+            </dl>
+            <pre class="code-block"><code>{
+  "model": "openai/gpt-5",
+  "messages": [
+    { "role": "user", "content": "Hello, ZWIMA AI." }
+  ],
+  "temperature": 0.7,
+  "max_tokens": 2048
+}</code></pre>
+            <ul class="request-fields">
+              <li><strong>Model</strong> ??Provider-prefixed model identifier</li>
+              <li><strong>Messages</strong> ??Chat message array</li>
+              <li><strong>Temperature</strong> ??Sampling temperature (0??)</li>
+              <li><strong>Max Tokens</strong> ??Maximum output tokens</li>
+            </ul>
+          </section>
+
+          <section class="dash-section gateway-panel">
+            <h2>Gateway Statistics</h2>
+            <div class="gateway-stats-grid">
+              <article class="overview-card">
+                <span>Today's Requests</span>
+                <strong id="statRequests">1,248</strong>
+              </article>
+              <article class="overview-card">
+                <span>Average Latency</span>
+                <strong id="statLatency">248 ms</strong>
+              </article>
+              <article class="overview-card">
+                <span>Success Rate</span>
+                <strong id="statSuccess">99.6%</strong>
+              </article>
+              <article class="overview-card">
+                <span>Token Usage</span>
+                <strong id="statTokens">3.2M</strong>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <section class="dash-section gateway-panel">
+          <h2>Code Examples</h2>
+          <div class="code-tabs" role="tablist" id="codeTabs"></div>
+          <pre class="code-block code-example-block"><code id="codeExample"></code></pre>
+        </section>
+
+        <div class="gateway-grid">
+          <section class="dash-section gateway-panel">
+            <h2>Supported Providers</h2>
+            <ul class="provider-status-list" id="providerStatusList"></ul>
+          </section>
+
+          <section class="dash-section gateway-panel">
+            <h2>API Health</h2>
+            <ul class="health-list" id="healthList"></ul>
+          </section>
+        </div>
+
+        <section class="dash-section gateway-panel">
+          <h2>Rate Limits</h2>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Plan</th>
+                  <th>Requests / min</th>
+                  <th>Tokens / day</th>
+                  <th>Concurrent</th>
+                </tr>
+              </thead>
+              <tbody id="rateLimitsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dash-section gateway-panel">
+          <h2>Request Logs</h2>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Endpoint</th>
+                  <th>Provider</th>
+                  <th>Latency</th>
+                  <th>Status</th>
+                  <th>Tokens</th>
+                </tr>
+              </thead>
+              <tbody id="requestLogsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dash-section gateway-panel">
+          <h2>Generate SDK</h2>
+          <div class="sdk-actions">
+            <button class="button button-secondary" type="button" data-sdk="Python">Download Python SDK</button>
+            <button class="button button-secondary" type="button" data-sdk="JavaScript">Download JS SDK</button>
+            <button class="button button-secondary" type="button" data-sdk="PHP">Download PHP SDK</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="auth/permissionManager.js"></script>
+  <script src="auth/jwtManager.js"></script>
+  <script src="auth/sessionManager.js"></script>
+  <script src="auth/authEngine.js"></script>
+  <script src="auth/authGuard.js"></script>
+  <script src="gateway/gatewayConfig.js"></script>
+  <script src="gateway/adapters/BaseProviderAdapter.js"></script>
+  <script src="gateway/adapters/OpenAIAdapter.js"></script>
+  <script src="gateway/adapters/AnthropicAdapter.js"></script>
+  <script src="gateway/adapters/GoogleGeminiAdapter.js"></script>
+  <script src="gateway/adapters/DeepSeekAdapter.js"></script>
+  <script src="gateway/adapters/QwenAdapter.js"></script>
+  <script src="gateway/adapters/MistralAdapter.js"></script>
+  <script src="gateway/adapters/OpenRouterAdapter.js"></script>
+  <script src="gateway/adapters/OpenAICompatibleAdapter.js"></script>
+  <script src="gateway/adapters/index.js"></script>
+  <script src="gateway/providerManager.js"></script>
+  <script src="gateway/routingEngine.js"></script>
+  <script src="gateway/healthMonitor.js"></script>
+  <script src="gateway/gateway.js"></script>
+  <script src="utils/apiClient.js"></script>
+  <script src="database/seed.js"></script>
+  <script src="database/adapters/MockAdapter.js"></script>
+  <script src="database/adapters/SQLiteAdapter.js"></script>
+  <script src="database/adapters/PostgresAdapter.js"></script>
+  <script src="database/DatabaseAdapter.js"></script>
+  <script src="database/health.js"></script>
+  <script src="database/repositories/BaseRepository.js"></script>
+  <script src="database/repositories/ProviderRepository.js"></script>
+  <script src="database/repositories/ModelRepository.js"></script>
+  <script src="database/repositories/ApiKeyRepository.js"></script>
+  <script src="database/repositories/CreditRepository.js"></script>
+  <script src="database/repositories/BillingRepository.js"></script>
+  <script src="database/repositories/UserRepository.js"></script>
+  <script src="database/repositories/AuthRepository.js"></script>
+  <script src="database/repositories/RoutingRepository.js"></script>
+  <script src="database/repositories/LogRepository.js"></script>
+  <script src="database/repositories/SettingsRepository.js"></script>
+  <script src="database/repositories/GatewayRepository.js"></script>
+  <script src="database/models/index.js"></script>
+  <script src="database/index.js"></script>
+  <script src="utils/constants.js"></script>
+  <script src="utils/storage.js"></script>
+  <script src="utils/format.js"></script>
+  <script src="utils/validators.js"></script>
+  <script src="components/modal.js"></script>
+  <script src="components/toast.js"></script>
+  <script src="components/table.js"></script>
+  <script src="components/loading.js"></script>
+  <script src="components/empty.js"></script>
+  <script src="layouts/sidebar.js"></script>
+  <script src="layouts/header.js"></script>
+  <script src="layouts/footer.js"></script>
+  <script src="services/providerService.js"></script>
+  <script src="services/userService.js"></script>
+  <script src="services/authService.js"></script>
+  <script src="services/billingService.js"></script>
+  <script src="services/routingService.js"></script>
+  <script src="services/apiService.js"></script>
+  <script src="services/gatewayService.js"></script>
+  <script src="platform-data.js"></script>
+  <script src="platform.js"></script>
+  <script src="user-session.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="gateway.js"></script>
+</body>
+</html>

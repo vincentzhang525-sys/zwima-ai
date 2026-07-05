@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima Credits Engine | Internal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+  <style>
+    .formula-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .formula-card,
+    .credit-example,
+    .margin-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 20px;
+    }
+
+    .formula-card h3,
+    .credit-example h3,
+    .margin-card h3 {
+      color: var(--blue-dark);
+      font-size: 14px;
+      margin: 0 0 10px;
+    }
+
+    .formula-card code {
+      background: var(--gray-50);
+      border-radius: var(--radius);
+      color: var(--blue-dark);
+      display: block;
+      font-family: "Consolas", monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 12px;
+      white-space: normal;
+    }
+
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .credit-example strong {
+      color: var(--blue-dark);
+      display: block;
+      font-size: 1.7rem;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .credit-example span {
+      color: var(--gray-600);
+      display: block;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .margin-visual {
+      display: grid;
+      gap: 14px;
+    }
+
+    .margin-row {
+      display: grid;
+      grid-template-columns: 150px 1fr 80px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .margin-label,
+    .margin-value {
+      color: var(--gray-600);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .margin-value {
+      color: var(--blue-dark);
+      text-align: right;
+    }
+
+    .margin-track {
+      background: var(--gray-50);
+      border-radius: 999px;
+      height: 14px;
+      overflow: hidden;
+    }
+
+    .margin-fill {
+      background: linear-gradient(90deg, #2d7a52, #1f5a3c);
+      border-radius: inherit;
+      display: block;
+      height: 100%;
+    }
+
+    .credit-note {
+      color: var(--gray-400);
+      font-size: 12px;
+      line-height: 1.6;
+      margin: 14px 0 0;
+    }
+
+    .credits-table-wrap {
+      overflow-x: auto;
+    }
+
+    .credits-table {
+      min-width: 1180px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .pricing-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      padding: 20px;
+    }
+
+    .pricing-card h3 {
+      color: var(--blue-dark);
+      font-size: 14px;
+      margin: 0 0 8px;
+    }
+
+    .pricing-card strong {
+      color: var(--blue-dark);
+      display: block;
+      font-size: 1.7rem;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .pricing-card span {
+      color: var(--gray-600);
+      display: block;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .margin-pill {
+      background: var(--blue-light);
+      border-radius: 999px;
+      color: var(--blue-dark);
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 9px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1024px) {
+      .formula-grid,
+      .examples-grid,
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .margin-row {
+        grid-template-columns: 1fr;
+      }
+
+      .margin-value {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge-finance">Credits · Internal</span>
+        <a href="dashboard.html" class="arch-back">Back to Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Credits Engine</span>
+        <a href="#definition">Credit Definition</a>
+        <a href="#model-pricing">Unified Cost Table</a>
+        <a href="#formulas">Formulas</a>
+        <a href="#examples">Margin Examples</a>
+        <a href="#margin">Margin Visual</a>
+        <a href="#recommendations">Recommendations</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Internal Documentation</span>
+        <a href="credits-engine.html" class="active">Credits Engine</a>
+        <a href="provider-catalog.html">Provider Catalog</a>
+        <a href="customer-simulation.html">Revenue Simulation</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="lead-database.html">Lead Database</a>
+      </nav>
+      <div class="arch-meta">
+        <span>Internal document only</span>
+        <span>Robots: noindex, nofollow</span>
+      </div>
+    </aside>
+
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Billing Logic</p>
+          <h1>Zwima Credits Engine</h1>
+          <p class="arch-subtitle">Internal billing model for converting provider API costs into Zwima Credits, margins, and customer-facing packages.</p>
+        </div>
+      </header>
+
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p><strong>1 Credit = internal billing unit.</strong> Credits translate provider model usage into a simple customer-facing balance while preserving margin control across different models.</p>
+        </div>
+
+        <section id="definition" class="arch-section">
+          <h2>Credit Definition</h2>
+          <div class="arch-card">
+            <p><strong>1 Credit = internal billing unit.</strong> Credits normalize different provider prices into one Zwima billing system. Customers see credits; internally Zwima maps those credits to real provider token costs and target margins.</p>
+            <p class="spec-note">Unified formula: 1 Credit = internal unit. Model Cost = 80% input token cost + 20% output token cost. Credits Cost = Model Cost / Zwima Credits. Customer Price = Credits Cost × target multiplier.</p>
+          </div>
+        </section>
+
+        <section id="model-pricing" class="arch-section">
+          <h2>Unified Credit Formula Table</h2>
+          <div class="arch-card">
+            <div class="credits-table-wrap">
+              <table class="arch-table credits-table">
+                <thead>
+                  <tr>
+                    <th>Provider</th>
+                    <th>Model</th>
+                    <th>Model Cost</th>
+                    <th>Zwima Credits</th>
+                    <th>Credits Cost</th>
+                    <th>Customer Price 300%</th>
+                    <th>Gross Margin 300%</th>
+                    <th>Customer Price 500%</th>
+                    <th>Gross Margin 500%</th>
+                    <th>Customer Price 1000%</th>
+                    <th>Gross Margin 1000%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>OpenAI</td><td>GPT-4.1</td><td>$3.20</td><td>12</td><td>$0.267</td><td>$1.07</td><td>75.0%</td><td>$1.60</td><td>83.3%</td><td>$2.93</td><td>90.9%</td></tr>
+                  <tr><td>OpenAI</td><td>GPT-4.1 Mini</td><td>$0.64</td><td>3</td><td>$0.213</td><td>$0.85</td><td>75.0%</td><td>$1.28</td><td>83.3%</td><td>$2.35</td><td>90.9%</td></tr>
+                  <tr><td>OpenAI</td><td>GPT-4o</td><td>$4.00</td><td>14</td><td>$0.286</td><td>$1.14</td><td>75.0%</td><td>$1.71</td><td>83.3%</td><td>$3.14</td><td>90.9%</td></tr>
+                  <tr><td>OpenAI</td><td>GPT-4o Mini</td><td>$0.24</td><td>2</td><td>$0.120</td><td>$0.48</td><td>75.0%</td><td>$0.72</td><td>83.3%</td><td>$1.32</td><td>90.9%</td></tr>
+                  <tr><td>Anthropic</td><td>Claude Opus 4.8</td><td>$9.00</td><td>38</td><td>$0.237</td><td>$0.95</td><td>75.0%</td><td>$1.42</td><td>83.3%</td><td>$2.61</td><td>90.9%</td></tr>
+                  <tr><td>Anthropic</td><td>Claude Sonnet 4.6</td><td>$5.40</td><td>23</td><td>$0.235</td><td>$0.94</td><td>75.0%</td><td>$1.41</td><td>83.3%</td><td>$2.58</td><td>90.9%</td></tr>
+                  <tr><td>Anthropic</td><td>Claude Haiku 4.5</td><td>$1.80</td><td>8</td><td>$0.225</td><td>$0.90</td><td>75.0%</td><td>$1.35</td><td>83.3%</td><td>$2.48</td><td>90.9%</td></tr>
+                  <tr><td>Google Gemini</td><td>Gemini 2.5 Pro</td><td>$3.00</td><td>16</td><td>$0.188</td><td>$0.75</td><td>75.0%</td><td>$1.13</td><td>83.3%</td><td>$2.06</td><td>90.9%</td></tr>
+                  <tr><td>Google Gemini</td><td>Gemini 2.5 Flash</td><td>$0.74</td><td>4</td><td>$0.185</td><td>$0.74</td><td>75.0%</td><td>$1.11</td><td>83.3%</td><td>$2.04</td><td>90.9%</td></tr>
+                  <tr><td>DeepSeek</td><td>DeepSeek V3</td><td>$0.168</td><td>1</td><td>$0.168</td><td>$0.67</td><td>75.0%</td><td>$1.01</td><td>83.3%</td><td>$1.85</td><td>90.9%</td></tr>
+                  <tr><td>DeepSeek</td><td>DeepSeek R1</td><td>$0.168</td><td>1</td><td>$0.168</td><td>$0.67</td><td>75.0%</td><td>$1.01</td><td>83.3%</td><td>$1.85</td><td>90.9%</td></tr>
+                  <tr><td>Alibaba Qwen</td><td>Qwen Max</td><td>$2.56</td><td>10</td><td>$0.256</td><td>$1.02</td><td>75.0%</td><td>$1.54</td><td>83.3%</td><td>$2.82</td><td>90.9%</td></tr>
+                  <tr><td>Alibaba Qwen</td><td>Qwen Plus</td><td>$0.56</td><td>3</td><td>$0.187</td><td>$0.75</td><td>75.0%</td><td>$1.12</td><td>83.3%</td><td>$2.05</td><td>90.9%</td></tr>
+                  <tr><td>Alibaba Qwen</td><td>Qwen Turbo</td><td>$0.08</td><td>1</td><td>$0.080</td><td>$0.32</td><td>75.0%</td><td>$0.48</td><td>83.3%</td><td>$0.88</td><td>90.9%</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="credit-note">Model Cost is per 1M blended tokens. Gross margin is revenue-basis margin: (Customer Price - Credits Cost) / Customer Price.</p>
+          </div>
+        </section>
+
+        <section id="formulas" class="arch-section">
+          <h2>Formulas</h2>
+          <div class="formula-grid">
+            <div class="formula-card">
+              <h3>Blended API Cost</h3>
+              <code>blended_cost = input_price × 80% + output_price × 20%</code>
+            </div>
+            <div class="formula-card">
+              <h3>Credits Cost</h3>
+              <code>credits_cost = model_cost / zwima_credits</code>
+            </div>
+            <div class="formula-card">
+              <h3>Customer Price + Margin</h3>
+              <code>customer_price = credits_cost × multiplier
+gross_margin = (customer_price - credits_cost) / customer_price</code>
+            </div>
+          </div>
+        </section>
+
+        <section id="examples" class="arch-section">
+          <h2>Credit Package Examples</h2>
+          <div class="arch-card">
+            <p class="section-lead">Examples use a planning Credits Cost of $0.25 per credit.</p>
+            <table class="arch-table">
+              <thead>
+                <tr>
+                  <th>Credits</th>
+                  <th>Internal Cost</th>
+                  <th>Customer Price 300%</th>
+                  <th>Gross Margin</th>
+                  <th>Customer Price 500%</th>
+                  <th>Gross Margin</th>
+                  <th>Customer Price 1000%</th>
+                  <th>Gross Margin</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>100 Credits</td><td>$25</td><td>$100</td><td>75.0%</td><td>$150</td><td>83.3%</td><td>$275</td><td>90.9%</td></tr>
+                <tr><td>1000 Credits</td><td>$250</td><td>$1,000</td><td>75.0%</td><td>$1,500</td><td>83.3%</td><td>$2,750</td><td>90.9%</td></tr>
+                <tr><td>10000 Credits</td><td>$2,500</td><td>$10,000</td><td>75.0%</td><td>$15,000</td><td>83.3%</td><td>$27,500</td><td>90.9%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="margin" class="arch-section">
+          <h2>Visualize Gross Margin</h2>
+          <div class="margin-card">
+            <div class="margin-visual">
+              <div class="margin-row">
+                <span class="margin-label">300% target</span>
+                <span class="margin-track"><span class="margin-fill" style="width: 75%"></span></span>
+                <span class="margin-value">75.0%</span>
+              </div>
+              <div class="margin-row">
+                <span class="margin-label">500% target</span>
+                <span class="margin-track"><span class="margin-fill" style="width: 83.3%"></span></span>
+                <span class="margin-value">83.3%</span>
+              </div>
+              <div class="margin-row">
+                <span class="margin-label">1000% target</span>
+                <span class="margin-track"><span class="margin-fill" style="width: 90.9%"></span></span>
+                <span class="margin-value">90.9%</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="recommendations" class="arch-section">
+          <h2>Pricing Recommendations</h2>
+          <div class="arch-card">
+            <p class="section-lead">Recommended customer credit prices should be based on the model access tier. This prevents cheap models from subsidizing premium reasoning models.</p>
+            <div class="pricing-grid">
+              <div class="pricing-card">
+                <h3>Budget Credits</h3>
+                <strong>$0.40 / credit</strong>
+                <span>For Qwen Turbo, GPT-4o Mini, DeepSeek V3/R1, and other low-cost routing.</span>
+                <span><span class="margin-pill">300%+ target</span></span>
+              </div>
+              <div class="pricing-card">
+                <h3>Standard Credits</h3>
+                <strong>$1.00 / credit</strong>
+                <span>Default customer-facing credit price for mixed model access.</span>
+                <span><span class="margin-pill">300% on high-cost average</span></span>
+              </div>
+              <div class="pricing-card">
+                <h3>Premium Credits</h3>
+                <strong>$1.75 / credit</strong>
+                <span>For unrestricted access to GPT-4o, GPT-4.1, Claude Opus, Gemini 2.5 Pro, and premium routing.</span>
+                <span><span class="margin-pill">500% target</span></span>
+              </div>
+            </div>
+            <table class="arch-table">
+              <thead>
+                <tr>
+                  <th>Package</th>
+                  <th>Budget</th>
+                  <th>Standard</th>
+                  <th>Premium</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>100 Credits</td><td>$40</td><td>$100</td><td>$175</td></tr>
+                <tr><td>1000 Credits</td><td>$400</td><td>$1,000</td><td>$1,750</td></tr>
+                <tr><td>10000 Credits</td><td>$4,000</td><td>$10,000</td><td>$17,500</td></tr>
+              </tbody>
+            </table>
+            <p class="credit-note">Recommendation: launch with Standard Credits at $1.00 per credit, then add Budget and Premium routing tiers after usage data confirms real token mix and customer willingness to pay.</p>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima Credits Engine · Internal Document · Noindex</p>
+          <p class="arch-footer-links">
+            <a href="provider-catalog.html">Provider Catalog</a><span>|</span>
+            <a href="customer-simulation.html">Revenue Simulation</a><span>|</span>
+            <a href="pricing-sheet.html">Pricing Sheet</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+
+  <script src="architecture.js"></script>
+</body>
+</html>

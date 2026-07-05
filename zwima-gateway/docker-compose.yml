@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: zwima
+      POSTGRES_PASSWORD: zwima
+      POSTGRES_DB: zwima_gateway
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zwima -d zwima_gateway"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://zwima:zwima@db:5432/zwima_gateway
+      JWT_SECRET: dev-jwt-secret-change-in-production
+      ADMIN_SECRET: dev-admin-secret
+      ADMIN_EMAIL: admin@zwima.local
+      ADMIN_PASSWORD: admin123456
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MOCK_OPENAI: ${MOCK_OPENAI:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

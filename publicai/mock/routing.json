@@ -1,0 +1,28 @@
+{
+  "rules": [
+    { "condition": "If Prompt > 5000 tokens", "target": "Claude" },
+    { "condition": "If Image", "target": "OpenAI" },
+    { "condition": "If Coding", "target": "DeepSeek" },
+    { "condition": "If Translation", "target": "Qwen" },
+    { "condition": "If Creative Writing", "target": "Claude" },
+    { "condition": "If Cheap Mode", "target": "OpenRouter" }
+  ],
+  "providerPriority": ["OpenAI", "Claude", "Gemini", "DeepSeek", "Qwen", "Mistral", "OpenRouter"],
+  "routingLog": [
+    { "time": "14:32:08", "request": "Summarize quarterly report...", "provider": "Claude", "latency": "312 ms", "status": "Routed" },
+    { "time": "14:31:54", "request": "Generate Python API client...", "provider": "DeepSeek", "latency": "198 ms", "status": "Routed" },
+    { "time": "14:31:41", "request": "Translate contract to German...", "provider": "Qwen", "latency": "276 ms", "status": "Routed" },
+    { "time": "14:31:22", "request": "Analyze dashboard image...", "provider": "OpenAI", "latency": "341 ms", "status": "Routed" },
+    { "time": "14:30:58", "request": "Draft marketing copy...", "provider": "Claude", "latency": "289 ms", "status": "Fallback" },
+    { "time": "14:30:44", "request": "Low-cost batch inference...", "provider": "OpenRouter", "latency": "412 ms", "status": "Routed" }
+  ],
+  "statusBase": {
+    "OpenAI": { "latency": [280, 360], "availability": [99.6, 99.9], "cost": ["€0.12", "€0.14"] },
+    "Claude": { "latency": [300, 380], "availability": [99.4, 99.8], "cost": ["€0.14", "€0.16"] },
+    "Gemini": { "latency": [240, 320], "availability": [99.5, 99.8], "cost": ["€0.09", "€0.11"] },
+    "DeepSeek": { "latency": [190, 260], "availability": [99.2, 99.6], "cost": ["€0.05", "€0.07"] },
+    "Qwen": { "latency": [260, 340], "availability": [98.8, 99.4], "cost": ["€0.06", "€0.08"] },
+    "Mistral": { "latency": [250, 330], "availability": [99.0, 99.5], "cost": ["€0.08", "€0.10"] },
+    "OpenRouter": { "latency": [350, 450], "availability": [98.5, 99.2], "cost": ["€0.04", "€0.06"] }
+  }
+}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima Cost Sheet V1 | Intern</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge strategy-badge-finance">Kosten · Intern</span>
+        <a href="dashboard.html" class="arch-back">← Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Provider</span>
+        <a href="#openai">OpenAI</a>
+        <a href="#claude">Claude</a>
+        <a href="#gemini">Gemini</a>
+        <a href="#deepseek">DeepSeek</a>
+        <a href="#qwen">Qwen</a>
+        <a href="#margin">Margin Strategy</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Interne Dokumentation</span>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="supplier-due-diligence.html">Supplier Due Diligence</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html" class="active">Cost Sheet</a>
+        <a href="mvp.html">MVP V0.1</a>
+        <a href="architecture.html">Architecture V1</a>
+      </nav>
+      <div class="arch-meta"><span>V1 · Platzhalter-Preise</span></div>
+    </aside>
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Menü"><span></span><span></span><span></span></button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Provider-Kosten</p>
+          <h1>Zwima Cost Sheet V1</h1>
+          <p class="arch-subtitle">Interne Kostenbasis für AI credits Kalkulation</p>
+        </div>
+      </header>
+      <article class="arch-content">
+        <div class="arch-card strategy-hero-card">
+          <p>Provider-Kosten als Grundlage für Credit-Faktoren im <strong>unified API gateway</strong>. Preise als <strong>Platzhalter</strong> – vor Go-Live mit aktuellen Provider-Preislisten aktualisieren.</p>
+        </div>
+
+        <section id="openai" class="arch-section">
+          <h2>OpenAI</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Modell</th><th>Tier</th><th>Input ( / 1M tokens)</th><th>Output ( / 1M tokens)</th><th>Use Case</th><th>Zwima Margin</th></tr></thead>
+              <tbody>
+                <tr><td>gpt-4o</td><td>Premium</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Komplexe Aufgaben, Multimodal</td><td><span class="margin-strategy">Faktor 1.0</span></td></tr>
+                <tr><td>gpt-4o-mini</td><td>Standard</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Produktiv-Default, hohes Volumen</td><td><span class="margin-strategy">Faktor 0.25</span></td></tr>
+                <tr><td>gpt-3.5-turbo</td><td>Legacy</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Einfache Tasks, Kostensenkung</td><td><span class="margin-strategy">Faktor 0.2</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="claude" class="arch-section">
+          <h2>Claude (Anthropic)</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Modell</th><th>Tier</th><th>Input</th><th>Output</th><th>Use Case</th><th>Zwima Margin</th></tr></thead>
+              <tbody>
+                <tr><td>claude-sonnet</td><td>Standard</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Lange Kontexte, Analyse</td><td><span class="margin-strategy">Faktor 0.8</span></td></tr>
+                <tr><td>claude-opus</td><td>Premium</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Maximale Qualität</td><td><span class="margin-strategy">Faktor 1.2</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="gemini" class="arch-section">
+          <h2>Google Gemini</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Modell</th><th>Tier</th><th>Input</th><th>Output</th><th>Use Case</th><th>Zwima Margin</th></tr></thead>
+              <tbody>
+                <tr><td>gemini-pro</td><td>Standard</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Multimodal, Allround</td><td><span class="margin-strategy">Faktor 0.6</span></td></tr>
+                <tr><td>gemini-flash</td><td>Efficiency</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Hohes Volumen, schnelle Antworten</td><td><span class="margin-strategy">Faktor 0.15</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="deepseek" class="arch-section">
+          <h2>DeepSeek</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Modell</th><th>Tier</th><th>Input</th><th>Output</th><th>Use Case</th><th>Zwima Margin</th></tr></thead>
+              <tbody>
+                <tr><td>deepseek-chat</td><td>Standard</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Allgemeine Textaufgaben</td><td><span class="margin-strategy">Faktor 0.1</span></td></tr>
+                <tr><td>deepseek-coder</td><td>Specialized</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Code-Generierung</td><td><span class="margin-strategy">Faktor 0.12</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="qwen" class="arch-section">
+          <h2>Alibaba Qwen</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Modell</th><th>Tier</th><th>Input</th><th>Output</th><th>Use Case</th><th>Zwima Margin</th></tr></thead>
+              <tbody>
+                <tr><td>qwen-turbo</td><td>Efficiency</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Mehrsprachig, schnell</td><td><span class="margin-strategy">Faktor 0.1</span></td></tr>
+                <tr><td>qwen-plus</td><td>Standard</td><td class="cost-placeholder">[TBD] EUR</td><td class="cost-placeholder">[TBD] EUR</td><td>Cross-Border, CN/EU</td><td><span class="margin-strategy">Faktor 0.3</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="margin" class="arch-section">
+          <h2>Zwima Margin Strategy</h2>
+          <div class="arch-card">
+            <ol>
+              <li><strong>Credit-Faktor-Methode:</strong> <code>credits = tokens × model_factor</code> – Faktoren so wählen, dass Starter-Plan ≥ 30% Deckungsbeitrag liefert.</li>
+              <li><strong>Cost Optimization (V1):</strong> Model Router leitet <code>model: auto</code> auf kosteneffizientes Modell – ohne Qualitätsverlust für Standard-Tasks.</li>
+              <li><strong>Platzhalter-Update:</strong> Cost Sheet quartalsweise mit Provider-Preislisten abgleichen.</li>
+              <li><strong>Enterprise:</strong> Individuelle Faktoren und Volumenrabatte – manuell im Admin Panel.</li>
+              <li><strong>Transparenz:</strong> Endkunden sehen AI credits, nicht Provider-Einkaufspreise.</li>
+            </ol>
+            <p class="spec-note">Verknüpfung: <a href="pricing-sheet.html">Pricing Sheet</a> · <a href="revenue-engine.html">Revenue Engine</a> · <a href="supplier-due-diligence.html">Supplier Due Diligence</a></p>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima Cost Sheet V1 · Intern · Preise vor Produktiv-Launch aktualisieren</p>
+          <p class="arch-footer-links">
+            <a href="pricing-sheet.html">Pricing Sheet</a><span>·</span>
+            <a href="revenue-engine.html">Revenue Engine</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+  <script src="architecture.js"></script>
+</body>
+</html>

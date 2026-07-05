@@ -1,0 +1,67 @@
+{
+  "keys": [
+    {
+      "id": "key-1",
+      "name": "Production Key",
+      "prefix": "zwima_live_8f29a1b2c3d4",
+      "provider": "OpenAI",
+      "environment": "Production",
+      "scopes": ["Read", "Write", "Admin"],
+      "expiration": "Never",
+      "created": "2026-06-14",
+      "lastUsed": "Today",
+      "status": "Active",
+      "quota": "100,000 / mo",
+      "usage": "38,420"
+    },
+    {
+      "id": "key-2",
+      "name": "Testing Key",
+      "prefix": "zwima_live_3c91e5f6a7b8",
+      "provider": "Claude",
+      "environment": "Testing",
+      "scopes": ["Read", "Write"],
+      "expiration": "90 Days",
+      "created": "2026-06-13",
+      "lastUsed": "Yesterday",
+      "status": "Active",
+      "quota": "50,000 / mo",
+      "usage": "12,104"
+    },
+    {
+      "id": "key-3",
+      "name": "Legacy Key",
+      "prefix": "zwima_live_7b42c9d0e1f2",
+      "provider": "Gemini",
+      "environment": "Production",
+      "scopes": ["Read"],
+      "expiration": "30 Days",
+      "created": "2026-06-01",
+      "lastUsed": "7 days ago",
+      "status": "Disabled",
+      "quota": "25,000 / mo",
+      "usage": "4,892"
+    },
+    {
+      "id": "key-4",
+      "name": "Development Key",
+      "prefix": "zwima_live_a4d8e2f1b9c0",
+      "provider": "DeepSeek",
+      "environment": "Development",
+      "scopes": ["Read", "Write"],
+      "expiration": "180 Days",
+      "created": "2026-06-10",
+      "lastUsed": "2 days ago",
+      "status": "Active",
+      "quota": "10,000 / mo",
+      "usage": "1,240"
+    }
+  ],
+  "activity": [
+    { "type": "Created Key", "detail": "Development Key created for DeepSeek (Development)", "time": "2026-06-10 11:20" },
+    { "type": "Rotated Key", "detail": "Testing Key rotated — previous key invalidated", "time": "2026-06-13 09:05" },
+    { "type": "Created Key", "detail": "Testing Key created for Claude (Testing)", "time": "2026-06-13 08:42" },
+    { "type": "Disabled Key", "detail": "Legacy Key disabled by account admin", "time": "2026-06-05 14:18" },
+    { "type": "Created Key", "detail": "Production Key created for OpenAI (Production)", "time": "2026-06-14 10:30" }
+  ]
+}

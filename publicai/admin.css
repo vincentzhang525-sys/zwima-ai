@@ -1,0 +1,60 @@
+.admin-content .admin-panel {
+  padding: 22px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+}
+
+.admin-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.admin-toolbar input[type="search"],
+.admin-toolbar input[type="text"],
+.admin-toolbar input[type="number"] {
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+}
+
+.admin-nav .sidebar-link.active {
+  font-weight: 600;
+}
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-stat-card {
+  padding: 16px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: 12px;
+}
+
+.admin-stat-card span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+}
+
+.admin-stat-card strong {
+  font-size: 1.2rem;
+  color: var(--blue-950);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

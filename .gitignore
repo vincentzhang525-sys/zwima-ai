@@ -1,0 +1,21 @@
+# Local secrets
+publicai/config.local.js
+publicai/.env
+.env
+.env.*
+!.env.example
+!publicai/.env.example
+!publicai/config.local.js.example
+
+# Dependencies
+node_modules/
+publicai/node_modules/
+zwima-gateway/node_modules/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Gateway runtime
+zwima-gateway/.env

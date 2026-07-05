@@ -1,0 +1,362 @@
+.credits-content .balance-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 28px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+.balance-label {
+  display: block;
+  color: var(--gray-600);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.balance-value {
+  display: block;
+  margin-top: 8px;
+  color: var(--blue-950);
+  font-size: 2.2rem;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.credits-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.topup-panel,
+.billing-form {
+  padding: 22px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+.topup-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.modal-topup-options {
+  margin-top: 8px;
+}
+
+.topup-option {
+  padding: 12px 14px;
+  color: var(--blue-950);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.topup-option.selected {
+  background: var(--blue-100);
+  border-color: var(--blue-700);
+}
+
+.custom-credits-wrap {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.custom-credits-wrap label {
+  color: var(--blue-950);
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.custom-credits-wrap input {
+  padding: 11px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  font: inherit;
+  background: var(--gray-50);
+}
+
+.price-summary {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 16px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: 12px;
+}
+
+.price-summary div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.price-summary dt {
+  color: var(--gray-600);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.price-summary dd {
+  margin: 0;
+  color: var(--blue-950);
+  font-weight: 800;
+}
+
+.price-summary .price-total dd {
+  font-size: 1.1rem;
+}
+
+.breakdown-list,
+.usage-provider-list,
+.payment-methods {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.breakdown-list {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+.breakdown-item {
+  display: grid;
+  gap: 6px;
+}
+
+.breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--blue-950);
+}
+
+.breakdown-bar {
+  height: 8px;
+  background: var(--gray-100);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.breakdown-bar span {
+  display: block;
+  height: 100%;
+  background: var(--blue-700);
+  border-radius: 999px;
+}
+
+.usage-provider-list {
+  display: grid;
+  gap: 12px;
+}
+
+.usage-provider-item {
+  padding: 16px 18px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+.usage-provider-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--blue-950);
+  font-weight: 750;
+  font-size: 0.92rem;
+}
+
+.usage-provider-bar {
+  height: 8px;
+  background: var(--gray-100);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.usage-provider-bar span {
+  display: block;
+  height: 100%;
+  background: var(--blue-950);
+  border-radius: 999px;
+}
+
+.spending-chart {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  height: 220px;
+  padding: 22px;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+.spending-bar-col {
+  display: grid;
+  gap: 8px;
+  align-content: end;
+  height: 100%;
+}
+
+.spending-bar {
+  width: 100%;
+  background: var(--blue-700);
+  border-radius: 8px 8px 4px 4px;
+  min-height: 12px;
+}
+
+.spending-bar-label {
+  color: var(--gray-600);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.spending-bar-value {
+  color: var(--blue-950);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.billing-form {
+  display: grid;
+  gap: 12px;
+}
+
+.billing-form label {
+  color: var(--blue-950);
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.billing-form input,
+.billing-form select {
+  padding: 11px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  font: inherit;
+  background: var(--gray-50);
+}
+
+.billing-settings-form .checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--gray-800);
+  font-weight: 650;
+}
+
+.payment-method-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: 12px;
+}
+
+.payment-method-item.default {
+  border-color: rgba(31, 95, 158, 0.34);
+  background: var(--blue-100);
+}
+
+.payment-method-name {
+  color: var(--blue-950);
+  font-weight: 800;
+}
+
+.payment-method-meta {
+  color: var(--gray-600);
+  font-size: 0.84rem;
+}
+
+.payment-method-badge {
+  color: var(--blue-850);
+  background: var(--white);
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.status-pill.pending {
+  color: var(--blue-850);
+  background: var(--blue-100);
+}
+
+.status-pill.failed {
+  color: #8b3a3a;
+  background: #fdecec;
+}
+
+.status-pill.refunded {
+  color: var(--gray-600);
+  background: var(--gray-100);
+}
+
+.invoice-btn {
+  padding: 5px 10px;
+  color: var(--blue-950);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 1000px) {
+  .credits-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .spending-chart {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    height: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .balance-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topup-options {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .spending-chart {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

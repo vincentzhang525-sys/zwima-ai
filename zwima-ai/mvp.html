@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zwima Gateway MVP V0.1 | Interne Spezifikation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="architecture.css">
+  <link rel="stylesheet" href="mvp.css">
+  <link rel="stylesheet" href="internal-strategy.css">
+</head>
+<body class="arch-body">
+  <div class="arch-layout">
+    <aside class="arch-sidebar" id="archSidebar">
+      <div class="arch-sidebar-header">
+        <span class="internal-badge mvp-badge">MVP V0.1</span>
+        <a href="dashboard.html" class="arch-back">← Dashboard</a>
+      </div>
+      <nav class="arch-toc">
+        <span class="toc-label">Spezifikation</span>
+        <a href="#goal">Ziel</a>
+        <a href="#scope">Scope</a>
+        <a href="#diagram">MVP-Architektur</a>
+        <a href="#features">Feature-Details</a>
+        <a href="#out-of-scope">Nicht im Scope</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#launch">Launch-Kriterien</a>
+        <a href="#stack">Technischer Stack</a>
+      </nav>
+      <nav class="arch-toc internal-docs-nav">
+        <span class="toc-label">Interne Dokumentation</span>
+        <a href="first-customer.html">First Customer</a>
+        <a href="first-100-customers.html">First 100 Customers</a>
+        <a href="supplier-due-diligence.html">Supplier Due Diligence</a>
+        <a href="revenue-engine.html">Revenue Engine</a>
+        <a href="pricing-sheet.html">Pricing Sheet</a>
+        <a href="cost-sheet.html">Cost Sheet</a>
+        <a href="mvp.html" class="active">MVP V0.1</a>
+        <a href="architecture.html">Architecture V1</a>
+      </nav>
+      <div class="arch-meta">
+        <span>Version: V0.1</span>
+        <span>Stand: Juni 2026</span>
+      </div>
+    </aside>
+
+    <div class="arch-main">
+      <header class="arch-header">
+        <button class="arch-toggle" id="archToggle" aria-label="Inhaltsverzeichnis">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="arch-header-text">
+          <p class="arch-eyebrow">Zwima Group Online · Produkt-Spezifikation</p>
+          <h1>Zwima Gateway MVP</h1>
+          <p class="arch-subtitle">Version V0.1 · Schnellster Weg zum ersten zahlenden Kunden</p>
+        </div>
+      </header>
+
+      <article class="arch-content">
+        <section id="goal" class="arch-section">
+          <h2>Ziel</h2>
+          <div class="arch-card mvp-goal-card">
+            <p class="mvp-goal-statement">Den <strong>ersten zahlenden Geschäftskunden</strong> onboarden und einen stabilen, abrechenbaren OpenAI-API-Zugang über die Zwima AI API Credits Platform bereitstellen.</p>
+            <div class="mvp-principles">
+              <div class="principle">
+                <strong>Speed over completeness</strong>
+                <span>Nur was für Umsatz und Betrieb zwingend nötig ist</span>
+              </div>
+              <div class="principle">
+                <strong>Ein Provider</strong>
+                <span>OpenAI only – kein Multi-Model-Routing</span>
+              </div>
+              <div class="principle">
+                <strong>Manuell wo möglich</strong>
+                <span>Admin Panel statt Vollautomatisierung bei Billing</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="scope" class="arch-section">
+          <h2>Scope V0.1</h2>
+          <p class="section-lead">Acht Kernfunktionen. Alles andere ist explizit ausgeschlossen.</p>
+          <table class="arch-table mvp-scope-table">
+            <thead>
+              <tr><th>#</th><th>Feature</th><th>Priorität</th><th>Status V0.1</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>Customer Registration</td><td>P0</td><td><span class="scope-in">Im Scope</span></td></tr>
+              <tr><td>2</td><td>Login</td><td>P0</td><td><span class="scope-in">Im Scope</span></td></tr>
+              <tr><td>3</td><td>API Key Generation</td><td>P0</td><td><span class="scope-in">Im Scope</span></td></tr>
+              <tr><td>4</td><td>OpenAI Integration</td><td>P0</td><td><span class="scope-in">Im Scope</span></td></tr>
+              <tr><td>5</td><td>Credit Balance</td><td>P0</td><td><span class="scope-in">Im Scope</span></td></tr>
+              <tr><td>6</td><td>Usage Tracking</td><td>P0</td><td><span class="scope-in">Im Scope</span></td></tr>
+              <tr><td>7</td><td>Billing Records</td><td>P1</td><td><span class="scope-in">Im Scope</span></td></tr>
+              <tr><td>8</td><td>Admin Panel</td><td>P1</td><td><span class="scope-in">Im Scope</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="diagram" class="arch-section">
+          <h2>MVP-Architektur</h2>
+          <p class="section-lead">Vereinfachte V0.1-Pipeline – kein Model Router, ein Adapter, minimale Schichten.</p>
+
+          <div class="mvp-diagram">
+            <div class="mvp-zone mvp-zone-client">
+              <span class="zone-label">Kunde</span>
+              <div class="mvp-row">
+                <div class="mvp-node">Registration</div>
+                <div class="mvp-conn-h" aria-hidden="true"></div>
+                <div class="mvp-node">Login</div>
+                <div class="mvp-conn-h" aria-hidden="true"></div>
+                <div class="mvp-node">Dashboard</div>
+              </div>
+            </div>
+            <div class="mvp-conn-v" aria-hidden="true"></div>
+            <div class="mvp-zone mvp-zone-core">
+              <span class="zone-label">Zwima Gateway V0.1</span>
+              <div class="mvp-row">
+                <div class="mvp-node mvp-node-key">API Key Generation</div>
+                <div class="mvp-conn-h" aria-hidden="true"></div>
+                <div class="mvp-node mvp-node-gw">API Gateway</div>
+                <div class="mvp-conn-h" aria-hidden="true"></div>
+                <div class="mvp-node">Auth + Rate Limit</div>
+              </div>
+              <div class="mvp-conn-v mvp-conn-v-sm" aria-hidden="true"></div>
+              <div class="mvp-row">
+                <div class="mvp-node">Credit Balance Check</div>
+                <div class="mvp-conn-h" aria-hidden="true"></div>
+                <div class="mvp-node mvp-node-openai">OpenAI Adapter</div>
+              </div>
+              <div class="mvp-conn-v mvp-conn-v-sm" aria-hidden="true"></div>
+              <div class="mvp-row">
+                <div class="mvp-node">Usage Tracking</div>
+                <div class="mvp-conn-h" aria-hidden="true"></div>
+                <div class="mvp-node">Credit Deduction</div>
+                <div class="mvp-conn-h" aria-hidden="true"></div>
+                <div class="mvp-node">Billing Records</div>
+              </div>
+            </div>
+            <div class="mvp-conn-v" aria-hidden="true"></div>
+            <div class="mvp-zone mvp-zone-ext">
+              <span class="zone-label">Extern</span>
+              <div class="mvp-node mvp-node-ext">OpenAI API</div>
+            </div>
+            <div class="mvp-side">
+              <div class="mvp-node mvp-node-admin">Admin Panel</div>
+              <span class="mvp-side-label">Intern · manuelle Verwaltung</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" class="arch-section">
+          <h2>Feature-Details</h2>
+
+          <div class="arch-card feature-spec">
+            <h3>1. Customer Registration</h3>
+            <ul>
+              <li>Registrierungsformular: Firmenname, E-Mail, Passwort, Ansprechpartner</li>
+              <li>E-Mail-Verifizierung vor erstem API-Zugang</li>
+              <li>Automatische Anlage von Customer Account mit Status <code>pending</code> → <code>active</code></li>
+              <li>Standard-Plan: <strong>Starter</strong> (49 EUR/Monat, 10.000 Credits)</li>
+            </ul>
+            <p class="spec-note">Kein Self-Service-Planwechsel in V0.1 – nur via Admin.</p>
+          </div>
+
+          <div class="arch-card feature-spec">
+            <h3>2. Login</h3>
+            <ul>
+              <li>E-Mail + Passwort, Session-basiert (HTTP-only Cookie)</li>
+              <li>Passwort-Reset per E-Mail-Link</li>
+              <li>Zugang zum Kunden-Dashboard nach Login</li>
+            </ul>
+            <p class="spec-note">Kein SSO, kein 2FA in V0.1.</p>
+          </div>
+
+          <div class="arch-card feature-spec">
+            <h3>3. API Key Generation</h3>
+            <ul>
+              <li>Kunde erstellt Schlüssel im Dashboard (Name + Live/Test)</li>
+              <li>Format: <code>zwima_sk_live_</code> / <code>zwima_sk_test_</code></li>
+              <li>Einmalige Anzeige bei Erstellung; danach nur Prefix sichtbar</li>
+              <li>Widerruf mit sofortiger Wirkung</li>
+              <li>Max. 3 aktive Schlüssel pro Konto (V0.1)</li>
+            </ul>
+          </div>
+
+          <div class="arch-card feature-spec">
+            <h3>4. OpenAI Integration Only</h3>
+            <ul>
+              <li>Ein Endpunkt: <code>POST /v1/chat/completions</code></li>
+              <li>Unterstützte Modelle: <code>gpt-4o</code>, <code>gpt-4o-mini</code>, <code>gpt-3.5-turbo</code></li>
+              <li>Direkter OpenAI Adapter – kein Model Router</li>
+              <li>Request/Response 1:1 an OpenAI-Format angelehnt</li>
+              <li>Fehler von OpenAI werden durchgereicht (normalisierte Fehlercodes)</li>
+            </ul>
+            <pre class="code-block"><code>POST /v1/chat/completions
+Authorization: Bearer zwima_sk_live_...
+{ "model": "gpt-4o-mini", "messages": [...] }</code></pre>
+          </div>
+
+          <div class="arch-card feature-spec">
+            <h3>5. Credit Balance</h3>
+            <ul>
+              <li>Monatliches Kontingent gemäß Plan (Starter: 10.000 Credits)</li>
+              <li>Anzeige im Dashboard: Gesamt, Verbraucht, Verbleibend</li>
+              <li>Pre-Request-Prüfung: HTTP 429 bei leerem Kontingent</li>
+              <li>Credit-Faktor fest für V0.1 (eine Rate pro Modell, intern konfiguriert)</li>
+            </ul>
+            <pre class="code-block"><code>credits_used = ceil((input_tokens + output_tokens) * model_factor)</code></pre>
+          </div>
+
+          <div class="arch-card feature-spec">
+            <h3>6. Usage Tracking</h3>
+            <ul>
+              <li>Jeder API-Aufruf erzeugt ein Usage Event (asynchron)</li>
+              <li>Gespeichert: Timestamp, Account, API Key, Modell, Tokens, Status, Latenz</li>
+              <li><strong>Nicht gespeichert:</strong> Prompt-Inhalte, Antworttexte</li>
+              <li>Dashboard: Tages- und Monatsübersicht (einfache Tabelle)</li>
+            </ul>
+          </div>
+
+          <div class="arch-card feature-spec">
+            <h3>7. Billing Records</h3>
+            <ul>
+              <li>Monatliche Subscription-Rechnung (manuell oder halbautomatisch)</li>
+              <li>Rechnungsdatensatz: Nummer, Betrag, Zeitraum, Status (draft / issued / paid)</li>
+              <li>PDF-Export manuell in V0.1 (Template + Admin-Aktion)</li>
+              <li>Kein Zahlungsgateway in V0.1 – Rechnung per E-Mail, Zahlung per Überweisung</li>
+            </ul>
+            <p class="spec-note">Overage-Berechnung nicht in V0.1 – harter Stopp bei Quota.</p>
+          </div>
+
+          <div class="arch-card feature-spec">
+            <h3>8. Admin Panel</h3>
+            <ul>
+              <li>Internes Tool (separate URL, Basic Auth oder einfaches Login)</li>
+              <li>Kundenliste: Suchen, Status ändern (active / suspended)</li>
+              <li>Credit-Topup manuell (z. B. bei Zahlungseingang)</li>
+              <li>Rechnung erstellen und als „issued" markieren</li>
+              <li>Usage-Übersicht pro Kunde (letzte 30 Tage)</li>
+              <li>OpenAI-Status-Anzeige (letzter Health-Check)</li>
+            </ul>
+            <p class="spec-note">Kein Provider Monitoring Dashboard – nur OpenAI Ping.</p>
+          </div>
+        </section>
+
+        <section id="out-of-scope" class="arch-section">
+          <h2>Nicht im Scope V0.1</h2>
+          <div class="arch-card out-of-scope-card">
+            <p>Explizit ausgeschlossen, um Launch-Geschwindigkeit zu maximieren:</p>
+            <div class="removed-providers">
+              <div class="removed-item">
+                <span class="removed-name">Claude</span>
+                <span class="removed-status">Roadmap V1</span>
+              </div>
+              <div class="removed-item">
+                <span class="removed-name">Gemini</span>
+                <span class="removed-status">Roadmap V1</span>
+              </div>
+              <div class="removed-item">
+                <span class="removed-name">DeepSeek</span>
+                <span class="removed-status">Roadmap V1</span>
+              </div>
+              <div class="removed-item">
+                <span class="removed-name">Qwen</span>
+                <span class="removed-status">Roadmap V1</span>
+              </div>
+            </div>
+            <table class="arch-table">
+              <thead><tr><th>Komponente</th><th>V1 Architecture</th><th>MVP V0.1</th></tr></thead>
+              <tbody>
+                <tr><td>Model Router</td><td>✓</td><td>✗ – direkter OpenAI Adapter</td></tr>
+                <tr><td>Provider Adapter Layer (multi)</td><td>✓</td><td>✗ – nur OpenAI</td></tr>
+                <tr><td>Cost Optimization</td><td>✓</td><td>✗</td></tr>
+                <tr><td>Fallback Routing</td><td>✓</td><td>✗</td></tr>
+                <tr><td>Overage Calculation</td><td>✓</td><td>✗ – harter Quota-Stopp</td></tr>
+                <tr><td>Zahlungsgateway</td><td>✓</td><td>✗ – manuelle Rechnung</td></tr>
+                <tr><td>Self-Service Planwechsel</td><td>✓</td><td>✗ – nur Admin</td></tr>
+                <tr><td>Audit &amp; Logging (voll)</td><td>✓</td><td>✗ – Basis Usage Logs only</td></tr>
+                <tr><td>Enterprise Features / SLA</td><td>✓</td><td>✗</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="roadmap" class="arch-section">
+          <h2>Future Roadmap</h2>
+          <div class="arch-card">
+            <p>Nach erfolgreichem MVP-Launch und erstem zahlenden Kunden:</p>
+            <div class="roadmap-timeline">
+              <div class="roadmap-item">
+                <span class="roadmap-version">V0.2</span>
+                <div>
+                  <strong>Zahlungsintegration</strong>
+                  <p>Stripe/Rechnungsautomatisierung, Self-Service Upgrade auf Pro</p>
+                </div>
+              </div>
+              <div class="roadmap-item">
+                <span class="roadmap-version">V0.3</span>
+                <div>
+                  <strong>Claude Adapter</strong>
+                  <p>Erster zusätzlicher Provider, einfacher Model Router</p>
+                </div>
+              </div>
+              <div class="roadmap-item">
+                <span class="roadmap-version">V1.0</span>
+                <div>
+                  <strong>Full Gateway</strong>
+                  <p>Gemini, DeepSeek, Qwen · Credit Engine · Admin Console wie in V1 Architecture</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="launch" class="arch-section">
+          <h2>Launch-Kriterien</h2>
+          <div class="arch-card">
+            <p>MVP V0.1 gilt als launch-ready, wenn alle Punkte erfüllt sind:</p>
+            <ul class="launch-checklist">
+              <li>Kunde kann sich registrieren, E-Mail verifizieren und einloggen</li>
+              <li>Kunde kann API-Schlüssel erstellen und widerrufen</li>
+              <li>API-Aufruf an <code>gpt-4o-mini</code> liefert valide OpenAI-Response</li>
+              <li>Credits werden korrekt abgezogen; Dashboard zeigt aktuellen Stand</li>
+              <li>Bei leerem Kontingent: HTTP 429, kein stiller Durchgriff</li>
+              <li>Usage Events werden persistiert (ohne Prompt-Inhalte)</li>
+              <li>Admin kann Kunde aktivieren, Credits aufladen, Rechnung ausstellen</li>
+              <li>Erster Testkunde hat bezahlt und produktiv API-Aufrufe durchgeführt</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="stack" class="arch-section">
+          <h2>Technischer Stack (Empfehlung V0.1)</h2>
+          <div class="arch-card">
+            <table class="arch-table">
+              <thead><tr><th>Schicht</th><th>Technologie</th><th>Begründung</th></tr></thead>
+              <tbody>
+                <tr><td>API Gateway</td><td>Node.js / Fastify</td><td>Schnelle Entwicklung, OpenAI SDK</td></tr>
+                <tr><td>Datenbank</td><td>PostgreSQL</td><td>Accounts, Credits, Usage, Billing</td></tr>
+                <tr><td>Cache</td><td>Redis</td><td>Rate Limiting, API-Key-Cache</td></tr>
+                <tr><td>Frontend</td><td>Bestehendes Dashboard (HTML)</td><td>Bereits vorhanden, minimal erweitern</td></tr>
+                <tr><td>Admin</td><td>Einfache interne Seite</td><td>Kein separates Framework nötig</td></tr>
+                <tr><td>Hosting</td><td>EU VPS / Railway</td><td>DSGVO, schnelles Deployment</td></tr>
+              </tbody>
+            </table>
+            <p class="spec-note">Stack ist Empfehlung – Ziel ist minimale Time-to-Market, nicht optimale Skalierung.</p>
+          </div>
+        </section>
+
+        <footer class="arch-footer">
+          <p>Zwima Gateway MVP V0.1 · Interne Spezifikation</p>
+          <p class="arch-footer-links">
+            <a href="architecture.html">V1 Architecture</a>
+            <span>·</span>
+            <a href="dashboard.html">Dashboard</a>
+            <span>·</span>
+            <a href="index.html">Website</a>
+          </p>
+        </footer>
+      </article>
+    </div>
+  </div>
+
+  <script src="architecture.js"></script>
+</body>
+</html>

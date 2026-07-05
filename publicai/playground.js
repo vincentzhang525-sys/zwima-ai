@@ -227,6 +227,42 @@ async function sendMessage() {
     sessionInputTokens += result.usage.inputTokens;
     sessionOutputTokens += result.usage.outputTokens;
     lastResponseMs = result.latencyMs;
+
+    const totalTokens = result.usage.inputTokens + result.usage.outputTokens;
+    const estimatedCost = window.ZwimaUsageService?.estimateCost?.(totalTokens) ?? 0;
+    const providerName = window.ZwimaPlaygroundService.getProviders()[getSelectedProviderId()]?.name || result.provider;
+
+    try {
+      window.ZwimaCreditsService?.spend?.(
+        totalTokens,
+        `Playground: ${providerName} · ${getSelectedModel()}`
+      );
+    } catch (creditErr) {
+      messages.pop();
+      messages.pop();
+      messages.push({
+        role: "assistant",
+        content: creditErr.message || "Insufficient credits for this request.",
+      });
+      if (sendBtn) sendBtn.disabled = false;
+      renderMessages();
+      updateUsageDisplay();
+      return;
+    }
+
+    const remainingCredits = window.ZwimaCreditsService?.getWallet?.()?.balance ?? 0;
+    window.ZwimaUsageService?.addRecord?.({
+      provider: providerName,
+      model: getSelectedModel(),
+      prompt,
+      inputTokens: result.usage.inputTokens,
+      outputTokens: result.usage.outputTokens,
+      totalTokens,
+      estimatedCost,
+      remainingCredits,
+      status: "Success",
+    });
+
     saveToHistory(prompt);
   } catch (err) {
     messages.push({

@@ -81,20 +81,31 @@ async function loadDashboardData() {
     overviewValues[4].textContent = "Invoice ready";
   }
 
-  const activityList = document.querySelector("#overview .activity-list");
+  const activityList = document.querySelector("#recentActivityList") || document.querySelector("#overview .activity-list");
   if (activityList) {
-    activityList.innerHTML = activity
-      .slice(0, 4)
-      .map(
-        (item) => `
+    const usageActivity = window.ZwimaUsageService?.getRecentActivity?.(4) || [];
+    const rows = usageActivity.length ? usageActivity : activity.slice(0, 4);
+    if (!rows.length) {
+      activityList.innerHTML = `
+        <article class="activity-item">
+          <span class="activity-type">No activity yet</span>
+          <p>Send a prompt in Playground to see recent API calls here.</p>
+          <time class="activity-time">—</time>
+        </article>
+      `;
+    } else {
+      activityList.innerHTML = rows
+        .map(
+          (item) => `
         <article class="activity-item">
           <span class="activity-type">${window.ZwimaFormat.escapeHtml(item.type)}</span>
           <p>${window.ZwimaFormat.escapeHtml(item.detail)}</p>
           <time class="activity-time">${window.ZwimaFormat.escapeHtml(item.time)}</time>
         </article>
       `
-      )
-      .join("");
+        )
+        .join("");
+    }
   }
 
   const apiKeysBody = document.querySelector("#api-keys tbody");

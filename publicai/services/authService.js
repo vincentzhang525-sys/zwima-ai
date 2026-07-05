@@ -4,6 +4,7 @@
     "apikeys.html",
     "credits.html",
     "playground.html",
+    "usage.html",
     "routing.html",
     "gateway.html",
     "admin.html",

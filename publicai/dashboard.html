@@ -23,7 +23,7 @@
         <a href="routing.html" class="sidebar-link">Intelligent Routing</a>
         <a href="gateway.html" class="sidebar-link">API Gateway</a>
         <a href="credits.html" class="sidebar-link">Credits</a>
-        <a href="#usage" class="sidebar-link" data-section="usage">Usage</a>
+        <a href="usage.html" class="sidebar-link" data-section="usage">Usage</a>
         <a href="#billing" class="sidebar-link" data-section="billing">Billing</a>
         <a href="models.html" class="sidebar-link">Models</a>
         <a href="#settings" class="sidebar-link" data-section="settings">Settings</a>
@@ -106,26 +106,11 @@
           <div class="dash-section-header" style="margin-top: 28px;">
             <h2>Recent Activity</h2>
           </div>
-          <div class="activity-list">
+          <div class="activity-list" id="recentActivityList">
             <article class="activity-item">
-              <span class="activity-type">API Key Created</span>
-              <p>Production Key added for OpenAI routing.</p>
-              <time class="activity-time">Today, 09:14</time>
-            </article>
-            <article class="activity-item">
-              <span class="activity-type">Credits Purchased</span>
-              <p>€500 credit top-up recorded on account.</p>
-              <time class="activity-time">Yesterday, 16:42</time>
-            </article>
-            <article class="activity-item">
-              <span class="activity-type">Provider Updated</span>
-              <p>DeepSeek routing status changed to Ready.</p>
-              <time class="activity-time">Jun 12, 2026</time>
-            </article>
-            <article class="activity-item">
-              <span class="activity-type">New Model Released</span>
-              <p>GPT-5 now available in Models Marketplace.</p>
-              <time class="activity-time">Jun 10, 2026</time>
+              <span class="activity-type">No activity yet</span>
+              <p>Send a prompt in Playground to see recent API calls here.</p>
+              <time class="activity-time">—</time>
             </article>
           </div>
         </section>
@@ -396,6 +381,7 @@
   <script src="services/authService.js"></script>
   <script src="services/creditsService.js"></script>
   <script src="services/apiKeyService.js"></script>
+  <script src="services/usageService.js"></script>
   <script src="services/billingService.js"></script>
   <script src="services/routingService.js"></script>
   <script src="services/apiService.js"></script>

@@ -1,0 +1,110 @@
+(function () {
+  const COST_PER_TOKEN_EUR = 0.000002;
+
+  function storageKey() {
+    const email = window.ZwimaAuthService?.getCurrentUser()?.email || "default";
+    return `zwima_usage_history_${email}`;
+  }
+
+  function loadStore() {
+    try {
+      const raw = localStorage.getItem(storageKey());
+      if (!raw) return { records: [] };
+      const parsed = JSON.parse(raw);
+      return {
+        records: Array.isArray(parsed.records) ? parsed.records : [],
+      };
+    } catch {
+      return { records: [] };
+    }
+  }
+
+  function saveStore(store) {
+    localStorage.setItem(storageKey(), JSON.stringify(store));
+  }
+
+  function newId() {
+    return `usage-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  function estimateCost(totalTokens) {
+    const tokens = Number(totalTokens) || 0;
+    return Number((tokens * COST_PER_TOKEN_EUR).toFixed(6));
+  }
+
+  function formatDateTime(iso) {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    return date.toLocaleString("en-GB", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  window.ZwimaUsageService = {
+    estimateCost,
+
+    addRecord(payload) {
+      const inputTokens = Number(payload.inputTokens) || 0;
+      const outputTokens = Number(payload.outputTokens) || 0;
+      const totalTokens = Number(payload.totalTokens) || inputTokens + outputTokens;
+      const record = {
+        id: newId(),
+        dateTime: payload.dateTime || new Date().toISOString(),
+        provider: payload.provider || "—",
+        model: payload.model || "—",
+        prompt: payload.prompt || "",
+        inputTokens,
+        outputTokens,
+        totalTokens,
+        estimatedCost: payload.estimatedCost ?? estimateCost(totalTokens),
+        remainingCredits: Number(payload.remainingCredits) || 0,
+        status: payload.status || "Success",
+      };
+      const store = loadStore();
+      store.records.unshift(record);
+      saveStore(store);
+      return record;
+    },
+
+    getRecords(filters = {}) {
+      let rows = loadStore().records.slice();
+      const provider = filters.provider || "";
+      const model = filters.model || "";
+
+      if (provider) rows = rows.filter((row) => row.provider === provider);
+      if (model) rows = rows.filter((row) => row.model === model);
+
+      rows.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+      return rows;
+    },
+
+    getRecentActivity(limit = 4) {
+      return loadStore()
+        .records.slice()
+        .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+        .slice(0, limit)
+        .map((row) => ({
+          type: "API Call",
+          detail: `${row.provider} · ${row.model} — ${truncate(row.prompt, 64)}`,
+          time: formatDateTime(row.dateTime),
+        }));
+    },
+
+    getFilterOptions() {
+      const records = loadStore().records;
+      return {
+        providers: [...new Set(records.map((row) => row.provider).filter(Boolean))].sort(),
+        models: [...new Set(records.map((row) => row.model).filter(Boolean))].sort(),
+      };
+    },
+  };
+
+  function truncate(text, len) {
+    const value = String(text || "");
+    return value.length <= len ? value : `${value.slice(0, len)}…`;
+  }
+})();

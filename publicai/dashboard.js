@@ -67,12 +67,16 @@ async function loadDashboardData() {
   const monthlyUsageLabel = wallet
     ? `${window.ZwimaCreditsService.getMonthlyUsage().toLocaleString()} credits this month`
     : overview.monthlyUsage;
+  const apiKeyService = window.ZwimaApiKeyService;
+  const localKeys = apiKeyService?.getKeys?.() ?? null;
+  const activeKeyCount = apiKeyService?.getActiveCount?.() ?? user.apiKeyCount;
+  const dashboardKeys = localKeys ?? keys;
 
   const overviewValues = document.querySelectorAll("#overview .overview-card strong");
   if (overviewValues.length >= 5) {
     overviewValues[0].textContent = balanceLabel;
     overviewValues[1].textContent = monthlyUsageLabel;
-    overviewValues[2].textContent = `${user.apiKeyCount} business keys`;
+    overviewValues[2].textContent = `${activeKeyCount} business keys`;
     overviewValues[3].textContent = `${usage.estimatedCost} this period`;
     overviewValues[4].textContent = "Invoice ready";
   }
@@ -95,19 +99,23 @@ async function loadDashboardData() {
 
   const apiKeysBody = document.querySelector("#api-keys tbody");
   if (apiKeysBody) {
-    apiKeysBody.innerHTML = keys
-      .map(
-        (key) => `
+    apiKeysBody.innerHTML = dashboardKeys.length
+      ? dashboardKeys
+          .map((key) => {
+            const prefix = key.prefix || (key.key ? `${key.key.slice(0, 12)}...` : "—");
+            const created = key.created || key.createdAt || "—";
+            return `
         <tr>
           <td>${window.ZwimaFormat.escapeHtml(key.name)}</td>
-          <td class="muted">${window.ZwimaFormat.escapeHtml(key.prefix)}...</td>
+          <td class="muted">${window.ZwimaFormat.escapeHtml(prefix)}</td>
           <td><span class="status-pill ${statusClass(key.status)}">${window.ZwimaFormat.escapeHtml(key.status)}</span></td>
-          <td class="muted">${window.ZwimaFormat.escapeHtml(key.created)}</td>
+          <td class="muted">${window.ZwimaFormat.escapeHtml(created)}</td>
           <td class="muted">${window.ZwimaFormat.escapeHtml(key.lastUsed)}</td>
         </tr>
-      `
-      )
-      .join("");
+      `;
+          })
+          .join("")
+      : '<tr><td colspan="5" class="muted">No API keys yet.</td></tr>';
   }
 
   const creditsPanel = document.querySelector("#credits .placeholder-panel strong");

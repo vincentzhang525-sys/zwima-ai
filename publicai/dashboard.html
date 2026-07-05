@@ -78,6 +78,28 @@
           </div>
 
           <div class="dash-section-header" style="margin-top: 28px;">
+            <h2>Your Account</h2>
+          </div>
+          <div class="overview-grid account-info-grid">
+            <article class="overview-card">
+              <span>Company</span>
+              <strong id="acctCompany">—</strong>
+            </article>
+            <article class="overview-card">
+              <span>Email</span>
+              <strong id="acctEmail">—</strong>
+            </article>
+            <article class="overview-card">
+              <span>Plan</span>
+              <strong id="acctPlan">Early Access</strong>
+            </article>
+            <article class="overview-card">
+              <span>Credits</span>
+              <strong id="acctCredits">12,450</strong>
+            </article>
+          </div>
+
+          <div class="dash-section-header" style="margin-top: 28px;">
             <h2>Recent Activity</h2>
           </div>
           <div class="activity-list">
@@ -310,6 +332,8 @@
   <script src="config.js"></script>
   <script src="auth/permissionManager.js"></script>
   <script src="auth/jwtManager.js"></script>
+  <script src="auth/mockAuthClient.js"></script>
+  <script src="auth/authState.js"></script>
   <script src="auth/sessionManager.js"></script>
   <script src="auth/authEngine.js"></script>
   <script src="auth/authGuard.js"></script>

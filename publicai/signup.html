@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign in | ZWIMA AI</title>
-  <meta name="description" content="Sign in to the ZWIMA AI platform console.">
+  <title>Create Account | ZWIMA AI</title>
+  <meta name="description" content="Create your ZWIMA AI platform account.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -25,18 +25,27 @@
   <main class="auth-page">
     <div class="auth-card">
       <a class="logo auth-logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a>
-      <h1>Sign in to ZWIMA AI</h1>
-      <form class="auth-form" id="loginForm">
-        <label for="loginEmail">Email</label>
-        <input id="loginEmail" name="email" type="email" placeholder="you@company.com" autocomplete="email" required>
-        <label for="loginPassword">Password</label>
-        <input id="loginPassword" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
-        <p class="auth-error" id="loginError" hidden></p>
-        <button class="button button-primary auth-submit" type="submit">Sign in</button>
+      <h1>Create your account</h1>
+      <form class="auth-form" id="signupForm">
+        <label for="signupEmail">Company Email</label>
+        <input id="signupEmail" name="email" type="email" placeholder="you@company.com" autocomplete="email" required>
+        <label for="signupPassword">Password</label>
+        <input id="signupPassword" name="password" type="password" placeholder="Create a password" autocomplete="new-password" minlength="6" required>
+        <label for="signupCompany">Company Name</label>
+        <input id="signupCompany" name="company" type="text" placeholder="Your company" required>
+        <label for="signupCountry">Country</label>
+        <input id="signupCountry" name="country" type="text" placeholder="Germany" value="Germany" required>
+        <label for="signupUserType">User Type</label>
+        <select id="signupUserType" name="userType" required>
+          <option value="Business">Business</option>
+          <option value="Developer">Developer</option>
+          <option value="Partner">Partner</option>
+        </select>
+        <p class="auth-error" id="signupError" hidden></p>
+        <button class="button button-primary auth-submit" type="submit">Create Account</button>
       </form>
       <div class="auth-links">
-        <a href="forgot-password.html">Forgot password</a>
-        <a href="signup.html">Create account</a>
+        <a href="login.html">Already have an account? Sign in</a>
       </div>
       <p class="auth-note">For early access customers and partners.</p>
     </div>

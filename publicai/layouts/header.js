@@ -19,7 +19,12 @@
             <span class="user-plan-line">${window.ZwimaFormat.escapeHtml(user.plan)}</span>
           </span>
         </a>
+        <button class="button button-secondary button-sm topbar-logout" type="button" id="topbarLogoutBtn">Logout</button>
       `;
+      const logoutBtn = document.getElementById("topbarLogoutBtn");
+      logoutBtn?.addEventListener("click", () => {
+        window.ZwimaAuthState?.logout?.();
+      });
     },
   };
 })();

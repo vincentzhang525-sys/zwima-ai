@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign in | ZWIMA AI</title>
-  <meta name="description" content="Sign in to the ZWIMA AI platform console.">
+  <title>Verify Email | ZWIMA AI</title>
+  <meta name="description" content="Verify your ZWIMA AI account email address.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -25,20 +25,19 @@
   <main class="auth-page">
     <div class="auth-card">
       <a class="logo auth-logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a>
-      <h1>Sign in to ZWIMA AI</h1>
-      <form class="auth-form" id="loginForm">
-        <label for="loginEmail">Email</label>
-        <input id="loginEmail" name="email" type="email" placeholder="you@company.com" autocomplete="email" required>
-        <label for="loginPassword">Password</label>
-        <input id="loginPassword" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
-        <p class="auth-error" id="loginError" hidden></p>
-        <button class="button button-primary auth-submit" type="submit">Sign in</button>
+      <h1>Verify your email</h1>
+      <p class="auth-note" style="margin-top:0;">We sent a verification code to <strong id="pendingEmail">your email</strong>.</p>
+      <form class="auth-form" id="verifyForm">
+        <label for="verifyCode">Verification Code</label>
+        <input id="verifyCode" name="code" type="text" maxlength="6" placeholder="000000" inputmode="numeric" required>
+        <p class="auth-error" id="verifyError" hidden></p>
+        <p class="auth-success" id="verifySuccess" hidden></p>
+        <button class="button button-primary auth-submit" type="submit">Verify Email</button>
       </form>
       <div class="auth-links">
-        <a href="forgot-password.html">Forgot password</a>
-        <a href="signup.html">Create account</a>
+        <a href="login.html">Back to sign in</a>
       </div>
-      <p class="auth-note">For early access customers and partners.</p>
+      <p class="auth-note">Mock verification: use code <strong>000000</strong>.</p>
     </div>
   </main>
 

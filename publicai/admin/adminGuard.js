@@ -2,7 +2,7 @@
   window.ZwimaAdminGuard = {
     requireAdmin() {
       if (!window.ZwimaAuthGuard?.isAuthenticated()) {
-        window.location.href = "auth.html?mode=signin&redirect=admin.html";
+        window.location.href = "login.html?redirect=admin.html";
         return false;
       }
       const user = window.ZwimaJwtManager?.getUserFromAccessToken() || window.ZwimaUserService?.getSessionSync();

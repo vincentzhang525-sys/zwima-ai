@@ -110,6 +110,15 @@ async function loadDashboardData() {
 
   const planRow = document.querySelector("#billing .billing-row:first-child strong");
   if (planRow) planRow.textContent = user.plan;
+
+  const acctCompany = document.getElementById("acctCompany");
+  const acctEmail = document.getElementById("acctEmail");
+  const acctPlan = document.getElementById("acctPlan");
+  const acctCredits = document.getElementById("acctCredits");
+  if (acctCompany) acctCompany.textContent = user.company || "—";
+  if (acctEmail) acctEmail.textContent = user.email || "—";
+  if (acctPlan) acctPlan.textContent = user.plan || "Early Access";
+  if (acctCredits) acctCredits.textContent = user.creditsBalance || "12,450";
 }
 
 document.addEventListener("DOMContentLoaded", loadDashboardData);

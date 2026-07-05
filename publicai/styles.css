@@ -728,6 +728,38 @@ p {
   border-color: var(--blue-700);
 }
 
+.auth-form select {
+  width: 100%;
+  padding: 13px 14px;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  font: inherit;
+}
+
+.auth-error {
+  margin: 0;
+  padding: 10px 12px;
+  color: #9b1c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.auth-success {
+  margin: 0;
+  padding: 10px 12px;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
 .auth-submit {
   width: 100%;
   margin-top: 8px;

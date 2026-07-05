@@ -60,10 +60,18 @@ async function loadDashboardData() {
     billing.getApiKeyActivity(),
   ]);
 
+  const wallet = window.ZwimaCreditsService?.getWallet?.();
+  const balanceLabel = wallet
+    ? `${wallet.balance.toLocaleString()} API credits`
+    : overview.balanceLabel;
+  const monthlyUsageLabel = wallet
+    ? `${window.ZwimaCreditsService.getMonthlyUsage().toLocaleString()} credits this month`
+    : overview.monthlyUsage;
+
   const overviewValues = document.querySelectorAll("#overview .overview-card strong");
   if (overviewValues.length >= 5) {
-    overviewValues[0].textContent = overview.balanceLabel;
-    overviewValues[1].textContent = overview.monthlyUsage;
+    overviewValues[0].textContent = balanceLabel;
+    overviewValues[1].textContent = monthlyUsageLabel;
     overviewValues[2].textContent = `${user.apiKeyCount} business keys`;
     overviewValues[3].textContent = `${usage.estimatedCost} this period`;
     overviewValues[4].textContent = "Invoice ready";
@@ -103,10 +111,10 @@ async function loadDashboardData() {
   }
 
   const creditsPanel = document.querySelector("#credits .placeholder-panel strong");
-  if (creditsPanel) creditsPanel.textContent = overview.balanceLabel;
+  if (creditsPanel) creditsPanel.textContent = balanceLabel;
 
   const usagePanel = document.querySelector("#usage .placeholder-panel strong");
-  if (usagePanel) usagePanel.textContent = overview.monthlyUsage;
+  if (usagePanel) usagePanel.textContent = monthlyUsageLabel;
 
   const planRow = document.querySelector("#billing .billing-row:first-child strong");
   if (planRow) planRow.textContent = user.plan;
@@ -121,7 +129,11 @@ async function loadDashboardData() {
   if (acctEmail) acctEmail.textContent = sessionUser.email || "—";
   if (acctCountry) acctCountry.textContent = sessionUser.country || "—";
   if (acctPlan) acctPlan.textContent = sessionUser.plan || "Early Access";
-  if (acctCredits) acctCredits.textContent = String(sessionUser.credits ?? sessionUser.creditsBalance ?? 12450);
+  if (acctCredits) {
+    acctCredits.textContent = wallet
+      ? String(wallet.balance)
+      : String(sessionUser.credits ?? sessionUser.creditsBalance ?? 12450);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", loadDashboardData);

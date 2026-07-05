@@ -113,12 +113,15 @@ async function loadDashboardData() {
 
   const acctCompany = document.getElementById("acctCompany");
   const acctEmail = document.getElementById("acctEmail");
+  const acctCountry = document.getElementById("acctCountry");
   const acctPlan = document.getElementById("acctPlan");
   const acctCredits = document.getElementById("acctCredits");
-  if (acctCompany) acctCompany.textContent = user.company || "—";
-  if (acctEmail) acctEmail.textContent = user.email || "—";
-  if (acctPlan) acctPlan.textContent = user.plan || "Early Access";
-  if (acctCredits) acctCredits.textContent = user.creditsBalance || "12,450";
+  const sessionUser = window.ZwimaAuthService?.getCurrentUser?.() || user;
+  if (acctCompany) acctCompany.textContent = sessionUser.company || "—";
+  if (acctEmail) acctEmail.textContent = sessionUser.email || "—";
+  if (acctCountry) acctCountry.textContent = sessionUser.country || "—";
+  if (acctPlan) acctPlan.textContent = sessionUser.plan || "Early Access";
+  if (acctCredits) acctCredits.textContent = String(sessionUser.credits ?? sessionUser.creditsBalance ?? 12450);
 }
 
 document.addEventListener("DOMContentLoaded", loadDashboardData);

@@ -27,16 +27,16 @@
       <a class="logo auth-logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a>
       <h1>Create your account</h1>
       <form class="auth-form" id="signupForm">
+        <label for="signupCompany">Company Name</label>
+        <input id="signupCompany" name="company" type="text" placeholder="Your company" required>
         <label for="signupEmail">Company Email</label>
         <input id="signupEmail" name="email" type="email" placeholder="you@company.com" autocomplete="email" required>
         <label for="signupPassword">Password</label>
         <input id="signupPassword" name="password" type="password" placeholder="Create a password" autocomplete="new-password" minlength="6" required>
-        <label for="signupCompany">Company Name</label>
-        <input id="signupCompany" name="company" type="text" placeholder="Your company" required>
         <label for="signupCountry">Country</label>
         <input id="signupCountry" name="country" type="text" placeholder="Germany" value="Germany" required>
-        <label for="signupUserType">User Type</label>
-        <select id="signupUserType" name="userType" required>
+        <label for="signupRole">Role</label>
+        <select id="signupRole" name="role" required>
           <option value="Business">Business</option>
           <option value="Developer">Developer</option>
           <option value="Partner">Partner</option>
@@ -55,7 +55,8 @@
   <script src="utils/constants.js"></script>
   <script src="utils/storage.js"></script>
   <script src="auth/jwtManager.js"></script>
-  <script src="auth/mockAuthClient.js"></script>
+  <script src="services/auth/localStorageAuthAdapter.js"></script>
+  <script src="services/authService.js"></script>
   <script src="auth/authState.js"></script>
   <script src="auth-pages.js"></script>
   <script src="script.js"></script>

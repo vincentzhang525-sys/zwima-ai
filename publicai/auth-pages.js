@@ -14,10 +14,11 @@
     event.preventDefault();
     const errorEl = document.getElementById("loginError");
     showError(errorEl, "");
-    const email = document.getElementById("loginEmail")?.value;
-    const password = document.getElementById("loginPassword")?.value;
     try {
-      await window.ZwimaMockAuth.signIn(email, password);
+      await window.ZwimaAuthService.login({
+        email: document.getElementById("loginEmail")?.value,
+        password: document.getElementById("loginPassword")?.value,
+      });
       redirectAfterAuth();
     } catch (err) {
       showError(errorEl, err.message || "Sign in failed.");
@@ -29,12 +30,12 @@
     const errorEl = document.getElementById("signupError");
     showError(errorEl, "");
     try {
-      await window.ZwimaMockAuth.signUp({
+      await window.ZwimaAuthService.register({
+        company: document.getElementById("signupCompany")?.value,
         email: document.getElementById("signupEmail")?.value,
         password: document.getElementById("signupPassword")?.value,
-        company: document.getElementById("signupCompany")?.value,
         country: document.getElementById("signupCountry")?.value,
-        userType: document.getElementById("signupUserType")?.value,
+        role: document.getElementById("signupRole")?.value,
       });
       window.location.href = "verify-email.html";
     } catch (err) {
@@ -49,7 +50,9 @@
     showError(errorEl, "");
     if (successEl) successEl.hidden = true;
     try {
-      const result = await window.ZwimaMockAuth.forgotPassword(document.getElementById("forgotEmail")?.value);
+      const result = await window.ZwimaAuthService.forgotPassword({
+        email: document.getElementById("forgotEmail")?.value,
+      });
       if (successEl) {
         successEl.textContent = result.message;
         successEl.hidden = false;
@@ -66,7 +69,7 @@
     showError(errorEl, "");
     if (successEl) successEl.hidden = true;
     try {
-      await window.ZwimaMockAuth.verifyEmail(document.getElementById("verifyCode")?.value);
+      await window.ZwimaAuthService.verifyEmail(document.getElementById("verifyCode")?.value);
       if (successEl) {
         successEl.textContent = "Email verified successfully. Redirecting to dashboard…";
         successEl.hidden = false;
@@ -79,7 +82,7 @@
     }
   });
 
-  const pending = window.ZwimaMockAuth?.getPendingRegistration?.();
+  const pending = window.ZwimaAuthService?.getPendingRegistration?.();
   const pendingEmail = document.getElementById("pendingEmail");
   if (pendingEmail && pending?.email) {
     pendingEmail.textContent = pending.email;

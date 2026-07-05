@@ -90,12 +90,16 @@
               <strong id="acctEmail">—</strong>
             </article>
             <article class="overview-card">
+              <span>Country</span>
+              <strong id="acctCountry">—</strong>
+            </article>
+            <article class="overview-card">
               <span>Plan</span>
               <strong id="acctPlan">Early Access</strong>
             </article>
             <article class="overview-card">
               <span>Credits</span>
-              <strong id="acctCredits">12,450</strong>
+              <strong id="acctCredits">12450</strong>
             </article>
           </div>
 
@@ -332,7 +336,7 @@
   <script src="config.js"></script>
   <script src="auth/permissionManager.js"></script>
   <script src="auth/jwtManager.js"></script>
-  <script src="auth/mockAuthClient.js"></script>
+  <script src="services/auth/localStorageAuthAdapter.js"></script>
   <script src="auth/authState.js"></script>
   <script src="auth/sessionManager.js"></script>
   <script src="auth/authEngine.js"></script>
@@ -387,6 +391,8 @@
   <script src="layouts/footer.js"></script>
   <script src="services/providerService.js"></script>
   <script src="services/userService.js"></script>
+  <script src="services/auth/localStorageAuthAdapter.js"></script>
+  <script src="services/auth/apiAuthAdapter.js"></script>
   <script src="services/authService.js"></script>
   <script src="services/billingService.js"></script>
   <script src="services/routingService.js"></script>

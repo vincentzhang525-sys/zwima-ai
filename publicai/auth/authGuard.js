@@ -14,8 +14,6 @@
     "terms.html",
   ];
 
-  const PROTECTED_PAGES = ["dashboard.html", "admin.html", "credits.html", "apikeys.html", "playground.html"];
-
   function currentPage() {
     return (window.location.pathname.split("/").pop() || "index.html").split("?")[0];
   }
@@ -27,18 +25,13 @@
 
   window.ZwimaAuthGuard = {
     isAuthenticated() {
-      if (window.ZwimaMockAuth?.isAuthenticated()) return true;
-      const token = window.ZwimaJwtManager?.getAccessToken();
-      if (!token) return false;
-      return !window.ZwimaJwtManager.isExpired(token);
+      return window.ZwimaAuthService?.isAuthenticated() || false;
     },
     requireAuth() {
+      const protectedPages = window.ZwimaAuthService?.PROTECTED_PAGES || [];
       const page = currentPage();
-      if (PROTECTED_PAGES.includes(page)) {
-        if (this.isAuthenticated()) return true;
-        const redirect = encodeURIComponent(page + window.location.search);
-        window.location.href = `login.html?redirect=${redirect}`;
-        return false;
+      if (protectedPages.includes(page)) {
+        return window.ZwimaAuthService.requireAuth();
       }
       if (isPublicPage()) return true;
       if (!document.body.classList.contains("dashboard-body") && !document.body.classList.contains("auth-module-body")) {
@@ -46,24 +39,25 @@
       }
       if (document.body.classList.contains("auth-module-body")) return true;
       if (this.isAuthenticated()) return true;
-      const redirect = encodeURIComponent(page + window.location.search);
-      window.location.href = `login.html?redirect=${redirect}`;
-      return false;
+      return window.ZwimaAuthService.requireAuth();
     },
     async restoreSession() {
       if (!window.ZwimaAuthService) return null;
       if (this.isAuthenticated()) {
-        const user = window.ZwimaJwtManager.getUserFromAccessToken();
-        if (user) window.ZwimaStorage.set("SESSION", user);
+        const user = window.ZwimaAuthService.getCurrentUser();
+        if (user) window.ZwimaStorage?.set("SESSION", user);
         return user;
       }
-      const refresh = window.ZwimaJwtManager?.getRefreshToken();
-      if (!refresh || window.ZwimaJwtManager.isExpired(refresh)) return null;
-      try {
-        return await window.ZwimaAuthService.refreshToken();
-      } catch {
-        return null;
+      if (window.ZWIMA_CONFIG?.AUTH_PROVIDER === "api") {
+        const refresh = window.ZwimaJwtManager?.getRefreshToken();
+        if (!refresh || window.ZwimaJwtManager.isExpired(refresh)) return null;
+        try {
+          return await window.ZwimaAuthService.refreshToken();
+        } catch {
+          return null;
+        }
       }
+      return null;
     },
   };
 })();

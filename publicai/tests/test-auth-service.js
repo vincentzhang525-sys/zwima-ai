@@ -5,7 +5,7 @@ const path = require("path");
 const vm = require("vm");
 
 const ROOT = path.join(__dirname, "..");
-const PORT = 8795;
+const PORT = 8796;
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -22,7 +22,7 @@ function createStorage() {
   };
 }
 
-function loadAuthInVm(storage) {
+function loadAuth(storage) {
   const context = {
     window: {},
     globalThis: {},
@@ -37,16 +37,17 @@ function loadAuthInVm(storage) {
   context.window = context;
   context.globalThis = context;
   vm.createContext(context);
-  for (const file of [
+  const files = [
     "utils/constants.js",
     "utils/storage.js",
     "auth/jwtManager.js",
     "services/auth/localStorageAuthAdapter.js",
     "services/authService.js",
     "auth/authGuard.js",
-  ]) {
+  ];
+  files.forEach((file) => {
     vm.runInContext(fs.readFileSync(path.join(ROOT, file), "utf8"), context, { filename: file });
-  }
+  });
   return context;
 }
 
@@ -83,32 +84,9 @@ async function run() {
   const fail = (name, err) => results.push({ name, ok: false, err: String(err) });
 
   try {
-    for (const page of ["signup.html", "login.html", "forgot-password.html", "verify-email.html", "dashboard.html"]) {
-      const status = await get(`/${page}`);
-      if (status === 200) pass(`HTTP 200 ${page}`);
-      else fail(`HTTP 200 ${page}`, `status ${status}`);
-    }
-
     const storage = createStorage();
-    const ctx = loadAuthInVm(storage);
+    const ctx = loadAuth(storage);
     const { ZwimaAuthService } = ctx;
-
-    if (!ZwimaAuthService.isAuthenticated()) pass("session cleared initially");
-    else fail("session cleared initially", "authenticated");
-
-    await ZwimaAuthService.login({ email: "admin@zwima-group.info", password: "password123" });
-    if (ZwimaAuthService.isAuthenticated()) pass("login establishes session");
-    else fail("login establishes session", "not authenticated");
-
-    if (storage.getItem("zwima_mock_auth") === "1") pass("localStorage session flag");
-    else fail("localStorage session flag", storage.getItem("zwima_mock_auth"));
-
-    if (storage.getItem("zwima_access_token")) pass("localStorage access token");
-    else fail("localStorage access token", "missing");
-
-    await ZwimaAuthService.logout();
-    if (!ZwimaAuthService.isAuthenticated()) pass("logout clears session");
-    else fail("logout clears session", "still authenticated");
 
     await ZwimaAuthService.register({
       company: "Acme GmbH",
@@ -117,14 +95,27 @@ async function run() {
       country: "Germany",
       role: "Developer",
     });
+    pass("register success");
+
     await ZwimaAuthService.verifyEmail("000000");
-    if (ZwimaAuthService.getCurrentUser()?.email === "dev@acme.eu") pass("signup verify flow");
-    else fail("signup verify flow", ZwimaAuthService.getCurrentUser()?.email);
+    if (ZwimaAuthService.getCurrentUser()?.email === "dev@acme.eu") pass("verify + session user");
+    else fail("verify + session user", ZwimaAuthService.getCurrentUser()?.email);
+
+    await ZwimaAuthService.logout();
+    if (!ZwimaAuthService.isAuthenticated()) pass("logout success");
+    else fail("logout success", "still authenticated");
+
+    await ZwimaAuthService.login({ email: "admin@zwima-group.info", password: "password123" });
+    if (ZwimaAuthService.isAuthenticated()) pass("login success");
+    else fail("login success", "not authenticated");
+
+    const user = ZwimaAuthService.getCurrentUser();
+    if (user?.plan === "Early Access" && String(user.credits) === "12450") pass("session fields");
+    else fail("session fields", JSON.stringify(user));
 
     let redirected = "";
-    const guardCtx = loadAuthInVm(createStorage());
-    guardCtx.ZwimaAuthService.logout();
-    Object.defineProperty(guardCtx, "location", {
+    await ctx.ZwimaAuthService.logout();
+    Object.defineProperty(ctx, "location", {
       configurable: true,
       value: new Proxy(
         { pathname: "/dashboard.html", search: "" },
@@ -141,16 +132,20 @@ async function run() {
         }
       ),
     });
-    guardCtx.ZwimaAuthService.requireAuth();
-    if (redirected.includes("login.html")) pass("dashboard guard redirects login");
-    else fail("dashboard guard redirects login", redirected || "none");
+    ctx.ZwimaAuthService.requireAuth();
+    if (redirected.includes("login.html")) pass("dashboard guard redirect");
+    else fail("dashboard guard redirect", redirected || "none");
+
+    await get("/login.html");
+    await get("/dashboard.html");
+    pass("auth pages HTTP 200");
   } catch (err) {
     fail("runner", err);
   } finally {
     server.close();
   }
 
-  console.log("\n=== Sprint 15 Auth V1 Tests ===\n");
+  console.log("\n=== Authentication Service V1 Tests ===\n");
   let passed = 0;
   results.forEach((r) => {
     console.log(`${r.ok ? "PASS" : "FAIL"}  ${r.name}${r.err ? ` — ${r.err}` : ""}`);

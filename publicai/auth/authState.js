@@ -1,5 +1,4 @@
 (function (root) {
-  const PROTECTED_PAGES = ["dashboard.html", "admin.html", "credits.html", "apikeys.html", "playground.html"];
   const AUTH_PAGES = ["login.html", "signup.html", "forgot-password.html", "verify-email.html"];
 
   function currentPage() {
@@ -7,9 +6,7 @@
   }
 
   function isAuthenticated() {
-    if (root.ZwimaMockAuth?.isAuthenticated()) return true;
-    if (root.ZwimaAuthGuard?.isAuthenticated()) return true;
-    return false;
+    return root.ZwimaAuthService?.isAuthenticated() || false;
   }
 
   function redirect(url) {
@@ -17,18 +14,12 @@
   }
 
   root.ZwimaAuthState = {
-    PROTECTED_PAGES,
     AUTH_PAGES,
 
     isAuthenticated,
 
     requireAuth() {
-      const page = currentPage();
-      if (!PROTECTED_PAGES.includes(page)) return true;
-      if (isAuthenticated()) return true;
-      const target = encodeURIComponent(page + root.location.search);
-      redirect(`login.html?redirect=${target}`);
-      return false;
+      return root.ZwimaAuthService?.requireAuth() ?? true;
     },
 
     redirectIfAuthenticated() {
@@ -39,9 +30,7 @@
     },
 
     logout() {
-      root.ZwimaMockAuth?.signOut?.();
-      root.ZwimaAuthService?.signOut?.().catch(() => {});
-      redirect("index.html");
+      root.ZwimaAuthService?.logout?.().finally(() => redirect("index.html"));
     },
 
     renderSiteNav() {

@@ -23,7 +23,9 @@
       `;
       const logoutBtn = document.getElementById("topbarLogoutBtn");
       logoutBtn?.addEventListener("click", () => {
-        window.ZwimaAuthState?.logout?.();
+        window.ZwimaAuthService?.logout?.().finally(() => {
+          window.location.href = "index.html";
+        });
       });
     },
   };

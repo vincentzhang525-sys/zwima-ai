@@ -27,16 +27,20 @@
 
   const MODEL_MAP = {
     "gpt-5": "gpt-4o",
-    "gpt-4.1": "gpt-4-turbo",
+    "gpt-4.1": "gpt-4.1",
     "gpt-4o": "gpt-4o",
+    "o1-mini": "o4-mini",
+    "o4-mini": "o4-mini",
     "gpt-4-turbo": "gpt-4-turbo",
     "GPT-5": "gpt-4o",
-    "GPT-4.1": "gpt-4-turbo",
+    "GPT-4.1": "gpt-4.1",
     "GPT-4o": "gpt-4o",
   };
 
   const PRICING = {
     "gpt-4o": { inputPer1M: 2.5, outputPer1M: 10 },
+    "gpt-4.1": { inputPer1M: 2, outputPer1M: 8 },
+    "o4-mini": { inputPer1M: 0.55, outputPer1M: 2.2 },
     "gpt-4-turbo": { inputPer1M: 2, outputPer1M: 8 },
     "gpt-3.5-turbo": { inputPer1M: 0.5, outputPer1M: 1.5 },
   };

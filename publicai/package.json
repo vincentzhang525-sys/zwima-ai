@@ -4,11 +4,13 @@
   "private": true,
   "description": "ZWIMA AI Platform static site",
   "scripts": {
-    "build": "node scripts/bundle-migrations.mjs && node scripts/generate-runtime-config.mjs && node scripts/verify-static.mjs",
+    "build": "node scripts/bundle-migrations.mjs && node scripts/run-migrations-build.mjs && node scripts/generate-runtime-config.mjs && node scripts/verify-static.mjs",
     "test:user-system": "node tests/test-user-system-v1.js",
     "test:supabase-migration": "node tests/test-supabase-migration-v1.js",
     "test:sprint27": "node scripts/sprint27-verify.mjs",
     "test:all": "node tests/test-user-system-v1.js && node tests/test-supabase-migration-v1.js",
+    "test:openai-models": "node tests/test-openai-models-v1.js",
+    "test:openai-live": "node scripts/test-openai-models.mjs",
     "migrate:remote": "node scripts/run-migrations.mjs",
     "verify:sprint27": "node scripts/sprint27-verify.mjs"
   },

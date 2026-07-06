@@ -17,6 +17,7 @@
   const MODELS = [
     {
       id: "gpt-4o",
+      apiId: "gpt-4o",
       displayName: "GPT-4o",
       provider: "openai",
       contextWindow: 128000,
@@ -25,6 +26,7 @@
     },
     {
       id: "gpt-4.1",
+      apiId: "gpt-4.1",
       displayName: "GPT-4.1",
       provider: "openai",
       contextWindow: 128000,
@@ -33,11 +35,12 @@
     },
     {
       id: "o1-mini",
+      apiId: "o4-mini",
       displayName: "o1-mini",
       provider: "openai",
-      contextWindow: 128000,
-      inputPrice: 3,
-      outputPrice: 12,
+      contextWindow: 200000,
+      inputPrice: 0.55,
+      outputPrice: 2.2,
     },
     {
       id: "claude-4-sonnet",
@@ -115,11 +118,18 @@
 
   const REASONING_MODEL_IDS = new Set([
     "o1-mini",
+    "o4-mini",
+    "o3-mini",
     "o1-preview",
     "o1",
-    "o3-mini",
+    "o3",
     "deepseek-reasoner",
   ]);
+
+  const OPENAI_API_ALIASES = {
+    "o1-preview": "o3",
+    o1: "o1",
+  };
 
   function getAll() {
     return MODELS.slice();
@@ -159,8 +169,20 @@
     return byName?.id || normalized;
   }
 
+  function resolveApiId(modelRef) {
+    const id = resolveId(modelRef);
+    const model = getById(id);
+    if (model?.apiId) return model.apiId;
+    if (model?.provider === "openai" && OPENAI_API_ALIASES[id]) {
+      return OPENAI_API_ALIASES[id];
+    }
+    return id;
+  }
+
   function isReasoningModel(modelRef) {
-    return REASONING_MODEL_IDS.has(resolveId(modelRef));
+    const id = resolveId(modelRef);
+    const apiId = resolveApiId(modelRef);
+    return REASONING_MODEL_IDS.has(id) || REASONING_MODEL_IDS.has(apiId);
   }
 
   return {
@@ -173,6 +195,7 @@
     getProviderName,
     getProviderIds,
     resolveId,
+    resolveApiId,
     isReasoningModel,
   };
 });

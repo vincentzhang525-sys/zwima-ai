@@ -1,7 +1,7 @@
 const modelConfig = require("../config/models.js");
 
 function resolveModel(modelRef) {
-  return modelConfig.resolveId(modelRef);
+  return modelConfig.resolveApiId(modelRef);
 }
 
 function isReasoningModel(modelRef) {
@@ -86,7 +86,7 @@ function buildPayload(body) {
     store: false,
   };
 
-  if (!isReasoningModel(apiModel)) {
+  if (!isReasoningModel(body.model)) {
     payload.temperature = Number(body.temperature ?? 0.7);
   }
 

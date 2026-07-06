@@ -9,6 +9,14 @@
   async function refreshFromDb() {
     const data = await window.ZwimaSupabaseApi.apiFetch("/api/credits");
     walletCache = data.wallet;
+    const user = window.ZwimaAuthService?.getCurrentUser?.();
+    if (user && window.ZwimaStorage && walletCache) {
+      window.ZwimaStorage.set("SESSION", {
+        ...user,
+        credits: walletCache.balance,
+        creditsBalance: String(walletCache.balance),
+      });
+    }
     return walletCache;
   }
 
@@ -33,7 +41,9 @@
         method: "POST",
         body: JSON.stringify({ action: "spend", amount, description }),
       });
-      return refreshFromDb();
+      const wallet = await refreshFromDb();
+      window.ZwimaAppEvents?.emit?.("data-updated", { source: "credits" });
+      return wallet;
     },
     async topUp(amountEur) {
       await window.ZwimaSupabaseApi.apiFetch("/api/credits", {

@@ -18,6 +18,7 @@
         body: JSON.stringify(payload),
       });
       recordsCache.unshift(data.record);
+      window.ZwimaAppEvents?.emit?.("data-updated", { source: "usage" });
       return data.record;
     },
   };

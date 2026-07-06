@@ -6,9 +6,12 @@
   "scripts": {
     "build": "node scripts/generate-runtime-config.mjs && node scripts/verify-static.mjs",
     "test:user-system": "node tests/test-user-system-v1.js",
-    "test:supabase-migration": "node tests/test-supabase-migration-v1.js"
+    "test:supabase-migration": "node tests/test-supabase-migration-v1.js",
+    "test:sprint27": "node scripts/sprint27-verify.mjs",
+    "test:all": "node tests/test-user-system-v1.js && node tests/test-supabase-migration-v1.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1"
+    "@supabase/supabase-js": "^2.49.1",
+    "pg": "^8.14.1"
   }
 }

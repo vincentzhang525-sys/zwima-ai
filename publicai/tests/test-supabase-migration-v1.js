@@ -56,6 +56,7 @@ const apiRoutes = [
   "api/user/me.js",
   "api/user/profile.js",
   "api/db/seed-users.js",
+  "api/db/migrate.js",
   "api/credits/index.js",
   "api/usage/index.js",
   "api/apikeys/index.js",

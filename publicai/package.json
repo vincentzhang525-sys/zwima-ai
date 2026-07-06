@@ -8,7 +8,9 @@
     "test:user-system": "node tests/test-user-system-v1.js",
     "test:supabase-migration": "node tests/test-supabase-migration-v1.js",
     "test:sprint27": "node scripts/sprint27-verify.mjs",
-    "test:all": "node tests/test-user-system-v1.js && node tests/test-supabase-migration-v1.js"
+    "test:all": "node tests/test-user-system-v1.js && node tests/test-supabase-migration-v1.js",
+    "migrate:remote": "node scripts/run-migrations.mjs",
+    "verify:sprint27": "node scripts/sprint27-verify.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

@@ -1,6 +1,5 @@
-const fs = require("fs");
-const path = require("path");
 const { getAdminClient, parseBody, json, handleOptions, withCors } = require("../lib/supabase");
+const { applyMigrations, verifyTables } = require("../lib/runMigrations");
 
 async function needsBootstrap(admin) {
   const { data: listed } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -38,111 +37,11 @@ const SEED_USERS = [
   },
 ];
 
-const TABLES = [
-  "profiles",
-  "credit_wallets",
-  "credit_transactions",
-  "usage_records",
-  "api_keys",
-  "playground_conversations",
-];
-
 function isAuthorized(req, body, allowBootstrap) {
   const secret = process.env.SUPABASE_SEED_SECRET || process.env.ZWIMA_SEED_SECRET;
   const provided = body.secret || req.headers["x-seed-secret"] || "";
   if (secret && provided === secret) return true;
   return allowBootstrap;
-}
-
-async function tableExists(admin, table) {
-  const { error } = await admin.from(table).select("*").limit(1);
-  if (!error) return true;
-  const message = String(error.message || "").toLowerCase();
-  return !message.includes("does not exist") && !message.includes("schema cache");
-}
-
-function getDatabaseUrl() {
-  const direct =
-    process.env.DATABASE_URL ||
-    process.env.SUPABASE_DB_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.POSTGRES_URL_NON_POOLING ||
-    "";
-
-  if (direct) return direct;
-
-  const password = process.env.SUPABASE_DB_PASSWORD || process.env.POSTGRES_PASSWORD;
-  const supabaseUrl = process.env.SUPABASE_URL || "";
-  if (!password || !supabaseUrl) return "";
-
-  const ref = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
-  if (!ref) return "";
-
-  return `postgresql://postgres:${encodeURIComponent(password)}@db.${ref}.supabase.co:5432/postgres`;
-}
-
-async function applySchemaViaManagementApi() {
-  const token = process.env.SUPABASE_ACCESS_TOKEN;
-  const supabaseUrl = process.env.SUPABASE_URL || "";
-  const ref = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
-  if (!token || !ref) {
-    return { applied: false, reason: "SUPABASE_ACCESS_TOKEN not configured" };
-  }
-
-  const schemaPath = path.join(process.cwd(), "supabase", "schema.sql");
-  const sql = fs.readFileSync(schemaPath, "utf8");
-  const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query: sql }),
-  });
-
-  const payload = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    return { applied: false, reason: payload.message || `HTTP ${res.status}` };
-  }
-  return { applied: true, via: "management-api" };
-}
-
-async function applySchema() {
-  const pgResult = await applySchemaWithPg();
-  if (pgResult.applied) return pgResult;
-  const apiResult = await applySchemaViaManagementApi();
-  if (apiResult.applied) return apiResult;
-  return pgResult.reason ? pgResult : apiResult;
-}
-
-async function applySchemaWithPg() {
-  const connectionString = getDatabaseUrl();
-
-  if (!connectionString) {
-    return { applied: false, reason: "DATABASE_URL not configured" };
-  }
-
-  let Client;
-  try {
-    ({ Client } = require("pg"));
-  } catch {
-    return { applied: false, reason: "pg module unavailable" };
-  }
-
-  const schemaPath = path.join(process.cwd(), "supabase", "schema.sql");
-  const sql = fs.readFileSync(schemaPath, "utf8");
-  const client = new Client({
-    connectionString,
-    ssl: { rejectUnauthorized: false },
-  });
-
-  await client.connect();
-  try {
-    await client.query(sql);
-    return { applied: true };
-  } finally {
-    await client.end();
-  }
 }
 
 async function seedUsers(admin) {
@@ -215,32 +114,22 @@ module.exports = async function handler(req, res) {
       return json(res, 403, { error: "Forbidden" });
     }
 
-    const tablesBefore = {};
-    let schemaMissing = false;
-    for (const table of TABLES) {
-      const exists = await tableExists(admin, table);
-      tablesBefore[table] = exists;
-      if (!exists) schemaMissing = true;
-    }
+    const tablesBefore = await verifyTables(admin);
+    const schemaMissing = Object.values(tablesBefore).some((exists) => !exists);
 
     let schemaResult = { applied: false, reason: "tables already present" };
     if (schemaMissing) {
-      schemaResult = await applySchema();
+      schemaResult = await applyMigrations();
       if (!schemaResult.applied) {
         return json(res, 503, {
           error: "Database schema not applied",
           tables: tablesBefore,
-          hint: "Run supabase/schema.sql in Supabase SQL Editor or set DATABASE_URL for automatic migration",
           schemaResult,
         });
       }
     }
 
-    const tablesAfter = {};
-    for (const table of TABLES) {
-      tablesAfter[table] = await tableExists(admin, table);
-    }
-
+    const tablesAfter = await verifyTables(admin);
     const seeded = await seedUsers(admin);
 
     return json(res, 200, {
@@ -248,7 +137,7 @@ module.exports = async function handler(req, res) {
       schema: schemaResult,
       tables: tablesAfter,
       seeded,
-      rls: "enabled via schema.sql policies",
+      rls: "enabled via migration 20260706120700_rls_policies.sql",
     });
   } catch (err) {
     console.error("[db/migrate]", err);

@@ -16,6 +16,7 @@ const promptInput = document.getElementById("promptInput");
 const historyList = document.getElementById("historyList");
 const sendBtn = document.getElementById("sendBtn");
 const stopBtn = document.getElementById("stopBtn");
+const providerStatusNote = document.getElementById("providerStatusNote");
 
 function escapeHtml(text) {
   return window.ZwimaFormat?.escapeHtml?.(text) ?? String(text);
@@ -24,6 +25,25 @@ function escapeHtml(text) {
 function truncate(text, len) {
   const value = String(text || "");
   return value.length <= len ? value : `${value.slice(0, len)}…`;
+}
+
+function isLiveProvider(providerId) {
+  if (providerId === "openai" || providerId === "google") return true;
+  return Boolean(window.ZwimaProviders?.ProviderManager?.get(providerId)?.enabled);
+}
+
+function updateProviderStatusNote() {
+  if (!providerStatusNote) return;
+  const providerId = getSelectedProviderId();
+  const providerName =
+    window.ZwimaPlaygroundService.getProviders()[providerId]?.name || providerId;
+
+  if (isLiveProvider(providerId)) {
+    providerStatusNote.textContent = `Live API mode — ${providerName} responses use the real provider API.`;
+    return;
+  }
+
+  providerStatusNote.textContent = `Preview mode — ${providerName} responses are simulated locally until integration is enabled.`;
 }
 
 function getSelectedProviderId() {
@@ -107,6 +127,7 @@ function selectModel(providerId, modelId) {
   populateModels(providerId);
   if (modelSelect) modelSelect.value = modelId;
   renderModelList();
+  updateProviderStatusNote();
 }
 
 function applyUrlParams() {
@@ -494,6 +515,175 @@ async function runOpenAIChatWithFallback(prompt, onDelta, signal) {
   }
 }
 
+function extractGeminiStreamText(event) {
+  const candidates = event?.candidates;
+  if (!Array.isArray(candidates) || !candidates.length) return "";
+  const parts = candidates[0]?.content?.parts;
+  if (!Array.isArray(parts)) return "";
+  return parts
+    .filter((part) => part.text)
+    .map((part) => part.text)
+    .join("");
+}
+
+async function consumeGeminiStream(response, onDelta) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let fullText = "";
+  let usage = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const raw = trimmed.slice(5).trim();
+      if (!raw || raw === "[DONE]") continue;
+
+      let event;
+      try {
+        event = JSON.parse(raw);
+      } catch {
+        continue;
+      }
+
+      if (event.error) {
+        throw new Error(event.error.message || "Gemini stream error");
+      }
+
+      const delta = extractGeminiStreamText(event);
+      if (delta) {
+        fullText += delta;
+        onDelta(fullText);
+      }
+
+      if (event.usageMetadata) {
+        usage = event.usageMetadata;
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    const trimmed = buffer.trim();
+    if (trimmed.startsWith("data:")) {
+      const raw = trimmed.slice(5).trim();
+      if (raw && raw !== "[DONE]") {
+        try {
+          const event = JSON.parse(raw);
+          const delta = extractGeminiStreamText(event);
+          if (delta) {
+            fullText += delta;
+            onDelta(fullText);
+          }
+          if (event.usageMetadata) usage = event.usageMetadata;
+        } catch {
+          // ignore trailing partial chunk
+        }
+      }
+    }
+  }
+
+  if (!fullText.trim()) {
+    throw new Error("Gemini stream returned empty content");
+  }
+
+  const inputTokens = Number(usage?.promptTokenCount) || 0;
+  const outputTokens = Number(usage?.candidatesTokenCount) || 0;
+
+  return {
+    content: fullText.trim(),
+    model: getSelectedModelId(),
+    usage: {
+      inputTokens,
+      outputTokens,
+      totalTokens: Number(usage?.totalTokenCount) || inputTokens + outputTokens,
+    },
+  };
+}
+
+async function runGeminiChat(prompt) {
+  const started = Date.now();
+  const response = await fetch("/api/gemini-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(getChatPayload(prompt)),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    console.error("[Playground Gemini Error]", {
+      status: response.status,
+      error: data.error,
+      details: data.details,
+    });
+    throw new Error(data.error || "Gemini request failed");
+  }
+
+  return mapProviderResult(
+    "google",
+    {
+      content: data.content,
+      model: data.model,
+      usage: data.usage,
+      latencyMs: data.latencyMs,
+      provider: "google",
+    },
+    started
+  );
+}
+
+async function runGeminiChatStream(prompt, onDelta, signal) {
+  const started = Date.now();
+  const response = await fetch("/api/gemini-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...getChatPayload(prompt), stream: true }),
+    signal,
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!response.ok || !contentType.includes("text/event-stream")) {
+    const data = await response.json().catch(() => ({}));
+    console.error("[Playground Gemini Stream Error]", {
+      status: response.status,
+      error: data.error,
+      details: data.details,
+    });
+    throw new Error(data.error || "Gemini stream failed");
+  }
+
+  const result = await consumeGeminiStream(response, onDelta);
+  return mapProviderResult(
+    "google",
+    {
+      content: result.content,
+      model: result.model,
+      usage: result.usage,
+      latencyMs: Date.now() - started,
+      provider: "google",
+    },
+    started
+  );
+}
+
+async function runGeminiChatWithFallback(prompt, onDelta, signal) {
+  try {
+    return await runGeminiChatStream(prompt, onDelta, signal);
+  } catch (streamErr) {
+    if (signal.aborted) throw streamErr;
+    console.warn("[Playground] Gemini stream failed, falling back to non-stream:", streamErr);
+    removeStreamingAssistant();
+    return runGeminiChat(prompt);
+  }
+}
+
 async function runProviderChat(prompt, providerId, onDelta, signal) {
   const started = Date.now();
   const result = await window.ZwimaProviders.ProviderManager.chat(providerId, {
@@ -511,6 +701,10 @@ async function runChatRequest(prompt, onDelta, signal) {
 
   if (providerId === "openai") {
     return runOpenAIChatWithFallback(prompt, onDelta, signal);
+  }
+
+  if (providerId === "google") {
+    return runGeminiChatWithFallback(prompt, onDelta, signal);
   }
 
   const adapter = window.ZwimaProviders?.ProviderManager?.get(providerId);
@@ -589,8 +783,7 @@ async function sendMessage() {
   renderMessages();
 
   const providerId = getSelectedProviderId();
-  const adapter = window.ZwimaProviders?.ProviderManager?.get(providerId);
-  const useRealChat = Boolean(adapter?.enabled);
+  const useRealChat = isLiveProvider(providerId);
   if (useRealChat) beginStreamingAssistant();
 
   try {
@@ -648,6 +841,7 @@ function bindEvents() {
   providerSelect?.addEventListener("change", () => {
     populateModels(providerSelect.value);
     renderModelList();
+    updateProviderStatusNote();
   });
 
   modelSelect?.addEventListener("change", renderModelList);
@@ -689,5 +883,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderMessages();
   renderHistory();
   updateUsageDisplay();
+  updateProviderStatusNote();
   bindEvents();
 });

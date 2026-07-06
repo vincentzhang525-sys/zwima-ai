@@ -4,8 +4,6 @@
       `[Mock · ${model.displayName}] Here is a detailed response to: "${truncate(prompt, 80)}"\n\nI've analyzed your request and structured a step-by-step answer with actionable recommendations.`,
     anthropic: (prompt, model) =>
       `[Mock · ${model.displayName}] Let's think through this carefully.\n\nRegarding "${truncate(prompt, 80)}", here is a balanced, methodical answer tailored to your use case.`,
-    google: (prompt, model) =>
-      `[Mock · ${model.displayName}] I can help with that.\n\nFor "${truncate(prompt, 80)}", here is a concise summary with practical guidance you can apply immediately.`,
     deepseek: (prompt, model) =>
       `[Mock · ${model.displayName}] Analysis for "${truncate(prompt, 80)}":\n\nCost-efficient mock output focused on accuracy and clarity for production workloads.`,
     mistral: (prompt, model) =>

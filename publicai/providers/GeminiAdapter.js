@@ -33,6 +33,7 @@
       maxTokens: payload.maxTokens ?? 2048,
       messages: payload.messages,
       instructions: payload.instructions,
+      stream: Boolean(payload.stream),
     };
 
     const response = await fetch("/api/gemini-chat", {
@@ -42,12 +43,21 @@
       signal: payload.signal,
     });
 
-    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
       const err = new Error(data.error || "Gemini request failed");
       err.details = data.details;
       throw err;
     }
+
+    if (body.stream) {
+      return {
+        stream: response.body,
+        contentType: response.headers.get("content-type") || "",
+      };
+    }
+
+    const data = await response.json();
 
     const usage = data.usage || {};
     const inputTokens = Number(usage.inputTokens) || 0;

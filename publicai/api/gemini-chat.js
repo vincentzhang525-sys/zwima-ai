@@ -67,6 +67,27 @@ function buildContents(messages, prompt) {
     }));
 }
 
+function buildRequestBody(body) {
+  const modelId = resolveModel(body.model);
+  const apiModel = resolveApiModel(modelId);
+  const maxTokens = Number(body.maxTokens) || 2048;
+  const temperature = Number(body.temperature ?? 0.7);
+  const contents = buildContents(body.messages, body.prompt);
+
+  return {
+    modelId,
+    apiModel,
+    requestBody: {
+      systemInstruction: buildSystemInstruction(body.instructions),
+      contents,
+      generationConfig: {
+        temperature,
+        maxOutputTokens: maxTokens,
+      },
+    },
+  };
+}
+
 function mapUsage(usageMetadata) {
   const inputTokens = Number(usageMetadata?.promptTokenCount) || 0;
   const outputTokens = Number(usageMetadata?.candidatesTokenCount) || 0;
@@ -88,6 +109,92 @@ function extractText(candidates) {
     .trim();
 }
 
+async function handleNonStream(req, res, body) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const { modelId, apiModel, requestBody } = buildRequestBody(body);
+  const started = Date.now();
+
+  const geminiRes = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    }
+  );
+
+  const json = await geminiRes.json().catch(() => ({}));
+
+  if (!geminiRes.ok) {
+    console.error("[gemini-chat] API error:", JSON.stringify(json, null, 2));
+    return res.status(geminiRes.status).json({
+      error: json?.error?.message || `Gemini API error ${geminiRes.status}`,
+      details: json?.error || json,
+    });
+  }
+
+  const content = extractText(json.candidates);
+  if (!content) {
+    console.error("[gemini-chat] Empty output:", JSON.stringify(json, null, 2));
+    return res.status(502).json({
+      error: "Gemini returned an empty response",
+      details: json,
+    });
+  }
+
+  return res.status(200).json({
+    content,
+    model: modelId,
+    usage: mapUsage(json.usageMetadata),
+    latencyMs: Date.now() - started,
+  });
+}
+
+async function handleStream(req, res, body) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const { apiModel, requestBody } = buildRequestBody(body);
+
+  const geminiRes = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    }
+  );
+
+  if (!geminiRes.ok) {
+    const json = await geminiRes.json().catch(() => ({}));
+    console.error("[gemini-chat] Stream error:", JSON.stringify(json, null, 2));
+    return res.status(geminiRes.status).json({
+      error: json?.error?.message || `Gemini API error ${geminiRes.status}`,
+      details: json?.error || json,
+    });
+  }
+
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+
+  if (typeof res.flushHeaders === "function") {
+    res.flushHeaders();
+  }
+
+  const reader = geminiRes.body.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(Buffer.from(value));
+    }
+  } catch (err) {
+    console.error("[gemini-chat] Stream pipe failed:", err);
+  } finally {
+    res.end();
+  }
+}
+
 module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -106,57 +213,12 @@ module.exports = async function handler(req, res) {
   }
 
   const body = parseBody(req);
-  const modelId = resolveModel(body.model);
-  const apiModel = resolveApiModel(modelId);
-  const maxTokens = Number(body.maxTokens) || 2048;
-  const temperature = Number(body.temperature ?? 0.7);
-  const contents = buildContents(body.messages, body.prompt);
-  const started = Date.now();
 
   try {
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${encodeURIComponent(apiKey)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: buildSystemInstruction(body.instructions),
-          contents,
-          generationConfig: {
-            temperature,
-            maxOutputTokens: maxTokens,
-          },
-        }),
-      }
-    );
-
-    const json = await geminiRes.json().catch(() => ({}));
-
-    if (!geminiRes.ok) {
-      console.error("[gemini-chat] API error:", JSON.stringify(json, null, 2));
-      return res.status(geminiRes.status).json({
-        error: json?.error?.message || `Gemini API error ${geminiRes.status}`,
-        details: json?.error || json,
-      });
+    if (body.stream) {
+      return handleStream(req, res, body);
     }
-
-    const content = extractText(json.candidates);
-    if (!content) {
-      console.error("[gemini-chat] Empty output:", JSON.stringify(json, null, 2));
-      return res.status(502).json({
-        error: "Gemini returned an empty response",
-        details: json,
-      });
-    }
-
-    const usage = mapUsage(json.usageMetadata);
-
-    return res.status(200).json({
-      content,
-      model: modelId,
-      usage,
-      latencyMs: Date.now() - started,
-    });
+    return handleNonStream(req, res, body);
   } catch (err) {
     console.error("[gemini-chat] Request failed:", err);
     return res.status(500).json({

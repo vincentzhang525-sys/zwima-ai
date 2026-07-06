@@ -2,6 +2,9 @@ let messages = [];
 let sessionInputTokens = 0;
 let sessionOutputTokens = 0;
 let lastResponseMs = null;
+let streamAbortController = null;
+let streamingMessageIndex = -1;
+let isGenerating = false;
 
 const providerSelect = document.getElementById("providerSelect");
 const modelSelect = document.getElementById("modelSelect");
@@ -11,6 +14,8 @@ const temperatureValue = document.getElementById("temperatureValue");
 const chatMessages = document.getElementById("chatMessages");
 const promptInput = document.getElementById("promptInput");
 const historyList = document.getElementById("historyList");
+const sendBtn = document.getElementById("sendBtn");
+const stopBtn = document.getElementById("stopBtn");
 
 function escapeHtml(text) {
   return window.ZwimaFormat?.escapeHtml?.(text) ?? String(text);
@@ -27,6 +32,22 @@ function getSelectedProviderId() {
 
 function getSelectedModel() {
   return modelSelect?.value || window.ZwimaPlaygroundService.getModels(getSelectedProviderId())[0];
+}
+
+function getChatPayload(prompt) {
+  return {
+    prompt,
+    model: getSelectedModel(),
+    temperature: Number(temperatureRange?.value || 0.7),
+    maxTokens: Number(document.getElementById("maxTokensInput")?.value || 2048),
+    messages: messages.map((item) => ({ role: item.role, content: item.content })),
+  };
+}
+
+function setGeneratingState(active) {
+  isGenerating = active;
+  if (sendBtn) sendBtn.disabled = active;
+  if (stopBtn) stopBtn.hidden = !active;
 }
 
 function populateProviders() {
@@ -113,6 +134,14 @@ function updateUsageDisplay() {
   set("remainingCredits", wallet ? wallet.balance.toLocaleString() : "—");
 }
 
+function formatMessageBody(content, streaming) {
+  const html = escapeHtml(content).replace(/\n/g, "<br>");
+  if (streaming) {
+    return `<span class="chat-bubble-body">${html}<span class="stream-cursor" aria-hidden="true"></span></span>`;
+  }
+  return `<span class="chat-bubble-body">${html}</span>`;
+}
+
 function renderMessages() {
   if (!chatMessages) return;
 
@@ -122,17 +151,51 @@ function renderMessages() {
   }
 
   chatMessages.innerHTML = messages
-    .map(
-      (msg) => `
-        <div class="chat-bubble ${msg.role}">
+    .map((msg, index) => {
+      const streaming = Boolean(msg.streaming);
+      const streamingClass = streaming ? " is-streaming" : "";
+      const streamId = streaming ? ' id="streaming-bubble"' : "";
+      return `
+        <div class="chat-bubble ${msg.role}${streamingClass}"${streamId} data-index="${index}">
           <span class="chat-bubble-role">${msg.role === "user" ? "User" : "Assistant"}</span>
-          ${escapeHtml(msg.content).replace(/\n/g, "<br>")}
+          ${formatMessageBody(msg.content, streaming)}
         </div>
-      `
-    )
+      `;
+    })
     .join("");
 
   chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function updateStreamingBubble(content) {
+  if (streamingMessageIndex < 0) return;
+  messages[streamingMessageIndex].content = content;
+  const bubble = document.getElementById("streaming-bubble");
+  const body = bubble?.querySelector(".chat-bubble-body");
+  if (body) {
+    body.innerHTML = `${escapeHtml(content).replace(/\n/g, "<br>")}<span class="stream-cursor" aria-hidden="true"></span>`;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+}
+
+function beginStreamingAssistant() {
+  messages.push({ role: "assistant", content: "", streaming: true });
+  streamingMessageIndex = messages.length - 1;
+  renderMessages();
+}
+
+function finalizeStreamingAssistant() {
+  if (streamingMessageIndex < 0) return;
+  delete messages[streamingMessageIndex].streaming;
+  streamingMessageIndex = -1;
+  renderMessages();
+}
+
+function removeStreamingAssistant() {
+  if (streamingMessageIndex < 0) return;
+  messages.splice(streamingMessageIndex, 1);
+  streamingMessageIndex = -1;
+  renderMessages();
 }
 
 function saveToHistory(firstPrompt) {
@@ -195,38 +258,17 @@ function loadHistoryItem(id) {
 }
 
 function clearConversation() {
+  if (isGenerating) stopGeneration();
   messages = [];
   sessionInputTokens = 0;
   sessionOutputTokens = 0;
   lastResponseMs = null;
+  streamingMessageIndex = -1;
   renderMessages();
   updateUsageDisplay();
 }
 
-async function runOpenAIChat(prompt) {
-  const started = Date.now();
-  const response = await fetch("/api/openai-chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      prompt,
-      model: getSelectedModel(),
-      temperature: Number(temperatureRange?.value || 0.7),
-      maxTokens: Number(document.getElementById("maxTokensInput")?.value || 2048),
-      messages: messages.map((item) => ({ role: item.role, content: item.content })),
-    }),
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    console.error("[Playground OpenAI Error]", {
-      status: response.status,
-      error: data.error,
-      details: data.details,
-    });
-    throw new Error(data.error || "OpenAI request failed");
-  }
-
+function mapApiResult(data, started) {
   return {
     content: data.content,
     provider: "OpenAI",
@@ -241,14 +283,176 @@ async function runOpenAIChat(prompt) {
   };
 }
 
-async function runChatRequest(prompt) {
+async function runOpenAIChat(prompt) {
+  const started = Date.now();
+  const response = await fetch("/api/openai-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(getChatPayload(prompt)),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    console.error("[Playground OpenAI Error]", {
+      status: response.status,
+      error: data.error,
+      details: data.details,
+    });
+    throw new Error(data.error || "OpenAI request failed");
+  }
+
+  return mapApiResult(data, started);
+}
+
+function parseSseEvents(chunk, onEvent) {
+  const lines = chunk.split("\n");
+  let eventName = null;
+  let dataLines = [];
+
+  const flush = () => {
+    if (!dataLines.length) {
+      eventName = null;
+      return;
+    }
+    const raw = dataLines.join("\n").trim();
+    dataLines = [];
+    if (!raw || raw === "[DONE]") {
+      eventName = null;
+      return;
+    }
+    try {
+      onEvent(eventName, JSON.parse(raw));
+    } catch {
+      // ignore malformed chunks
+    }
+    eventName = null;
+  };
+
+  for (const line of lines) {
+    if (line.startsWith("event:")) {
+      flush();
+      eventName = line.slice(6).trim();
+      continue;
+    }
+    if (line.startsWith("data:")) {
+      dataLines.push(line.slice(5).trim());
+      continue;
+    }
+    if (!line.trim()) {
+      flush();
+    }
+  }
+}
+
+async function consumeOpenAIStream(response, onDelta) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let fullText = "";
+  let usage = null;
+  let model = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const parts = buffer.split("\n\n");
+    buffer = parts.pop() || "";
+
+    for (const part of parts) {
+      parseSseEvents(`${part}\n\n`, (eventName, event) => {
+        const type = event.type || eventName;
+        if (type === "response.output_text.delta" && event.delta) {
+          fullText += event.delta;
+          onDelta(fullText);
+        }
+        if (type === "response.completed" && event.response) {
+          usage = event.response.usage;
+          model = event.response.model;
+          if (!fullText && typeof event.response.output_text === "string") {
+            fullText = event.response.output_text;
+            onDelta(fullText);
+          }
+        }
+        if (event.error) {
+          throw new Error(event.error.message || "OpenAI stream error");
+        }
+      });
+    }
+  }
+
+  if (!fullText.trim()) {
+    throw new Error("OpenAI stream returned empty content");
+  }
+
+  const inputTokens = Number(usage?.input_tokens) || 0;
+  const outputTokens = Number(usage?.output_tokens) || 0;
+
+  return {
+    content: fullText.trim(),
+    model: model || getSelectedModel(),
+    usage: {
+      inputTokens,
+      outputTokens,
+      totalTokens: Number(usage?.total_tokens) || inputTokens + outputTokens,
+    },
+  };
+}
+
+async function runOpenAIChatStream(prompt, onDelta, signal) {
+  const started = Date.now();
+  const response = await fetch("/api/openai-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...getChatPayload(prompt), stream: true }),
+    signal,
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!response.ok || !contentType.includes("text/event-stream")) {
+    const data = await response.json().catch(() => ({}));
+    console.error("[Playground OpenAI Stream Error]", {
+      status: response.status,
+      error: data.error,
+      details: data.details,
+    });
+    throw new Error(data.error || "OpenAI stream failed");
+  }
+
+  const result = await consumeOpenAIStream(response, onDelta);
+  return {
+    ...mapApiResult(
+      {
+        content: result.content,
+        model: result.model,
+        usage: result.usage,
+        latencyMs: Date.now() - started,
+      },
+      started
+    ),
+  };
+}
+
+async function runOpenAIChatWithFallback(prompt, onDelta, signal) {
+  try {
+    return await runOpenAIChatStream(prompt, onDelta, signal);
+  } catch (streamErr) {
+    if (signal.aborted) throw streamErr;
+    console.warn("[Playground] Stream failed, falling back to non-stream:", streamErr);
+    removeStreamingAssistant();
+    return runOpenAIChat(prompt);
+  }
+}
+
+async function runChatRequest(prompt, onDelta, signal) {
   const providerId = getSelectedProviderId();
   const model = getSelectedModel();
   const temperature = Number(temperatureRange?.value || 0.7);
   const maxTokens = Number(document.getElementById("maxTokensInput")?.value || 2048);
 
   if (providerId === "openai") {
-    return runOpenAIChat(prompt);
+    return runOpenAIChatWithFallback(prompt, onDelta, signal);
   }
 
   return window.ZwimaPlaygroundService.runMock({
@@ -289,21 +493,46 @@ async function recordSuccessfulRequest(prompt, result) {
   saveToHistory(prompt);
 }
 
+function stopGeneration() {
+  if (streamAbortController) {
+    streamAbortController.abort();
+    streamAbortController = null;
+  }
+  finalizeStreamingAssistant();
+  setGeneratingState(false);
+}
+
 async function sendMessage() {
   const prompt = promptInput?.value.trim();
-  if (!prompt) return;
+  if (!prompt || isGenerating) return;
 
-  const sendBtn = document.getElementById("sendBtn");
-  if (sendBtn) sendBtn.disabled = true;
+  streamAbortController = new AbortController();
+  setGeneratingState(true);
 
   messages.push({ role: "user", content: prompt });
   if (promptInput) promptInput.value = "";
   renderMessages();
 
-  try {
-    const result = await runChatRequest(prompt);
+  const providerId = getSelectedProviderId();
+  const useStream = providerId === "openai";
+  if (useStream) beginStreamingAssistant();
 
-    messages.push({ role: "assistant", content: result.content });
+  try {
+    const result = await runChatRequest(
+      prompt,
+      (partial) => updateStreamingBubble(partial),
+      streamAbortController.signal
+    );
+
+    if (streamAbortController?.signal.aborted) return;
+
+    if (streamingMessageIndex >= 0) {
+      messages[streamingMessageIndex].content = result.content;
+      finalizeStreamingAssistant();
+    } else {
+      messages.push({ role: "assistant", content: result.content });
+    }
+
     sessionInputTokens += result.usage.inputTokens;
     sessionOutputTokens += result.usage.outputTokens;
     lastResponseMs = result.latencyMs;
@@ -317,22 +546,26 @@ async function sendMessage() {
         role: "assistant",
         content: creditErr.message || "Insufficient credits for this request.",
       });
-      if (sendBtn) sendBtn.disabled = false;
       renderMessages();
       updateUsageDisplay();
       return;
     }
+
+    renderMessages();
+    updateUsageDisplay();
   } catch (err) {
+    if (streamAbortController?.signal.aborted) return;
     console.error("[Playground Send Error]", err);
+    removeStreamingAssistant();
     messages.push({
       role: "assistant",
       content: err.message || "OpenAI request failed.",
     });
+    renderMessages();
+  } finally {
+    streamAbortController = null;
+    setGeneratingState(false);
   }
-
-  if (sendBtn) sendBtn.disabled = false;
-  renderMessages();
-  updateUsageDisplay();
 }
 
 function bindEvents() {
@@ -353,7 +586,8 @@ function bindEvents() {
     if (temperatureValue) temperatureValue.textContent = temperatureRange.value;
   });
 
-  document.getElementById("sendBtn")?.addEventListener("click", sendMessage);
+  sendBtn?.addEventListener("click", sendMessage);
+  stopBtn?.addEventListener("click", stopGeneration);
 
   promptInput?.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {

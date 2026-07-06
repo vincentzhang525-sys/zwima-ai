@@ -77,6 +77,24 @@ function buildInput(messages, prompt) {
   return formatted;
 }
 
+function buildPayload(body) {
+  const apiModel = resolveModel(body.model);
+  const maxOutputTokens = Number(body.maxTokens) || 2048;
+  const payload = {
+    model: apiModel,
+    instructions: buildInstructions(body.instructions),
+    input: buildInput(body.messages, body.prompt),
+    max_output_tokens: maxOutputTokens,
+    store: false,
+  };
+
+  if (!REASONING_MODELS.has(apiModel)) {
+    payload.temperature = Number(body.temperature ?? 0.7);
+  }
+
+  return { apiModel, payload };
+}
+
 function extractOutputText(json) {
   if (json?.status && json.status !== "completed") {
     const reason = json.incomplete_details?.reason || json.status;
@@ -102,6 +120,119 @@ function extractOutputText(json) {
   return "";
 }
 
+function mapUsage(usage) {
+  const inputTokens = Number(usage?.input_tokens) || 0;
+  const outputTokens = Number(usage?.output_tokens) || 0;
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens: Number(usage?.total_tokens) || inputTokens + outputTokens,
+  };
+}
+
+async function handleNonStream(req, res, body) {
+  const started = Date.now();
+  const { apiModel, payload } = buildPayload(body);
+
+  const openaiRes = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const json = await openaiRes.json().catch(() => ({}));
+
+  if (!openaiRes.ok) {
+    console.error("[openai-chat] OpenAI API error:", JSON.stringify(json, null, 2));
+    return res.status(openaiRes.status).json({
+      error: json?.error?.message || `OpenAI API error ${openaiRes.status}`,
+      details: json?.error || json,
+    });
+  }
+
+  if (json.error) {
+    console.error("[openai-chat] OpenAI response error:", JSON.stringify(json.error, null, 2));
+    return res.status(502).json({
+      error: json.error.message || "OpenAI returned an error",
+      details: json.error,
+    });
+  }
+
+  let content;
+  try {
+    content = extractOutputText(json);
+  } catch (extractErr) {
+    console.error("[openai-chat] Output extraction failed:", extractErr.message, JSON.stringify(json, null, 2));
+    return res.status(502).json({
+      error: extractErr.message,
+      details: json,
+    });
+  }
+
+  if (!content) {
+    console.error("[openai-chat] Empty output:", JSON.stringify(json, null, 2));
+    return res.status(502).json({
+      error: "OpenAI returned an empty response",
+      details: json,
+    });
+  }
+
+  return res.status(200).json({
+    content,
+    model: json.model || apiModel,
+    usage: mapUsage(json.usage),
+    latencyMs: Date.now() - started,
+  });
+}
+
+async function handleStream(req, res, body) {
+  const { payload } = buildPayload(body);
+  payload.stream = true;
+
+  const openaiRes = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!openaiRes.ok) {
+    const json = await openaiRes.json().catch(() => ({}));
+    console.error("[openai-chat] OpenAI stream error:", JSON.stringify(json, null, 2));
+    return res.status(openaiRes.status).json({
+      error: json?.error?.message || `OpenAI API error ${openaiRes.status}`,
+      details: json?.error || json,
+    });
+  }
+
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+
+  if (typeof res.flushHeaders === "function") {
+    res.flushHeaders();
+  }
+
+  const reader = openaiRes.body.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(Buffer.from(value));
+    }
+  } catch (err) {
+    console.error("[openai-chat] Stream pipe failed:", err);
+  } finally {
+    res.end();
+  }
+}
+
 module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -120,86 +251,12 @@ module.exports = async function handler(req, res) {
   }
 
   const body = parseBody(req);
-  const apiModel = resolveModel(body.model);
-  const input = buildInput(body.messages, body.prompt);
-  const maxOutputTokens = Number(body.maxTokens) || 2048;
-
-  const payload = {
-    model: apiModel,
-    instructions: buildInstructions(body.instructions),
-    input,
-    max_output_tokens: maxOutputTokens,
-    store: false,
-  };
-
-  if (!REASONING_MODELS.has(apiModel)) {
-    payload.temperature = Number(body.temperature ?? 0.7);
-  }
-
-  const started = Date.now();
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const json = await openaiRes.json().catch(() => ({}));
-
-    if (!openaiRes.ok) {
-      console.error("[openai-chat] OpenAI API error:", JSON.stringify(json, null, 2));
-      return res.status(openaiRes.status).json({
-        error: json?.error?.message || `OpenAI API error ${openaiRes.status}`,
-        details: json?.error || json,
-      });
+    if (body.stream) {
+      return handleStream(req, res, body);
     }
-
-    if (json.error) {
-      console.error("[openai-chat] OpenAI response error:", JSON.stringify(json.error, null, 2));
-      return res.status(502).json({
-        error: json.error.message || "OpenAI returned an error",
-        details: json.error,
-      });
-    }
-
-    let content;
-    try {
-      content = extractOutputText(json);
-    } catch (extractErr) {
-      console.error("[openai-chat] Output extraction failed:", extractErr.message, JSON.stringify(json, null, 2));
-      return res.status(502).json({
-        error: extractErr.message,
-        details: json,
-      });
-    }
-
-    if (!content) {
-      console.error("[openai-chat] Empty output:", JSON.stringify(json, null, 2));
-      return res.status(502).json({
-        error: "OpenAI returned an empty response",
-        details: json,
-      });
-    }
-
-    const usage = json.usage || {};
-    const inputTokens = Number(usage.input_tokens) || 0;
-    const outputTokens = Number(usage.output_tokens) || 0;
-    const totalTokens = Number(usage.total_tokens) || inputTokens + outputTokens;
-
-    return res.status(200).json({
-      content,
-      model: json.model || apiModel,
-      usage: {
-        inputTokens,
-        outputTokens,
-        totalTokens,
-      },
-      latencyMs: Date.now() - started,
-    });
+    return handleNonStream(req, res, body);
   } catch (err) {
     console.error("[openai-chat] Request failed:", err);
     return res.status(500).json({

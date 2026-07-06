@@ -82,26 +82,42 @@ function getDatabaseUrlCandidates() {
   }
 
   if (password && ref) {
+    const regions = [
+      "aws-1-eu-central-1",
+      "aws-0-eu-central-1",
+      "aws-0-eu-west-1",
+      "aws-0-eu-west-2",
+      "aws-0-eu-west-3",
+      "aws-0-us-east-1",
+      "aws-0-us-west-1",
+      "aws-0-ap-southeast-1",
+      "aws-0-ap-northeast-1",
+    ];
+    for (const region of regions) {
+      push(
+        `postgresql://postgres.${ref}:${encodeURIComponent(password)}@${region}.pooler.supabase.com:6543/postgres`,
+        `pooler-${region}`
+      );
+      push(
+        `postgresql://postgres.${ref}:${encodeURIComponent(password)}@${region}.pooler.supabase.com:5432/postgres`,
+        `pooler-session-${region}`
+      );
+    }
     push(
       `postgresql://postgres:${encodeURIComponent(password)}@db.${ref}.supabase.co:5432/postgres`,
       "SUPABASE_DB_PASSWORD"
-    );
-    push(
-      `postgresql://postgres.${ref}:${encodeURIComponent(password)}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`,
-      "pooler-transaction"
     );
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (serviceKey && ref) {
-    push(
-      `postgresql://postgres:${encodeURIComponent(serviceKey)}@db.${ref}.supabase.co:5432/postgres`,
-      "service-role-direct"
-    );
-    push(
-      `postgresql://postgres.${ref}:${encodeURIComponent(serviceKey)}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`,
-      "service-role-pooler"
-    );
+    const regions = ["aws-1-eu-central-1", "aws-0-eu-central-1", "aws-0-us-east-1"];
+    for (const region of regions) {
+      push(
+        `postgresql://postgres.${ref}:${encodeURIComponent(serviceKey)}@${region}.pooler.supabase.com:6543/postgres`,
+        `service-role-${region}`
+      );
+    }
   }
 
   return candidates;

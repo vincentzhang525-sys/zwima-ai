@@ -124,6 +124,24 @@ function getDatabaseUrlCandidates() {
 }
 
 async function tryManagementApi(sql, token, ref) {
+  const attempts = [
+    { url: `https://api.supabase.com/v1/projects/${ref}/database/query`, headers: { Authorization: `Bearer ${token}` } },
+    { url: `https://api.supabase.com/v1/projects/${ref}/database/query`, headers: { apikey: token, Authorization: `Bearer ${token}` } },
+  ];
+
+  for (const attempt of attempts) {
+    const res = await fetch(attempt.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...attempt.headers,
+      },
+      body: JSON.stringify({ query: sql }),
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (res.ok) return { ok: true, status: res.status, payload };
+  }
+
   const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
     method: "POST",
     headers: {

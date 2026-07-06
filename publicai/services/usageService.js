@@ -2,13 +2,16 @@
   const COST_PER_TOKEN_EUR = 0.000002;
 
   function storageKey() {
-    const email = window.ZwimaAuthService?.getCurrentUser()?.email || "default";
+    const email = window.ZwimaAuthService?.getCurrentUser()?.email;
+    if (!email) return null;
     return `zwima_usage_history_${email}`;
   }
 
   function loadStore() {
+    const key = storageKey();
+    if (!key) return { records: [] };
     try {
-      const raw = localStorage.getItem(storageKey());
+      const raw = localStorage.getItem(key);
       if (!raw) return { records: [] };
       const parsed = JSON.parse(raw);
       return {
@@ -20,7 +23,9 @@
   }
 
   function saveStore(store) {
-    localStorage.setItem(storageKey(), JSON.stringify(store));
+    const key = storageKey();
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify(store));
   }
 
   function newId() {

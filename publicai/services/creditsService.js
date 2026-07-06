@@ -1,23 +1,26 @@
 (function () {
   const CREDITS_PER_EUR = 1000;
-  const DEFAULT_BALANCE = 12450;
-
   function walletKey() {
-    const email = window.ZwimaAuthService?.getCurrentUser()?.email || "default";
+    const email = window.ZwimaAuthService?.getCurrentUser()?.email;
+    if (!email) return null;
     return `zwima_credits_wallet_${email}`;
   }
 
   function defaultWallet() {
+    const user = window.ZwimaAuthService?.getCurrentUser?.();
+    const initial = Number(user?.credits) || 1000;
     return {
-      balance: DEFAULT_BALANCE,
+      balance: initial,
       currency: "EUR",
       transactions: [],
     };
   }
 
   function loadRaw() {
+    const key = walletKey();
+    if (!key) return defaultWallet();
     try {
-      const raw = localStorage.getItem(walletKey());
+      const raw = localStorage.getItem(key);
       if (!raw) return defaultWallet();
       const parsed = JSON.parse(raw);
       return {
@@ -31,7 +34,9 @@
   }
 
   function saveWallet(wallet) {
-    localStorage.setItem(walletKey(), JSON.stringify(wallet));
+    const key = walletKey();
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify(wallet));
     syncSessionBalance(wallet.balance);
   }
 

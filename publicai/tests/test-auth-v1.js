@@ -40,6 +40,7 @@ function loadAuthInVm(storage) {
   for (const file of [
     "utils/constants.js",
     "utils/storage.js",
+    "services/userStore.js",
     "auth/jwtManager.js",
     "services/auth/localStorageAuthAdapter.js",
     "services/authService.js",
@@ -83,7 +84,7 @@ async function run() {
   const fail = (name, err) => results.push({ name, ok: false, err: String(err) });
 
   try {
-    for (const page of ["signup.html", "login.html", "forgot-password.html", "verify-email.html", "dashboard.html"]) {
+    for (const page of ["signup.html", "login.html", "forgot-password.html", "verify-email.html", "dashboard.html", "settings.html"]) {
       const status = await get(`/${page}`);
       if (status === 200) pass(`HTTP 200 ${page}`);
       else fail(`HTTP 200 ${page}`, `status ${status}`);
@@ -96,7 +97,7 @@ async function run() {
     if (!ZwimaAuthService.isAuthenticated()) pass("session cleared initially");
     else fail("session cleared initially", "authenticated");
 
-    await ZwimaAuthService.login({ email: "admin@zwima-group.info", password: "password123" });
+    await ZwimaAuthService.login({ email: "admin@zwima-group.info", password: "admin123" });
     if (ZwimaAuthService.isAuthenticated()) pass("login establishes session");
     else fail("login establishes session", "not authenticated");
 
@@ -115,7 +116,7 @@ async function run() {
       email: "dev@acme.eu",
       password: "secret12",
       country: "Germany",
-      role: "Developer",
+      role: "customer",
     });
     await ZwimaAuthService.verifyEmail("000000");
     if (ZwimaAuthService.getCurrentUser()?.email === "dev@acme.eu") pass("signup verify flow");
@@ -150,7 +151,7 @@ async function run() {
     server.close();
   }
 
-  console.log("\n=== Sprint 15 Auth V1 Tests ===\n");
+  console.log("\n=== Sprint 26 User System V1 Tests ===\n");
   let passed = 0;
   results.forEach((r) => {
     console.log(`${r.ok ? "PASS" : "FAIL"}  ${r.name}${r.err ? ` — ${r.err}` : ""}`);

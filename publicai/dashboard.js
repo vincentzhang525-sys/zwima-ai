@@ -141,13 +141,19 @@ async function loadDashboardData() {
   const acctCompany = document.getElementById("acctCompany");
   const acctEmail = document.getElementById("acctEmail");
   const acctCountry = document.getElementById("acctCountry");
+  const acctRole = document.getElementById("acctRole");
+  const acctStatus = document.getElementById("acctStatus");
   const acctPlan = document.getElementById("acctPlan");
   const acctCredits = document.getElementById("acctCredits");
+  const welcomeName = document.getElementById("dashboardWelcomeName");
   const sessionUser = window.ZwimaAuthService?.getCurrentUser?.() || user;
+  if (welcomeName) welcomeName.textContent = sessionUser.company || sessionUser.name || sessionUser.email || "ZWIMA customer";
   if (acctCompany) acctCompany.textContent = sessionUser.company || "—";
   if (acctEmail) acctEmail.textContent = sessionUser.email || "—";
   if (acctCountry) acctCountry.textContent = sessionUser.country || "—";
-  if (acctPlan) acctPlan.textContent = sessionUser.plan || "Early Access";
+  if (acctRole) acctRole.textContent = sessionUser.role || "—";
+  if (acctStatus) acctStatus.textContent = sessionUser.status || "active";
+  if (acctPlan) acctPlan.textContent = sessionUser.plan || "Starter";
   if (acctCredits) {
     acctCredits.textContent = wallet
       ? String(wallet.balance)

@@ -35,7 +35,7 @@
         email: document.getElementById("signupEmail")?.value,
         password: document.getElementById("signupPassword")?.value,
         country: document.getElementById("signupCountry")?.value,
-        role: document.getElementById("signupRole")?.value,
+        role: "customer",
       });
       window.location.href = "verify-email.html";
     } catch (err) {
@@ -87,4 +87,25 @@
   if (pendingEmail && pending?.email) {
     pendingEmail.textContent = pending.email;
   }
+
+  document.getElementById("resetForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const errorEl = document.getElementById("resetError");
+    const successEl = document.getElementById("resetSuccess");
+    showError(errorEl, "");
+    if (successEl) successEl.hidden = true;
+    try {
+      const result = await window.ZwimaAuthService.resetPassword({
+        email: document.getElementById("resetEmail")?.value,
+        code: document.getElementById("resetCode")?.value,
+        password: document.getElementById("resetPassword")?.value,
+      });
+      if (successEl) {
+        successEl.textContent = result.message || "Password updated. You can sign in now.";
+        successEl.hidden = false;
+      }
+    } catch (err) {
+      showError(errorEl, err.message || "Reset failed.");
+    }
+  });
 })();

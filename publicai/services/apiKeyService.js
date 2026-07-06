@@ -4,7 +4,8 @@
   const CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
   function storageKey() {
-    const email = window.ZwimaAuthService?.getCurrentUser()?.email || "default";
+    const email = window.ZwimaAuthService?.getCurrentUser()?.email;
+    if (!email) return null;
     return `zwima_api_keys_${email}`;
   }
 
@@ -17,8 +18,10 @@
   }
 
   function loadStore() {
+    const key = storageKey();
+    if (!key) return { keys: [] };
     try {
-      const raw = localStorage.getItem(storageKey());
+      const raw = localStorage.getItem(key);
       if (!raw) return { keys: [] };
       const parsed = JSON.parse(raw);
       return {
@@ -30,7 +33,9 @@
   }
 
   function saveStore(store) {
-    localStorage.setItem(storageKey(), JSON.stringify(store));
+    const key = storageKey();
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify(store));
     syncSessionCount(store.keys);
   }
 

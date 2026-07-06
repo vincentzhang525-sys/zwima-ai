@@ -11,12 +11,12 @@
       const initials = user.avatar || window.ZwimaFormat.getInitials(user.name);
 
       panel.innerHTML = `
-        <a class="user-menu" href="auth.html?mode=profile">
+        <a class="user-menu" href="settings.html">
           <span class="user-avatar" aria-hidden="true">${initials}</span>
           <span class="user-meta">
             <strong class="user-name">${window.ZwimaFormat.escapeHtml(user.name)}</strong>
             <span class="user-company-line">${window.ZwimaFormat.escapeHtml(user.company)}</span>
-            <span class="user-plan-line">${window.ZwimaFormat.escapeHtml(user.plan)}</span>
+            <span class="user-plan-line">${window.ZwimaFormat.escapeHtml(user.role || user.plan)}</span>
           </span>
         </a>
         <button class="button button-secondary button-sm topbar-logout" type="button" id="topbarLogoutBtn">Logout</button>

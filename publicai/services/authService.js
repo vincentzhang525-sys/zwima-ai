@@ -5,6 +5,7 @@
     "credits.html",
     "playground.html",
     "usage.html",
+    "settings.html",
     "routing.html",
     "gateway.html",
     "admin.html",
@@ -132,6 +133,10 @@
     },
 
     updateProfile(data) {
+      const adapter = getAdapter();
+      if (adapter?.updateProfile) {
+        return Promise.resolve(adapter.updateProfile(data));
+      }
       const token = window.ZwimaJwtManager?.getAccessToken?.();
       if (!token || !window.ZwimaDatabase) {
         const user = { ...this.getCurrentUser(), ...data };
@@ -147,6 +152,10 @@
     },
 
     resetPassword(payload) {
+      const adapter = getAdapter();
+      if (adapter?.resetPassword) {
+        return Promise.resolve(adapter.resetPassword(payload));
+      }
       return window.ZwimaDatabase?.queryApi("/api/auth/reset", "POST", payload).then((r) => r.data);
     },
 

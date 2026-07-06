@@ -26,7 +26,7 @@
         <a href="usage.html" class="sidebar-link" data-section="usage">Usage</a>
         <a href="#billing" class="sidebar-link" data-section="billing">Billing</a>
         <a href="models.html" class="sidebar-link">Models</a>
-        <a href="#settings" class="sidebar-link" data-section="settings">Settings</a>
+        <a href="settings.html" class="sidebar-link" data-section="settings">Settings</a>
         <a href="documentation.html" class="sidebar-link">Documentation</a>
       </nav>
       <div class="sidebar-footer">
@@ -44,7 +44,7 @@
         </button>
         <div class="topbar-heading">
           <h1>Dashboard</h1>
-          <p>Welcome to ZWIMA AI Platform</p>
+          <p>Welcome back, <span id="dashboardWelcomeName">ZWIMA customer</span>.</p>
         </div>
         <div class="topbar-user" id="topbarUserPanel"></div>
       </header>
@@ -92,6 +92,14 @@
             <article class="overview-card">
               <span>Country</span>
               <strong id="acctCountry">—</strong>
+            </article>
+            <article class="overview-card">
+              <span>Role</span>
+              <strong id="acctRole">—</strong>
+            </article>
+            <article class="overview-card">
+              <span>Status</span>
+              <strong id="acctStatus">—</strong>
             </article>
             <article class="overview-card">
               <span>Plan</span>
@@ -321,6 +329,7 @@
   <script src="config.js"></script>
   <script src="auth/permissionManager.js"></script>
   <script src="auth/jwtManager.js"></script>
+  <script src="services/userStore.js"></script>
   <script src="services/auth/localStorageAuthAdapter.js"></script>
   <script src="auth/authState.js"></script>
   <script src="auth/sessionManager.js"></script>
@@ -376,6 +385,7 @@
   <script src="layouts/footer.js"></script>
   <script src="services/providerService.js"></script>
   <script src="services/userService.js"></script>
+  <script src="services/userStore.js"></script>
   <script src="services/auth/localStorageAuthAdapter.js"></script>
   <script src="services/auth/apiAuthAdapter.js"></script>
   <script src="services/authService.js"></script>

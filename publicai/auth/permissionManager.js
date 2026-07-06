@@ -3,10 +3,12 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.ZwimaPermissionManager = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
-  const ROLES = ["Admin", "Owner", "Developer", "Viewer"];
+  const ROLES = ["admin", "customer", "Admin", "Owner", "Developer", "Viewer"];
   const PERMISSIONS = ["apikeys", "billing", "credits", "models", "gateway", "settings", "logs", "documentation"];
 
   const ROLE_PERMISSIONS = {
+    admin: PERMISSIONS,
+    customer: ["apikeys", "credits", "models", "gateway", "settings", "documentation"],
     Admin: PERMISSIONS,
     Owner: PERMISSIONS,
     Developer: ["apikeys", "models", "gateway", "logs", "documentation"],
@@ -29,7 +31,8 @@
     },
     canAccess(user, permission) {
       if (!user) return false;
-      if (this.hasRole(user, "Admin") || this.hasRole(user, "Owner")) return true;
+      const role = String(user.role || "").toLowerCase();
+      if (role === "admin") return true;
       return this.hasPermission(user, permission);
     },
   };

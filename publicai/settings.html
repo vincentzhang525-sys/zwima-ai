@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Usage History | ZWIMA AI</title>
-  <meta name="description" content="View ZWIMA AI API usage history and call records.">
+  <title>Account Settings | ZWIMA AI</title>
+  <meta name="description" content="Manage your ZWIMA AI account profile and security settings.">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="dashboard.css">
-  <link rel="stylesheet" href="usage.css">
 </head>
-<body class="dashboard-body" data-page="usage">
+<body class="dashboard-body" data-page="settings">
   <div class="dashboard-layout">
     <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation">
       <a class="sidebar-logo" href="index.html">
@@ -24,9 +23,9 @@
         <a href="routing.html" class="sidebar-link">Intelligent Routing</a>
         <a href="gateway.html" class="sidebar-link">API Gateway</a>
         <a href="credits.html" class="sidebar-link">Credits</a>
-        <a href="usage.html" class="sidebar-link active" aria-current="page">Usage</a>
+        <a href="usage.html" class="sidebar-link">Usage</a>
         <a href="dashboard.html#billing" class="sidebar-link">Billing</a>
-        <a href="settings.html" class="sidebar-link">Settings</a>
+        <a href="settings.html" class="sidebar-link active" aria-current="page">Settings</a>
         <a href="documentation.html" class="sidebar-link">Documentation</a>
       </nav>
       <div class="sidebar-footer">
@@ -41,48 +40,44 @@
           <span></span><span></span><span></span>
         </button>
         <div class="topbar-heading">
-          <h1>Usage History</h1>
-          <p>Recent API calls from Playground and platform activity.</p>
+          <h1>Account Settings</h1>
+          <p>Manage your profile and account details.</p>
         </div>
         <div class="topbar-user" id="topbarUserPanel"></div>
       </header>
 
-      <main class="dashboard-content usage-content">
+      <main class="dashboard-content">
         <section class="dash-section">
           <div class="dash-section-header">
-            <h2>Recent Calls</h2>
+            <h2>Profile</h2>
           </div>
+          <form class="settings-form" id="settingsForm">
+            <div class="settings-grid">
+              <label for="settingsEmail">Email</label>
+              <input id="settingsEmail" name="email" type="email" readonly>
 
-          <div class="usage-toolbar">
-            <select id="filterProvider" aria-label="Filter by provider">
-              <option value="">All Providers</option>
-            </select>
-            <select id="filterModel" aria-label="Filter by model">
-              <option value="">All Models</option>
-            </select>
-          </div>
+              <label for="settingsCompany">Company</label>
+              <input id="settingsCompany" name="company" type="text" required>
 
-          <div class="data-table-wrap">
-            <table class="data-table usage-table">
-              <thead>
-                <tr>
-                  <th>Date / Time</th>
-                  <th>Provider</th>
-                  <th>Model</th>
-                  <th>Prompt</th>
-                  <th>Input</th>
-                  <th>Output</th>
-                  <th>Total</th>
-                  <th>Est. Cost</th>
-                  <th>Remaining</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="usageTableBody">
-                <tr><td colspan="10" class="muted">No usage records yet.</td></tr>
-              </tbody>
-            </table>
-          </div>
+              <label for="settingsCountry">Country</label>
+              <input id="settingsCountry" name="country" type="text" required>
+
+              <label for="settingsRole">Role</label>
+              <input id="settingsRole" name="role" type="text" readonly>
+
+              <label for="settingsStatus">Status</label>
+              <input id="settingsStatus" name="status" type="text" readonly>
+
+              <label for="settingsPlan">Plan</label>
+              <input id="settingsPlan" name="plan" type="text" readonly>
+            </div>
+            <p class="auth-error" id="settingsError" hidden></p>
+            <p class="auth-success" id="settingsSuccess" hidden></p>
+            <div class="settings-actions">
+              <button class="button button-primary" type="submit">Save Changes</button>
+              <button class="button button-secondary" type="button" id="settingsLogoutBtn">Logout</button>
+            </div>
+          </form>
         </section>
       </main>
     </div>
@@ -90,26 +85,19 @@
 
   <script src="config.js"></script>
   <script src="auth/permissionManager.js"></script>
-  <script src="auth/jwtManager.js"></script>
-  <script src="services/userStore.js"></script>
-  <script src="services/auth/localStorageAuthAdapter.js"></script>
-  <script src="auth/authState.js"></script>
-  <script src="auth/sessionManager.js"></script>
-  <script src="auth/authEngine.js"></script>
-  <script src="auth/authGuard.js"></script>
   <script src="utils/constants.js"></script>
   <script src="utils/storage.js"></script>
   <script src="utils/format.js"></script>
+  <script src="auth/jwtManager.js"></script>
   <script src="services/userStore.js"></script>
   <script src="services/auth/localStorageAuthAdapter.js"></script>
-  <script src="services/auth/apiAuthAdapter.js"></script>
   <script src="services/authService.js"></script>
-  <script src="services/usageService.js"></script>
+  <script src="auth/authState.js"></script>
+  <script src="auth/authGuard.js"></script>
+  <script src="services/userService.js"></script>
   <script src="layouts/sidebar.js"></script>
   <script src="layouts/header.js"></script>
   <script src="platform.js"></script>
-  <script src="user-session.js"></script>
-  <script src="dashboard.js"></script>
-  <script src="usage.js"></script>
+  <script src="settings.js"></script>
 </body>
 </html>

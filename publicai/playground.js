@@ -1,4 +1,5 @@
 let messages = [];
+let currentConversationId = null;
 let sessionInputTokens = 0;
 let sessionOutputTokens = 0;
 let lastResponseMs = null;
@@ -253,6 +254,7 @@ function removeStreamingAssistant() {
 function saveToHistory(firstPrompt) {
   const provider = window.ZwimaPlaygroundService.getProviders()[getSelectedProviderId()];
   const payload = {
+    id: currentConversationId,
     title: truncate(firstPrompt, 48),
     provider: provider?.name || getSelectedProviderId(),
     model: getSelectedModelLabel(),
@@ -261,7 +263,12 @@ function saveToHistory(firstPrompt) {
 
   const savePromise = window.ZwimaConversationService?.saveConversation?.(payload);
   if (savePromise?.then) {
-    savePromise.then(() => renderHistory()).catch((err) => console.warn("[Playground history]", err));
+    savePromise
+      .then((conversation) => {
+        if (conversation?.id) currentConversationId = conversation.id;
+        renderHistory();
+      })
+      .catch((err) => console.warn("[Playground history]", err));
     return;
   }
 
@@ -322,6 +329,7 @@ function loadHistoryItem(id) {
 
     renderMessages();
     updateUsageDisplay();
+    currentConversationId = item.id || null;
   };
 
   const itemPromise = window.ZwimaConversationService?.findById?.(id);
@@ -337,6 +345,7 @@ function loadHistoryItem(id) {
 function clearConversation() {
   if (isGenerating) stopGeneration();
   messages = [];
+  currentConversationId = null;
   sessionInputTokens = 0;
   sessionOutputTokens = 0;
   lastResponseMs = null;
@@ -948,6 +957,11 @@ async function recordSuccessfulRequest(prompt, result) {
   if (usageResult?.then) await usageResult;
 
   saveToHistory(prompt);
+  window.ZwimaAppEvents?.emit?.("data-updated", {
+    source: "playground",
+    credits: true,
+    usage: true,
+  });
 }
 
 function stopGeneration() {

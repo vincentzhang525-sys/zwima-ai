@@ -107,6 +107,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   renderWallet();
 
+  window.ZwimaAppEvents?.onUpdated?.((detail) => {
+    if (detail.source !== "playground" && detail.source !== "credits") return;
+    const refresh = window.ZwimaDbMode?.isSupabaseMode?.()
+      ? window.ZwimaCreditsService.refreshWallet()
+      : Promise.resolve();
+    refresh.then(() => renderWallet());
+  });
+
   document.querySelector(".wallet-topup-options")?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-eur]");
     if (!button) return;

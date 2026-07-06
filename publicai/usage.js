@@ -80,4 +80,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   filterProvider?.addEventListener("change", renderTable);
   filterModel?.addEventListener("change", renderTable);
+
+  window.ZwimaAppEvents?.onUpdated?.((detail) => {
+    if (detail.source !== "playground" && detail.source !== "usage") return;
+    const refresh = window.ZwimaDbMode?.isSupabaseMode?.()
+      ? window.ZwimaUsageService.refreshRecords()
+      : Promise.resolve();
+    refresh.then(() => {
+      populateFilters();
+      renderTable();
+    });
+  });
 });

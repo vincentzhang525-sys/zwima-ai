@@ -61,12 +61,62 @@ async function tableExists(admin, table) {
   return !message.includes("does not exist") && !message.includes("schema cache");
 }
 
-async function applySchemaWithPg() {
-  const connectionString =
+function getDatabaseUrl() {
+  const direct =
     process.env.DATABASE_URL ||
     process.env.SUPABASE_DB_URL ||
     process.env.POSTGRES_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
     "";
+
+  if (direct) return direct;
+
+  const password = process.env.SUPABASE_DB_PASSWORD || process.env.POSTGRES_PASSWORD;
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  if (!password || !supabaseUrl) return "";
+
+  const ref = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+  if (!ref) return "";
+
+  return `postgresql://postgres:${encodeURIComponent(password)}@db.${ref}.supabase.co:5432/postgres`;
+}
+
+async function applySchemaViaManagementApi() {
+  const token = process.env.SUPABASE_ACCESS_TOKEN;
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  const ref = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+  if (!token || !ref) {
+    return { applied: false, reason: "SUPABASE_ACCESS_TOKEN not configured" };
+  }
+
+  const schemaPath = path.join(process.cwd(), "supabase", "schema.sql");
+  const sql = fs.readFileSync(schemaPath, "utf8");
+  const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query: sql }),
+  });
+
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return { applied: false, reason: payload.message || `HTTP ${res.status}` };
+  }
+  return { applied: true, via: "management-api" };
+}
+
+async function applySchema() {
+  const pgResult = await applySchemaWithPg();
+  if (pgResult.applied) return pgResult;
+  const apiResult = await applySchemaViaManagementApi();
+  if (apiResult.applied) return apiResult;
+  return pgResult.reason ? pgResult : apiResult;
+}
+
+async function applySchemaWithPg() {
+  const connectionString = getDatabaseUrl();
 
   if (!connectionString) {
     return { applied: false, reason: "DATABASE_URL not configured" };
@@ -175,7 +225,7 @@ module.exports = async function handler(req, res) {
 
     let schemaResult = { applied: false, reason: "tables already present" };
     if (schemaMissing) {
-      schemaResult = await applySchemaWithPg();
+      schemaResult = await applySchema();
       if (!schemaResult.applied) {
         return json(res, 503, {
           error: "Database schema not applied",

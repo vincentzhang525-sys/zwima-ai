@@ -219,6 +219,11 @@ async function runOpenAIChat(prompt) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
+    console.error("[Playground OpenAI Error]", {
+      status: response.status,
+      error: data.error,
+      details: data.details,
+    });
     throw new Error(data.error || "OpenAI request failed");
   }
 
@@ -243,17 +248,7 @@ async function runChatRequest(prompt) {
   const maxTokens = Number(document.getElementById("maxTokensInput")?.value || 2048);
 
   if (providerId === "openai") {
-    try {
-      return await runOpenAIChat(prompt);
-    } catch {
-      return window.ZwimaPlaygroundService.runMock({
-        providerId,
-        model,
-        prompt,
-        temperature,
-        maxTokens,
-      });
-    }
+    return runOpenAIChat(prompt);
   }
 
   return window.ZwimaPlaygroundService.runMock({
@@ -328,9 +323,10 @@ async function sendMessage() {
       return;
     }
   } catch (err) {
+    console.error("[Playground Send Error]", err);
     messages.push({
       role: "assistant",
-      content: err.message || "Mock request failed.",
+      content: err.message || "OpenAI request failed.",
     });
   }
 

@@ -77,7 +77,10 @@ function buildInput(messages, prompt) {
 
 function buildPayload(body) {
   const apiModel = resolveModel(body.model);
-  const maxOutputTokens = Number(body.maxTokens) || 2048;
+  const requestedMax = Number(body.maxTokens) || 2048;
+  const maxOutputTokens = isReasoningModel(body.model)
+    ? Math.max(requestedMax, 1024)
+    : requestedMax;
   const payload = {
     model: apiModel,
     instructions: buildInstructions(body.instructions),

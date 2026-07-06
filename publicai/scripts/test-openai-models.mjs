@@ -25,13 +25,14 @@ function fail(name, detail) {
 
 async function testModel(model) {
   const label = `${model.displayName} (${model.id} → ${model.apiId || model.id})`;
+  const reasoning = modelConfig.isReasoningModel(model.id);
   const res = await fetch(`${baseUrl}/api/openai-chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: model.id,
-      prompt: "Reply with exactly: OK",
-      maxTokens: 32,
+      prompt: reasoning ? "Reply with exactly: OK" : "Reply with exactly: OK",
+      maxTokens: reasoning ? 1024 : 32,
       temperature: 0,
     }),
   });

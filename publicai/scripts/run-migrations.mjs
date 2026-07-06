@@ -11,7 +11,14 @@ async function main() {
     headers: { "Content-Type": "application/json" },
     body: "{}",
   });
-  const json = await res.json();
+  const text = await res.text();
+  let json = {};
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    console.error(text.slice(0, 500));
+    process.exit(1);
+  }
   console.log(JSON.stringify(json, null, 2));
   if (!res.ok) process.exit(1);
 }

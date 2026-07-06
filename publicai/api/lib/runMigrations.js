@@ -85,9 +85,9 @@ async function tryManagementApi(sql, token, ref) {
 async function applyWithPg(url, files) {
   let Client;
   try {
-    ({ Client } = require("pg"));
-  } catch {
-    return { applied: false, reason: "pg module unavailable" };
+    Client = require("pg").Client;
+  } catch (err) {
+    return { applied: false, reason: `pg module unavailable: ${err.message}` };
   }
 
   const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
@@ -124,14 +124,17 @@ async function applyMigrations() {
   ].filter(Boolean);
 
   for (const token of tokens) {
+    let tokenOk = true;
     for (const file of files) {
       const sql = fs.readFileSync(file.path, "utf8");
       const result = await tryManagementApi(sql, token, ref);
       if (!result.ok) {
         errors.push(`management-api/${file.name}: ${result.payload?.message || result.status}`);
+        tokenOk = false;
         break;
       }
-    } else {
+    }
+    if (tokenOk) {
       return { applied: true, via: "management-api", files: files.map((f) => f.name) };
     }
   }

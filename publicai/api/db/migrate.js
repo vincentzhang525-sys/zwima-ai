@@ -109,7 +109,13 @@ module.exports = async function handler(req, res) {
     const admin = getAdminClient();
     const body = parseBody(req);
 
-    const bootstrapAllowed = await needsBootstrap(admin);
+    let bootstrapAllowed = false;
+    try {
+      bootstrapAllowed = await needsBootstrap(admin);
+    } catch (bootstrapErr) {
+      console.error("[db/migrate] bootstrap check failed", bootstrapErr);
+      bootstrapAllowed = true;
+    }
     if (!isAuthorized(req, body, bootstrapAllowed)) {
       return json(res, 403, { error: "Forbidden" });
     }

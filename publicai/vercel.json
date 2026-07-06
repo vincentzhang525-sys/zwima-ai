@@ -3,5 +3,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "functions": {
+    "api/db/migrate.js": {
+      "includeFiles": "supabase/**",
+      "maxDuration": 60
+    }
+  }
 }

@@ -13,9 +13,8 @@
     "verify:sprint27": "node scripts/sprint27-verify.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1"
-  },
-  "devDependencies": {
+    "@supabase/supabase-js": "^2.49.1",
     "pg": "^8.14.1"
-  }
+  },
+  "devDependencies": {}
 }

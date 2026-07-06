@@ -92,6 +92,18 @@ function getDatabaseUrlCandidates() {
     );
   }
 
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceKey && ref) {
+    push(
+      `postgresql://postgres:${encodeURIComponent(serviceKey)}@db.${ref}.supabase.co:5432/postgres`,
+      "service-role-direct"
+    );
+    push(
+      `postgresql://postgres.${ref}:${encodeURIComponent(serviceKey)}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`,
+      "service-role-pooler"
+    );
+  }
+
   return candidates;
 }
 

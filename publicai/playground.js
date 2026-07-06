@@ -203,6 +203,97 @@ function clearConversation() {
   updateUsageDisplay();
 }
 
+async function runOpenAIChat(prompt) {
+  const started = Date.now();
+  const response = await fetch("/api/openai-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt,
+      model: getSelectedModel(),
+      temperature: Number(temperatureRange?.value || 0.7),
+      maxTokens: Number(document.getElementById("maxTokensInput")?.value || 2048),
+      messages: messages.map((item) => ({ role: item.role, content: item.content })),
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "OpenAI request failed");
+  }
+
+  return {
+    content: data.content,
+    provider: "OpenAI",
+    model: data.model || getSelectedModel(),
+    usage: {
+      inputTokens: Number(data.usage?.inputTokens) || 0,
+      outputTokens: Number(data.usage?.outputTokens) || 0,
+      totalTokens: Number(data.usage?.totalTokens) || 0,
+    },
+    latencyMs: Number(data.latencyMs) || Date.now() - started,
+    source: "openai",
+  };
+}
+
+async function runChatRequest(prompt) {
+  const providerId = getSelectedProviderId();
+  const model = getSelectedModel();
+  const temperature = Number(temperatureRange?.value || 0.7);
+  const maxTokens = Number(document.getElementById("maxTokensInput")?.value || 2048);
+
+  if (providerId === "openai") {
+    try {
+      return await runOpenAIChat(prompt);
+    } catch {
+      return window.ZwimaPlaygroundService.runMock({
+        providerId,
+        model,
+        prompt,
+        temperature,
+        maxTokens,
+      });
+    }
+  }
+
+  return window.ZwimaPlaygroundService.runMock({
+    providerId,
+    model,
+    prompt,
+    temperature,
+    maxTokens,
+  });
+}
+
+async function recordSuccessfulRequest(prompt, result) {
+  const inputTokens = result.usage.inputTokens;
+  const outputTokens = result.usage.outputTokens;
+  const totalTokens = result.usage.totalTokens || inputTokens + outputTokens;
+  const estimatedCost = window.ZwimaUsageService?.estimateCost?.(totalTokens) ?? 0;
+  const providerName =
+    window.ZwimaPlaygroundService.getProviders()[getSelectedProviderId()]?.name || result.provider;
+
+  window.ZwimaCreditsService?.spend?.(
+    totalTokens,
+    `Playground: ${providerName} · ${getSelectedModel()}`
+  );
+
+  const remainingCredits = window.ZwimaCreditsService?.getWallet?.()?.balance ?? 0;
+  window.ZwimaUsageService?.addRecord?.({
+    provider: providerName,
+    model: getSelectedModel(),
+    prompt,
+    inputTokens,
+    outputTokens,
+    totalTokens,
+    estimatedCost,
+    remainingCredits,
+    status: "Success",
+  });
+
+  saveToHistory(prompt);
+}
+
 async function sendMessage() {
   const prompt = promptInput?.value.trim();
   if (!prompt) return;
@@ -215,28 +306,15 @@ async function sendMessage() {
   renderMessages();
 
   try {
-    const result = await window.ZwimaPlaygroundService.runMock({
-      providerId: getSelectedProviderId(),
-      model: getSelectedModel(),
-      prompt,
-      temperature: Number(temperatureRange?.value || 0.7),
-      maxTokens: Number(document.getElementById("maxTokensInput")?.value || 2048),
-    });
+    const result = await runChatRequest(prompt);
 
     messages.push({ role: "assistant", content: result.content });
     sessionInputTokens += result.usage.inputTokens;
     sessionOutputTokens += result.usage.outputTokens;
     lastResponseMs = result.latencyMs;
 
-    const totalTokens = result.usage.inputTokens + result.usage.outputTokens;
-    const estimatedCost = window.ZwimaUsageService?.estimateCost?.(totalTokens) ?? 0;
-    const providerName = window.ZwimaPlaygroundService.getProviders()[getSelectedProviderId()]?.name || result.provider;
-
     try {
-      window.ZwimaCreditsService?.spend?.(
-        totalTokens,
-        `Playground: ${providerName} · ${getSelectedModel()}`
-      );
+      await recordSuccessfulRequest(prompt, result);
     } catch (creditErr) {
       messages.pop();
       messages.pop();
@@ -249,21 +327,6 @@ async function sendMessage() {
       updateUsageDisplay();
       return;
     }
-
-    const remainingCredits = window.ZwimaCreditsService?.getWallet?.()?.balance ?? 0;
-    window.ZwimaUsageService?.addRecord?.({
-      provider: providerName,
-      model: getSelectedModel(),
-      prompt,
-      inputTokens: result.usage.inputTokens,
-      outputTokens: result.usage.outputTokens,
-      totalTokens,
-      estimatedCost,
-      remainingCredits,
-      status: "Success",
-    });
-
-    saveToHistory(prompt);
   } catch (err) {
     messages.push({
       role: "assistant",

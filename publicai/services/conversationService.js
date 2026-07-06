@@ -7,6 +7,16 @@
     return conversationsCache;
   }
 
+  function upsertCache(conversation) {
+    const index = conversationsCache.findIndex((row) => String(row.id) === String(conversation.id));
+    if (index >= 0) {
+      conversationsCache[index] = conversation;
+    } else {
+      conversationsCache.unshift(conversation);
+    }
+    conversationsCache = conversationsCache.slice(0, 5);
+  }
+
   window.ZwimaConversationService = {
     isSupabase() {
       return window.ZwimaDbMode?.isSupabaseMode?.();
@@ -17,27 +27,48 @@
       return conversationsCache;
     },
 
-    async saveConversation({ title, provider, model, messages }) {
+    async saveConversation({ id, title, provider, model, messages }) {
       if (!this.isSupabase()) {
         let history = window.ZwimaStorage.get("PLAYGROUND_HISTORY", []);
-        history.unshift({
+        if (id) {
+          const index = history.findIndex((row) => String(row.id) === String(id));
+          const existing = index >= 0 ? history[index] : null;
+          const updated = {
+            id: existing?.id || id,
+            title,
+            provider,
+            model,
+            messages,
+            timestamp: new Date().toISOString(),
+          };
+          if (index >= 0) history[index] = updated;
+          else history.unshift(updated);
+          window.ZwimaStorage.set("PLAYGROUND_HISTORY", history.slice(0, 5));
+          return updated;
+        }
+
+        const created = {
           id: Date.now(),
           title,
           provider,
           model,
           messages,
           timestamp: new Date().toISOString(),
-        });
+        };
+        history.unshift(created);
         window.ZwimaStorage.set("PLAYGROUND_HISTORY", history.slice(0, 5));
-        return history[0];
+        return created;
       }
 
+      const payload = { title, provider, model, messages };
+      const method = id ? "PATCH" : "POST";
+      if (id) payload.id = id;
+
       const data = await window.ZwimaSupabaseApi.apiFetch("/api/conversations", {
-        method: "POST",
-        body: JSON.stringify({ title, provider, model, messages }),
+        method,
+        body: JSON.stringify(payload),
       });
-      conversationsCache.unshift(data.conversation);
-      conversationsCache = conversationsCache.slice(0, 5);
+      upsertCache(data.conversation);
       return data.conversation;
     },
 

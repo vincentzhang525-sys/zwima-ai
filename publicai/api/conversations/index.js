@@ -29,6 +29,28 @@ module.exports = async function handler(req, res) {
       return json(res, 200, { conversations: (data || []).map(mapConversation) });
     }
 
+    if (req.method === "PATCH") {
+      const body = parseBody(req);
+      const id = body.id;
+      if (!id) return json(res, 400, { error: "Conversation id is required." });
+
+      const { data, error } = await client
+        .from("playground_conversations")
+        .update({
+          title: body.title || "Conversation",
+          provider: body.provider || null,
+          model: body.model || null,
+          messages: body.messages || [],
+        })
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .select("*")
+        .single();
+      if (error) throw error;
+
+      return json(res, 200, { conversation: mapConversation(data) });
+    }
+
     if (req.method === "POST") {
       const body = parseBody(req);
       const payload = {

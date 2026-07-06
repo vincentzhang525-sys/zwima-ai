@@ -11,19 +11,45 @@ const TABLES = [
 ];
 
 function getMigrationsDir() {
-  return path.join(process.cwd(), "supabase", "migrations");
+  const candidates = [
+    path.join(process.cwd(), "supabase", "migrations"),
+    path.join(__dirname, "..", "..", "supabase", "migrations"),
+    path.join("/var/task", "supabase", "migrations"),
+  ];
+  for (const dir of candidates) {
+    if (fs.existsSync(dir)) return dir;
+  }
+  return null;
 }
 
 function listMigrationFiles() {
   const dir = getMigrationsDir();
-  if (!fs.existsSync(dir)) {
-    return [{ name: "schema.sql", path: path.join(process.cwd(), "supabase", "schema.sql") }];
+  if (dir) {
+    return fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith(".sql"))
+      .sort()
+      .map((name) => ({ name, path: path.join(dir, name) }));
   }
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".sql"))
-    .sort()
-    .map((name) => ({ name, path: path.join(dir, name) }));
+
+  const bundled = path.join(__dirname, "migrationSql.js");
+  if (fs.existsSync(bundled)) {
+    const { MIGRATIONS } = require("./migrationSql");
+    return MIGRATIONS.map((item) => ({ name: item.name, sql: item.sql }));
+  }
+
+  const schemaPath = path.join(process.cwd(), "supabase", "schema.sql");
+  if (fs.existsSync(schemaPath)) {
+    return [{ name: "schema.sql", path: schemaPath }];
+  }
+
+  const { MIGRATIONS } = require("./migrationSql");
+  return MIGRATIONS.map((item) => ({ name: item.name, sql: item.sql }));
+}
+
+function readSql(file) {
+  if (file.sql) return file.sql;
+  return fs.readFileSync(file.path, "utf8");
 }
 
 function getProjectRef(supabaseUrl) {
@@ -94,8 +120,7 @@ async function applyWithPg(url, files) {
   await client.connect();
   try {
     for (const file of files) {
-      const sql = fs.readFileSync(file.path, "utf8");
-      await client.query(sql);
+      await client.query(readSql(file));
     }
     return { applied: true, files: files.map((f) => f.name) };
   } finally {
@@ -126,8 +151,7 @@ async function applyMigrations() {
   for (const token of tokens) {
     let tokenOk = true;
     for (const file of files) {
-      const sql = fs.readFileSync(file.path, "utf8");
-      const result = await tryManagementApi(sql, token, ref);
+      const result = await tryManagementApi(readSql(file), token, ref);
       if (!result.ok) {
         errors.push(`management-api/${file.name}: ${result.payload?.message || result.status}`);
         tokenOk = false;
@@ -143,7 +167,7 @@ async function applyMigrations() {
     applied: false,
     reason: "No working database connection",
     errors,
-    hint: "Add SUPABASE_DB_PASSWORD or DATABASE_URL to Vercel (Supabase Dashboard → Settings → Database → connection string)",
+    hint: "Add SUPABASE_DB_PASSWORD, DATABASE_URL, or SUPABASE_ACCESS_TOKEN to Vercel",
   };
 }
 

@@ -30,14 +30,23 @@ function getSelectedProviderId() {
   return providerSelect?.value || "openai";
 }
 
+function getSelectedModelId() {
+  return modelSelect?.value || window.ZwimaPlaygroundService.getModels(getSelectedProviderId())[0]?.id;
+}
+
 function getSelectedModel() {
-  return modelSelect?.value || window.ZwimaPlaygroundService.getModels(getSelectedProviderId())[0];
+  return window.ZwimaPlaygroundService.getModel(getSelectedProviderId(), getSelectedModelId());
+}
+
+function getSelectedModelLabel() {
+  return getSelectedModel()?.displayName || getSelectedModelId();
 }
 
 function getChatPayload(prompt) {
+  const model = getSelectedModel();
   return {
     prompt,
-    model: getSelectedModel(),
+    model: model?.id || getSelectedModelId(),
     temperature: Number(temperatureRange?.value || 0.7),
     maxTokens: Number(document.getElementById("maxTokensInput")?.value || 2048),
     messages: messages.map((item) => ({ role: item.role, content: item.content })),
@@ -61,27 +70,30 @@ function populateModels(providerId) {
   if (!modelSelect) return;
   const models = window.ZwimaPlaygroundService.getModels(providerId);
   modelSelect.innerHTML = models
-    .map((model) => `<option value="${escapeHtml(model)}">${escapeHtml(model)}</option>`)
+    .map(
+      (model) =>
+        `<option value="${escapeHtml(model.id)}">${escapeHtml(model.displayName)}</option>`
+    )
     .join("");
 }
 
 function renderModelList() {
   if (!modelList) return;
   const activeProvider = getSelectedProviderId();
-  const activeModel = getSelectedModel();
+  const activeModelId = getSelectedModelId();
 
   modelList.innerHTML = window.ZwimaPlaygroundService.getAllModelEntries()
     .map((entry) => {
-      const isActive = entry.providerId === activeProvider && entry.model === activeModel;
+      const isActive = entry.providerId === activeProvider && entry.modelId === activeModelId;
       return `
         <li>
           <button
             class="model-list-item${isActive ? " active" : ""}"
             type="button"
             data-provider="${escapeHtml(entry.providerId)}"
-            data-model="${escapeHtml(entry.model)}"
+            data-model="${escapeHtml(entry.modelId)}"
           >
-            <span class="model-list-name">${escapeHtml(entry.model)}</span>
+            <span class="model-list-name">${escapeHtml(entry.displayName)}</span>
             <span class="model-list-provider">${escapeHtml(entry.providerName)}</span>
           </button>
         </li>
@@ -90,10 +102,10 @@ function renderModelList() {
     .join("");
 }
 
-function selectModel(providerId, model) {
+function selectModel(providerId, modelId) {
   if (providerSelect) providerSelect.value = providerId;
   populateModels(providerId);
-  if (modelSelect) modelSelect.value = model;
+  if (modelSelect) modelSelect.value = modelId;
   renderModelList();
 }
 
@@ -111,9 +123,11 @@ function applyUrlParams() {
   if (modelSlug && modelSelect) {
     const models = window.ZwimaPlaygroundService.getModels(getSelectedProviderId());
     const match = models.find(
-      (name) => window.ZwimaFormat?.slugify?.(name) === modelSlug.toLowerCase()
+      (model) =>
+        model.id === modelSlug ||
+        window.ZwimaFormat?.slugify?.(model.displayName) === modelSlug.toLowerCase()
     );
-    if (match) modelSelect.value = match;
+    if (match) modelSelect.value = match.id;
   }
 
   renderModelList();
@@ -134,12 +148,28 @@ function updateUsageDisplay() {
   set("remainingCredits", wallet ? wallet.balance.toLocaleString() : "—");
 }
 
-function formatMessageBody(content, streaming) {
-  const html = escapeHtml(content).replace(/\n/g, "<br>");
-  if (streaming) {
-    return `<span class="chat-bubble-body">${html}<span class="stream-cursor" aria-hidden="true"></span></span>`;
+function scrollChatToBottom() {
+  if (!chatMessages) return;
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function renderUserContent(content) {
+  return `<span class="chat-bubble-body">${escapeHtml(content).replace(/\n/g, "<br>")}</span>`;
+}
+
+function renderAssistantContent(content, streaming) {
+  if (streaming && !String(content || "").trim()) {
+    return `<span class="chat-bubble-body"><span class="typing-indicator" aria-label="Generating"><span></span><span></span><span></span></span></span>`;
   }
-  return `<span class="chat-bubble-body">${html}</span>`;
+
+  const markdown = window.ZwimaMarkdown?.render?.(content) || escapeHtml(content).replace(/\n/g, "<br>");
+  const cursor = streaming ? '<span class="stream-cursor" aria-hidden="true"></span>' : "";
+  return `<span class="chat-bubble-body chat-markdown">${markdown}${cursor}</span>`;
+}
+
+function formatMessageBody(msg) {
+  if (msg.role === "user") return renderUserContent(msg.content);
+  return renderAssistantContent(msg.content, Boolean(msg.streaming));
 }
 
 function renderMessages() {
@@ -158,24 +188,23 @@ function renderMessages() {
       return `
         <div class="chat-bubble ${msg.role}${streamingClass}"${streamId} data-index="${index}">
           <span class="chat-bubble-role">${msg.role === "user" ? "User" : "Assistant"}</span>
-          ${formatMessageBody(msg.content, streaming)}
+          ${formatMessageBody(msg)}
         </div>
       `;
     })
     .join("");
 
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  scrollChatToBottom();
 }
 
 function updateStreamingBubble(content) {
   if (streamingMessageIndex < 0) return;
   messages[streamingMessageIndex].content = content;
   const bubble = document.getElementById("streaming-bubble");
-  const body = bubble?.querySelector(".chat-bubble-body");
-  if (body) {
-    body.innerHTML = `${escapeHtml(content).replace(/\n/g, "<br>")}<span class="stream-cursor" aria-hidden="true"></span>`;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+  if (bubble) {
+    bubble.innerHTML = `<span class="chat-bubble-role">Assistant</span>${renderAssistantContent(content, true)}`;
   }
+  scrollChatToBottom();
 }
 
 function beginStreamingAssistant() {
@@ -206,7 +235,7 @@ function saveToHistory(firstPrompt) {
     id: Date.now(),
     title: truncate(firstPrompt, 48),
     provider: provider?.name || getSelectedProviderId(),
-    model: getSelectedModel(),
+    model: getSelectedModelLabel(),
     messages: [...messages],
     timestamp: new Date().toISOString(),
   });
@@ -268,19 +297,25 @@ function clearConversation() {
   updateUsageDisplay();
 }
 
-function mapApiResult(data, started) {
+function mapProviderResult(providerId, data, started) {
+  const providerName =
+    window.ZwimaPlaygroundService.getProviders()[providerId]?.name || data.provider || providerId;
   return {
     content: data.content,
-    provider: "OpenAI",
-    model: data.model || getSelectedModel(),
+    provider: providerName,
+    model: data.model || getSelectedModelLabel(),
     usage: {
       inputTokens: Number(data.usage?.inputTokens) || 0,
       outputTokens: Number(data.usage?.outputTokens) || 0,
       totalTokens: Number(data.usage?.totalTokens) || 0,
     },
     latencyMs: Number(data.latencyMs) || Date.now() - started,
-    source: "openai",
+    source: providerId,
   };
+}
+
+function mapApiResult(data, started) {
+  return mapProviderResult("openai", { ...data, provider: "openai" }, started);
 }
 
 async function runOpenAIChat(prompt) {
@@ -382,6 +417,20 @@ async function consumeOpenAIStream(response, onDelta) {
     }
   }
 
+  if (buffer.trim()) {
+    parseSseEvents(`${buffer}\n\n`, (eventName, event) => {
+      const type = event.type || eventName;
+      if (type === "response.output_text.delta" && event.delta) {
+        fullText += event.delta;
+        onDelta(fullText);
+      }
+      if (type === "response.completed" && event.response) {
+        usage = event.response.usage;
+        model = event.response.model;
+      }
+    });
+  }
+
   if (!fullText.trim()) {
     throw new Error("OpenAI stream returned empty content");
   }
@@ -391,7 +440,7 @@ async function consumeOpenAIStream(response, onDelta) {
 
   return {
     content: fullText.trim(),
-    model: model || getSelectedModel(),
+    model: model || getSelectedModelId(),
     usage: {
       inputTokens,
       outputTokens,
@@ -445,9 +494,18 @@ async function runOpenAIChatWithFallback(prompt, onDelta, signal) {
   }
 }
 
+async function runProviderChat(prompt, providerId, onDelta, signal) {
+  const started = Date.now();
+  const result = await window.ZwimaProviders.ProviderManager.chat(providerId, {
+    ...getChatPayload(prompt),
+    signal,
+  });
+  if (onDelta && result.content) onDelta(result.content);
+  return mapProviderResult(providerId, result, started);
+}
+
 async function runChatRequest(prompt, onDelta, signal) {
   const providerId = getSelectedProviderId();
-  const model = getSelectedModel();
   const temperature = Number(temperatureRange?.value || 0.7);
   const maxTokens = Number(document.getElementById("maxTokensInput")?.value || 2048);
 
@@ -455,9 +513,14 @@ async function runChatRequest(prompt, onDelta, signal) {
     return runOpenAIChatWithFallback(prompt, onDelta, signal);
   }
 
+  const adapter = window.ZwimaProviders?.ProviderManager?.get(providerId);
+  if (adapter?.enabled) {
+    return runProviderChat(prompt, providerId, onDelta, signal);
+  }
+
   return window.ZwimaPlaygroundService.runMock({
     providerId,
-    model,
+    model: getSelectedModelId(),
     prompt,
     temperature,
     maxTokens,
@@ -468,19 +531,27 @@ async function recordSuccessfulRequest(prompt, result) {
   const inputTokens = result.usage.inputTokens;
   const outputTokens = result.usage.outputTokens;
   const totalTokens = result.usage.totalTokens || inputTokens + outputTokens;
-  const estimatedCost = window.ZwimaUsageService?.estimateCost?.(totalTokens) ?? 0;
+  const providerId = getSelectedProviderId();
+  const modelId = getSelectedModelId();
+  const estimatedCost =
+    window.ZwimaProviders?.ProviderManager?.calculateCost?.(
+      providerId,
+      inputTokens,
+      outputTokens,
+      modelId
+    ) ?? window.ZwimaUsageService?.estimateCost?.(totalTokens) ?? 0;
   const providerName =
-    window.ZwimaPlaygroundService.getProviders()[getSelectedProviderId()]?.name || result.provider;
+    window.ZwimaPlaygroundService.getProviders()[providerId]?.name || result.provider;
 
   window.ZwimaCreditsService?.spend?.(
     totalTokens,
-    `Playground: ${providerName} · ${getSelectedModel()}`
+    `Playground: ${providerName} · ${getSelectedModelLabel()}`
   );
 
   const remainingCredits = window.ZwimaCreditsService?.getWallet?.()?.balance ?? 0;
   window.ZwimaUsageService?.addRecord?.({
     provider: providerName,
-    model: getSelectedModel(),
+    model: getSelectedModelLabel(),
     prompt,
     inputTokens,
     outputTokens,
@@ -498,7 +569,11 @@ function stopGeneration() {
     streamAbortController.abort();
     streamAbortController = null;
   }
-  finalizeStreamingAssistant();
+  if (streamingMessageIndex >= 0 && messages[streamingMessageIndex]) {
+    delete messages[streamingMessageIndex].streaming;
+    streamingMessageIndex = -1;
+    renderMessages();
+  }
   setGeneratingState(false);
 }
 
@@ -514,8 +589,9 @@ async function sendMessage() {
   renderMessages();
 
   const providerId = getSelectedProviderId();
-  const useStream = providerId === "openai";
-  if (useStream) beginStreamingAssistant();
+  const adapter = window.ZwimaProviders?.ProviderManager?.get(providerId);
+  const useRealChat = Boolean(adapter?.enabled);
+  if (useRealChat) beginStreamingAssistant();
 
   try {
     const result = await runChatRequest(
@@ -559,7 +635,7 @@ async function sendMessage() {
     removeStreamingAssistant();
     messages.push({
       role: "assistant",
-      content: err.message || "OpenAI request failed.",
+      content: err.message || "Request failed.",
     });
     renderMessages();
   } finally {

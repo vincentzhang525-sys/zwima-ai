@@ -1,0 +1,166 @@
+const modelConfig = require("../config/models.js");
+
+const GEMINI_MODEL_MAP = {
+  "gemini-2-flash": "gemini-2.5-flash",
+  "gemini-2-pro": "gemini-2.5-pro",
+};
+
+function resolveModel(modelRef) {
+  return modelConfig.resolveId(modelRef);
+}
+
+function resolveApiModel(modelId) {
+  return GEMINI_MODEL_MAP[modelId] || modelId;
+}
+
+function parseBody(req) {
+  if (!req.body) return {};
+  if (typeof req.body === "string") {
+    try {
+      return JSON.parse(req.body);
+    } catch {
+      return {};
+    }
+  }
+  return req.body;
+}
+
+function buildSystemInstruction(customInstructions) {
+  const now = new Date();
+  const utc = now.toISOString();
+  const local = now.toLocaleString("zh-CN", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const parts = [
+    "You are Gemini, a helpful AI assistant on the ZWIMA AI Playground.",
+    `Current UTC time: ${utc}.`,
+    `Current Asia/Shanghai time: ${local}.`,
+    "Answer clearly and naturally in the same language the user uses.",
+  ];
+
+  if (customInstructions && String(customInstructions).trim()) {
+    parts.unshift(String(customInstructions).trim());
+  }
+
+  return {
+    parts: [{ text: parts.join("\n") }],
+  };
+}
+
+function buildContents(messages, prompt) {
+  const items = Array.isArray(messages) && messages.length
+    ? messages
+    : [{ role: "user", content: String(prompt || "") }];
+
+  return items
+    .filter((item) => item && (item.role === "user" || item.role === "assistant"))
+    .map((item) => ({
+      role: item.role === "assistant" ? "model" : "user",
+      parts: [{ text: String(item.content || "") }],
+    }));
+}
+
+function mapUsage(usageMetadata) {
+  const inputTokens = Number(usageMetadata?.promptTokenCount) || 0;
+  const outputTokens = Number(usageMetadata?.candidatesTokenCount) || 0;
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens: Number(usageMetadata?.totalTokenCount) || inputTokens + outputTokens,
+  };
+}
+
+function extractText(candidates) {
+  if (!Array.isArray(candidates) || !candidates.length) return "";
+  const parts = candidates[0]?.content?.parts;
+  if (!Array.isArray(parts)) return "";
+  return parts
+    .filter((part) => part.text)
+    .map((part) => part.text)
+    .join("\n")
+    .trim();
+}
+
+module.exports = async function handler(req, res) {
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    return res.status(204).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: "Gemini API key not configured" });
+  }
+
+  const body = parseBody(req);
+  const modelId = resolveModel(body.model);
+  const apiModel = resolveApiModel(modelId);
+  const maxTokens = Number(body.maxTokens) || 2048;
+  const temperature = Number(body.temperature ?? 0.7);
+  const contents = buildContents(body.messages, body.prompt);
+  const started = Date.now();
+
+  try {
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: buildSystemInstruction(body.instructions),
+          contents,
+          generationConfig: {
+            temperature,
+            maxOutputTokens: maxTokens,
+          },
+        }),
+      }
+    );
+
+    const json = await geminiRes.json().catch(() => ({}));
+
+    if (!geminiRes.ok) {
+      console.error("[gemini-chat] API error:", JSON.stringify(json, null, 2));
+      return res.status(geminiRes.status).json({
+        error: json?.error?.message || `Gemini API error ${geminiRes.status}`,
+        details: json?.error || json,
+      });
+    }
+
+    const content = extractText(json.candidates);
+    if (!content) {
+      console.error("[gemini-chat] Empty output:", JSON.stringify(json, null, 2));
+      return res.status(502).json({
+        error: "Gemini returned an empty response",
+        details: json,
+      });
+    }
+
+    const usage = mapUsage(json.usageMetadata);
+
+    return res.status(200).json({
+      content,
+      model: modelId,
+      usage,
+      latencyMs: Date.now() - started,
+    });
+  } catch (err) {
+    console.error("[gemini-chat] Request failed:", err);
+    return res.status(500).json({
+      error: err.message || "Gemini request failed",
+    });
+  }
+};

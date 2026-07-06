@@ -1,13 +1,11 @@
-const MODEL_MAP = {
-  "GPT-4o": "gpt-4o",
-  "GPT-4.1": "gpt-4.1",
-  "o1-mini": "o1-mini",
-};
+const modelConfig = require("../config/models.js");
 
-const REASONING_MODELS = new Set(["o1-mini", "o1-preview", "o1", "o3-mini"]);
+function resolveModel(modelRef) {
+  return modelConfig.resolveId(modelRef);
+}
 
-function resolveModel(displayModel) {
-  return MODEL_MAP[displayModel] || String(displayModel || "gpt-4o").toLowerCase();
+function isReasoningModel(modelRef) {
+  return modelConfig.isReasoningModel(modelRef);
 }
 
 function parseBody(req) {
@@ -88,7 +86,7 @@ function buildPayload(body) {
     store: false,
   };
 
-  if (!REASONING_MODELS.has(apiModel)) {
+  if (!isReasoningModel(apiModel)) {
     payload.temperature = Number(body.temperature ?? 0.7);
   }
 

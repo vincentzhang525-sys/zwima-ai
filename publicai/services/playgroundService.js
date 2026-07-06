@@ -1,43 +1,15 @@
 (function () {
-  const PROVIDERS = {
-    openai: {
-      id: "openai",
-      name: "OpenAI",
-      models: ["GPT-4o", "GPT-4.1", "o1-mini"],
-    },
-    anthropic: {
-      id: "anthropic",
-      name: "Anthropic",
-      models: ["Claude 4 Sonnet", "Claude 4 Opus", "Claude 3.5 Haiku"],
-    },
-    google: {
-      id: "google",
-      name: "Google",
-      models: ["Gemini 2.0 Flash", "Gemini 2.0 Pro"],
-    },
-    deepseek: {
-      id: "deepseek",
-      name: "DeepSeek",
-      models: ["DeepSeek V3", "DeepSeek R1"],
-    },
-    mistral: {
-      id: "mistral",
-      name: "Mistral",
-      models: ["Mistral Large", "Mistral Small"],
-    },
-  };
-
   const RESPONSE_TEMPLATES = {
     openai: (prompt, model) =>
-      `[Mock · ${model}] Here is a detailed response to: "${truncate(prompt, 80)}"\n\nI've analyzed your request and structured a step-by-step answer with actionable recommendations.`,
+      `[Mock · ${model.displayName}] Here is a detailed response to: "${truncate(prompt, 80)}"\n\nI've analyzed your request and structured a step-by-step answer with actionable recommendations.`,
     anthropic: (prompt, model) =>
-      `[Mock · ${model}] Let's think through this carefully.\n\nRegarding "${truncate(prompt, 80)}", here is a balanced, methodical answer tailored to your use case.`,
+      `[Mock · ${model.displayName}] Let's think through this carefully.\n\nRegarding "${truncate(prompt, 80)}", here is a balanced, methodical answer tailored to your use case.`,
     google: (prompt, model) =>
-      `[Mock · ${model}] I can help with that.\n\nFor "${truncate(prompt, 80)}", here is a concise summary with practical guidance you can apply immediately.`,
+      `[Mock · ${model.displayName}] I can help with that.\n\nFor "${truncate(prompt, 80)}", here is a concise summary with practical guidance you can apply immediately.`,
     deepseek: (prompt, model) =>
-      `[Mock · ${model}] Analysis for "${truncate(prompt, 80)}":\n\nCost-efficient mock output focused on accuracy and clarity for production workloads.`,
+      `[Mock · ${model.displayName}] Analysis for "${truncate(prompt, 80)}":\n\nCost-efficient mock output focused on accuracy and clarity for production workloads.`,
     mistral: (prompt, model) =>
-      `[Mock · ${model}] Enterprise response for "${truncate(prompt, 80)}" — optimized for European compliance and coding workloads.`,
+      `[Mock · ${model.displayName}] Enterprise response for "${truncate(prompt, 80)}" — optimized for European compliance and coding workloads.`,
   };
 
   function truncate(text, len) {
@@ -53,48 +25,77 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  function config() {
+    return window.ZwimaModelConfig;
+  }
+
+  function buildProviders() {
+    const providers = {};
+    config().getProviderIds().forEach((providerId) => {
+      providers[providerId] = {
+        id: providerId,
+        name: config().getProviderName(providerId),
+        models: config().getByProvider(providerId),
+      };
+    });
+    return providers;
+  }
+
+  function resolveModel(providerId, modelRef) {
+    const models = config().getByProvider(providerId);
+    const id = config().resolveId(modelRef);
+    return config().getById(id) || models[0] || config().getById("gpt-4o");
+  }
+
   window.ZwimaPlaygroundService = {
     getProviders() {
-      return PROVIDERS;
+      return buildProviders();
     },
 
     getProviderList() {
-      return Object.values(PROVIDERS);
+      return config().getProviderIds().map((providerId) => ({
+        id: providerId,
+        name: config().getProviderName(providerId),
+      }));
     },
 
     getModels(providerId) {
-      return PROVIDERS[providerId]?.models || PROVIDERS.openai.models;
+      return config().getByProvider(providerId);
     },
 
     getAllModelEntries() {
-      return Object.values(PROVIDERS).flatMap((provider) =>
-        provider.models.map((model) => ({
-          providerId: provider.id,
-          providerName: provider.name,
-          model,
-        }))
-      );
+      return config().getAll().map((model) => ({
+        providerId: model.provider,
+        providerName: config().getProviderName(model.provider),
+        modelId: model.id,
+        displayName: model.displayName,
+      }));
+    },
+
+    getModel(providerId, modelRef) {
+      return resolveModel(providerId, modelRef);
     },
 
     async runMock({ providerId, model, prompt, temperature, maxTokens }) {
       const trimmed = String(prompt || "").trim();
       if (!trimmed) throw new Error("Prompt is required.");
 
-      const provider = PROVIDERS[providerId] || PROVIDERS.openai;
-      const modelName = model || provider.models[0];
-      const template = RESPONSE_TEMPLATES[provider.id] || RESPONSE_TEMPLATES.openai;
+      const modelMeta = resolveModel(providerId, model);
+      const providerName = config().getProviderName(modelMeta.provider);
+      const template = RESPONSE_TEMPLATES[modelMeta.provider] || RESPONSE_TEMPLATES.openai;
       const latencyMs = 350 + Math.floor(Math.random() * 650);
 
       await delay(latencyMs);
 
-      const content = template(trimmed, modelName);
+      const content = template(trimmed, modelMeta);
       const inputTokens = estimateTokens(trimmed);
       const outputTokens = Math.min(estimateTokens(content), Number(maxTokens) || 2048);
 
       return {
         content,
-        provider: provider.name,
-        model: modelName,
+        provider: providerName,
+        model: modelMeta.displayName,
+        modelId: modelMeta.id,
         temperature: Number(temperature) || 0.7,
         usage: {
           inputTokens,

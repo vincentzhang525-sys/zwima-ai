@@ -80,18 +80,18 @@
       outputPrice: 5,
     },
     {
-      id: "deepseek-v3",
-      displayName: "DeepSeek V3",
+      id: "deepseek-chat",
+      displayName: "DeepSeek Chat",
       provider: "deepseek",
-      contextWindow: 64000,
+      contextWindow: 128000,
       inputPrice: 0.27,
       outputPrice: 1.1,
     },
     {
-      id: "deepseek-r1",
-      displayName: "DeepSeek R1",
+      id: "deepseek-reasoner",
+      displayName: "DeepSeek Reasoner",
       provider: "deepseek",
-      contextWindow: 64000,
+      contextWindow: 128000,
       inputPrice: 0.55,
       outputPrice: 2.19,
     },
@@ -113,7 +113,13 @@
     },
   ];
 
-  const REASONING_MODEL_IDS = new Set(["o1-mini", "o1-preview", "o1", "o3-mini"]);
+  const REASONING_MODEL_IDS = new Set([
+    "o1-mini",
+    "o1-preview",
+    "o1",
+    "o3-mini",
+    "deepseek-reasoner",
+  ]);
 
   function getAll() {
     return MODELS.slice();
@@ -142,10 +148,15 @@
   function resolveId(modelRef) {
     const value = String(modelRef || "").trim();
     if (!value) return "gpt-4o";
-    const byId = getById(value);
+    const aliases = {
+      "deepseek-v3": "deepseek-chat",
+      "deepseek-r1": "deepseek-reasoner",
+    };
+    const normalized = aliases[value] || value;
+    const byId = getById(normalized);
     if (byId) return byId.id;
-    const byName = MODELS.find((model) => model.displayName === value);
-    return byName?.id || value;
+    const byName = MODELS.find((model) => model.displayName === normalized);
+    return byName?.id || normalized;
   }
 
   function isReasoningModel(modelRef) {

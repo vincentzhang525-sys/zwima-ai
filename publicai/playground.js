@@ -28,7 +28,9 @@ function truncate(text, len) {
 }
 
 function isLiveProvider(providerId) {
-  if (providerId === "openai" || providerId === "google") return true;
+  if (providerId === "openai" || providerId === "google" || providerId === "deepseek") {
+    return true;
+  }
   return Boolean(window.ZwimaProviders?.ProviderManager?.get(providerId)?.enabled);
 }
 
@@ -39,7 +41,7 @@ function updateProviderStatusNote() {
     window.ZwimaPlaygroundService.getProviders()[providerId]?.name || providerId;
 
   if (isLiveProvider(providerId)) {
-    providerStatusNote.textContent = `Live API mode — ${providerName} responses use the real provider API.`;
+    providerStatusNote.textContent = `Live API mode — ${providerName} provider.`;
     return;
   }
 
@@ -684,6 +686,165 @@ async function runGeminiChatWithFallback(prompt, onDelta, signal) {
   }
 }
 
+async function consumeChatCompletionsStream(response, onDelta) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let fullText = "";
+  let usage = null;
+  let model = null;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith("data:")) continue;
+      const raw = trimmed.slice(5).trim();
+      if (!raw || raw === "[DONE]") continue;
+
+      let event;
+      try {
+        event = JSON.parse(raw);
+      } catch {
+        continue;
+      }
+
+      if (event.error) {
+        throw new Error(event.error.message || "Chat completion stream error");
+      }
+
+      const delta = event.choices?.[0]?.delta;
+      if (delta?.content) {
+        fullText += delta.content;
+        onDelta(fullText);
+      }
+
+      if (event.usage) usage = event.usage;
+      if (event.model) model = event.model;
+    }
+  }
+
+  if (buffer.trim()) {
+    const trimmed = buffer.trim();
+    if (trimmed.startsWith("data:")) {
+      const raw = trimmed.slice(5).trim();
+      if (raw && raw !== "[DONE]") {
+        try {
+          const event = JSON.parse(raw);
+          const delta = event.choices?.[0]?.delta;
+          if (delta?.content) {
+            fullText += delta.content;
+            onDelta(fullText);
+          }
+          if (event.usage) usage = event.usage;
+          if (event.model) model = event.model;
+        } catch {
+          // ignore trailing partial chunk
+        }
+      }
+    }
+  }
+
+  if (!fullText.trim()) {
+    throw new Error("Chat completion stream returned empty content");
+  }
+
+  const inputTokens = Number(usage?.prompt_tokens) || 0;
+  const outputTokens = Number(usage?.completion_tokens) || 0;
+
+  return {
+    content: fullText.trim(),
+    model: model || getSelectedModelId(),
+    usage: {
+      inputTokens,
+      outputTokens,
+      totalTokens: Number(usage?.total_tokens) || inputTokens + outputTokens,
+    },
+  };
+}
+
+async function runDeepSeekChat(prompt) {
+  const started = Date.now();
+  const response = await fetch("/api/deepseek-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(getChatPayload(prompt)),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    console.error("[Playground DeepSeek Error]", {
+      status: response.status,
+      error: data.error,
+      details: data.details,
+    });
+    throw new Error(data.error || "DeepSeek request failed");
+  }
+
+  return mapProviderResult(
+    "deepseek",
+    {
+      content: data.content,
+      model: data.model,
+      usage: data.usage,
+      latencyMs: data.latencyMs,
+      provider: "deepseek",
+    },
+    started
+  );
+}
+
+async function runDeepSeekChatStream(prompt, onDelta, signal) {
+  const started = Date.now();
+  const response = await fetch("/api/deepseek-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...getChatPayload(prompt), stream: true }),
+    signal,
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!response.ok || !contentType.includes("text/event-stream")) {
+    const data = await response.json().catch(() => ({}));
+    console.error("[Playground DeepSeek Stream Error]", {
+      status: response.status,
+      error: data.error,
+      details: data.details,
+    });
+    throw new Error(data.error || "DeepSeek stream failed");
+  }
+
+  const result = await consumeChatCompletionsStream(response, onDelta);
+  return mapProviderResult(
+    "deepseek",
+    {
+      content: result.content,
+      model: result.model,
+      usage: result.usage,
+      latencyMs: Date.now() - started,
+      provider: "deepseek",
+    },
+    started
+  );
+}
+
+async function runDeepSeekChatWithFallback(prompt, onDelta, signal) {
+  try {
+    return await runDeepSeekChatStream(prompt, onDelta, signal);
+  } catch (streamErr) {
+    if (signal.aborted) throw streamErr;
+    console.warn("[Playground] DeepSeek stream failed, falling back to non-stream:", streamErr);
+    removeStreamingAssistant();
+    return runDeepSeekChat(prompt);
+  }
+}
+
 async function runProviderChat(prompt, providerId, onDelta, signal) {
   const started = Date.now();
   const result = await window.ZwimaProviders.ProviderManager.chat(providerId, {
@@ -705,6 +866,10 @@ async function runChatRequest(prompt, onDelta, signal) {
 
   if (providerId === "google") {
     return runGeminiChatWithFallback(prompt, onDelta, signal);
+  }
+
+  if (providerId === "deepseek") {
+    return runDeepSeekChatWithFallback(prompt, onDelta, signal);
   }
 
   const adapter = window.ZwimaProviders?.ProviderManager?.get(providerId);

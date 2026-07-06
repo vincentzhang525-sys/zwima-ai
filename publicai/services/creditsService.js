@@ -62,30 +62,51 @@
     return String(dateStr || "").slice(0, 7);
   }
 
+  function isSupabase() {
+    return window.ZwimaDbMode?.isSupabaseMode?.();
+  }
+
   window.ZwimaCreditsService = {
     CREDITS_PER_EUR,
 
+    async refreshWallet() {
+      if (isSupabase()) return window.ZwimaSupabaseCredits.refreshFromDb();
+      return loadRaw();
+    },
+
     getWallet() {
+      if (isSupabase()) {
+        const cached = window.ZwimaSupabaseCredits?.getCachedWallet?.();
+        if (cached) return cached;
+      }
       return loadRaw();
     },
 
     getTransactions() {
+      if (isSupabase()) {
+        const cached = window.ZwimaSupabaseCredits?.getCachedWallet?.();
+        return (cached?.transactions || []).slice().reverse();
+      }
       return loadRaw().transactions.slice().reverse();
     },
 
     getMonthlyUsage() {
       const current = monthKey(today());
-      return loadRaw().transactions
+      const transactions = isSupabase()
+        ? window.ZwimaSupabaseCredits?.getCachedWallet?.()?.transactions || []
+        : loadRaw().transactions;
+      return transactions
         .filter((tx) => tx.type === "usage" && monthKey(tx.date) === current)
         .reduce((sum, tx) => sum + Math.abs(Number(tx.amount) || 0), 0);
     },
 
     getEstimatedEurValue(balance) {
-      const credits = balance ?? loadRaw().balance;
+      const credits = balance ?? this.getWallet().balance;
       return credits / CREDITS_PER_EUR;
     },
 
     topUp(amountEur) {
+      if (isSupabase()) return window.ZwimaSupabaseCredits.topUp(amountEur);
       const eur = Number(amountEur);
       if (!eur || eur <= 0) {
         throw new Error("Please enter a valid top-up amount.");
@@ -106,6 +127,7 @@
     },
 
     spend(amount, description) {
+      if (isSupabase()) return window.ZwimaSupabaseCredits.spend(amount, description);
       const credits = Math.abs(Number(amount) || 0);
       if (!credits) throw new Error("Invalid usage amount.");
       const wallet = loadRaw();
@@ -126,6 +148,7 @@
     },
 
     addAdjustment(amount, description) {
+      if (isSupabase()) return window.ZwimaSupabaseCredits.addAdjustment(amount, description);
       const delta = Number(amount) || 0;
       const wallet = loadRaw();
       wallet.balance += delta;

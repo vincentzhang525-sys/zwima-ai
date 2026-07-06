@@ -71,7 +71,10 @@ function renderTable() {
     .join("");
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  if (window.ZwimaDbMode?.isSupabaseMode?.()) {
+    await window.ZwimaUsageService?.refreshRecords?.();
+  }
   populateFilters();
   renderTable();
 

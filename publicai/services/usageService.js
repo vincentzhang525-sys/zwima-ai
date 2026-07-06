@@ -49,10 +49,25 @@
     });
   }
 
+  function isSupabase() {
+    return window.ZwimaDbMode?.isSupabaseMode?.();
+  }
+
+  function getRecordsFromCache() {
+    if (isSupabase()) return window.ZwimaSupabaseUsage?.getCachedRecords?.() || [];
+    return loadStore().records;
+  }
+
   window.ZwimaUsageService = {
     estimateCost,
 
+    async refreshRecords() {
+      if (isSupabase()) return window.ZwimaSupabaseUsage.refreshFromDb();
+      return loadStore().records;
+    },
+
     addRecord(payload) {
+      if (isSupabase()) return window.ZwimaSupabaseUsage.addRecord(payload);
       const inputTokens = Number(payload.inputTokens) || 0;
       const outputTokens = Number(payload.outputTokens) || 0;
       const totalTokens = Number(payload.totalTokens) || inputTokens + outputTokens;
@@ -76,7 +91,7 @@
     },
 
     getRecords(filters = {}) {
-      let rows = loadStore().records.slice();
+      let rows = getRecordsFromCache().slice();
       const provider = filters.provider || "";
       const model = filters.model || "";
 
@@ -88,8 +103,7 @@
     },
 
     getRecentActivity(limit = 4) {
-      return loadStore()
-        .records.slice()
+      return getRecordsFromCache()
         .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
         .slice(0, limit)
         .map((row) => ({
@@ -100,7 +114,7 @@
     },
 
     getFilterOptions() {
-      const records = loadStore().records;
+      const records = getRecordsFromCache();
       return {
         providers: [...new Set(records.map((row) => row.provider).filter(Boolean))].sort(),
         models: [...new Set(records.map((row) => row.model).filter(Boolean))].sort(),

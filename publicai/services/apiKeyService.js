@@ -70,18 +70,33 @@
     return key;
   }
 
+  function isSupabase() {
+    return window.ZwimaDbMode?.isSupabaseMode?.();
+  }
+
+  function getKeysFromCache() {
+    if (isSupabase()) return window.ZwimaSupabaseApiKeys?.getCachedKeys?.() || [];
+    return loadStore().keys;
+  }
+
   window.ZwimaApiKeyService = {
     KEY_PREFIX,
 
+    async refreshKeys() {
+      if (isSupabase()) return window.ZwimaSupabaseApiKeys.refreshFromDb();
+      return loadStore().keys;
+    },
+
     getKeys() {
-      return loadStore().keys.slice().reverse();
+      return getKeysFromCache().slice().reverse();
     },
 
     getActiveCount() {
-      return loadStore().keys.filter((item) => item.status === "Active").length;
+      return getKeysFromCache().filter((item) => item.status === "Active").length;
     },
 
     createKey(name) {
+      if (isSupabase()) return window.ZwimaSupabaseApiKeys.createKey(name);
       const trimmed = String(name || "").trim();
       if (!trimmed) throw new Error("Key name is required.");
       const store = loadStore();
@@ -99,6 +114,7 @@
     },
 
     deleteKey(id) {
+      if (isSupabase()) return window.ZwimaSupabaseApiKeys.deleteKey(id);
       const store = loadStore();
       const before = store.keys.length;
       store.keys = store.keys.filter((item) => item.id !== id);
@@ -108,14 +124,17 @@
     },
 
     disableKey(id) {
+      if (isSupabase()) return window.ZwimaSupabaseApiKeys.setStatus(id, "Disabled");
       return setStatus(id, "Disabled");
     },
 
     enableKey(id) {
+      if (isSupabase()) return window.ZwimaSupabaseApiKeys.setStatus(id, "Active");
       return setStatus(id, "Active");
     },
 
     renameKey(id, name) {
+      if (isSupabase()) return window.ZwimaSupabaseApiKeys.renameKey(id, name);
       const trimmed = String(name || "").trim();
       if (!trimmed) throw new Error("Key name is required.");
       const store = loadStore();

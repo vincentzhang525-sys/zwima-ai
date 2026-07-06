@@ -58,4 +58,8 @@
     STRIPE_WEBHOOK_SECRET: "",
     AUTH_PROVIDER: "localStorage",
   };
+
+  if (typeof window !== "undefined" && window.__ZWIMA_RUNTIME__) {
+    Object.assign(window.ZWIMA_CONFIG, window.__ZWIMA_RUNTIME__);
+  }
 })();

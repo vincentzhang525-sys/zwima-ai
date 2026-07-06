@@ -79,11 +79,11 @@ function closeTopUpModal() {
   if (modal) modal.hidden = true;
 }
 
-function confirmTopUp() {
+async function confirmTopUp() {
   if (!pendingTopUpEur) return;
   try {
     showError("");
-    window.ZwimaCreditsService.topUp(pendingTopUpEur);
+    await window.ZwimaCreditsService.topUp(pendingTopUpEur);
     closeTopUpModal();
     renderWallet();
   } catch (err) {
@@ -91,17 +91,20 @@ function confirmTopUp() {
   }
 }
 
-function simulateUsage() {
+async function simulateUsage() {
   try {
     showError("");
-    window.ZwimaCreditsService.spend(250, "Simulated API usage (Playground request)");
+    await window.ZwimaCreditsService.spend(250, "Simulated API usage (Playground request)");
     renderWallet();
   } catch (err) {
     showError(err.message || "Usage simulation failed.");
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  if (window.ZwimaDbMode?.isSupabaseMode?.()) {
+    await window.ZwimaCreditsService?.refreshWallet?.();
+  }
   renderWallet();
 
   document.querySelector(".wallet-topup-options")?.addEventListener("click", (event) => {

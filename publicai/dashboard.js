@@ -51,6 +51,18 @@ function statusClass(status) {
 }
 
 async function loadDashboardData() {
+  if (window.ZwimaDbMode?.isSupabaseMode?.()) {
+    try {
+      await Promise.all([
+        window.ZwimaCreditsService?.refreshWallet?.(),
+        window.ZwimaUsageService?.refreshRecords?.(),
+        window.ZwimaApiKeyService?.refreshKeys?.(),
+      ]);
+    } catch (err) {
+      console.warn("[Dashboard] Supabase refresh failed:", err);
+    }
+  }
+
   const billing = window.ZwimaBillingService;
   const user = window.ZwimaUserService.getSessionSync();
   const [overview, usage, keys, activity] = await Promise.all([

@@ -86,7 +86,7 @@ async function copyKey(id, button) {
   }
 }
 
-function handleAction(action, id, button) {
+async function handleAction(action, id, button) {
   const service = window.ZwimaApiKeyService;
 
   try {
@@ -98,7 +98,7 @@ function handleAction(action, id, button) {
     }
 
     if (action === "copy") {
-      copyKey(id, button);
+      await copyKey(id, button);
       return;
     }
 
@@ -106,17 +106,17 @@ function handleAction(action, id, button) {
       const current = service.getKeys().find((key) => key.id === id);
       const newName = window.prompt("Enter new key name:", current?.name || "");
       if (!newName || newName.trim() === current?.name) return;
-      service.renameKey(id, newName.trim());
+      await service.renameKey(id, newName.trim());
     }
 
-    if (action === "disable") service.disableKey(id);
-    if (action === "enable") service.enableKey(id);
+    if (action === "disable") await service.disableKey(id);
+    if (action === "enable") await service.enableKey(id);
 
     if (action === "delete") {
       const current = service.getKeys().find((key) => key.id === id);
       if (!window.confirm(`Delete "${current?.name || "this key"}"? This cannot be undone.`)) return;
       visibleKeys.delete(id);
-      service.deleteKey(id);
+      await service.deleteKey(id);
     }
 
     renderKeys();
@@ -125,7 +125,10 @@ function handleAction(action, id, button) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  if (window.ZwimaDbMode?.isSupabaseMode?.()) {
+    await window.ZwimaApiKeyService?.refreshKeys?.();
+  }
   renderKeys();
 
   document.getElementById("openCreateKeyModal")?.addEventListener("click", openCreateModal);
@@ -135,11 +138,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event.target === createModal) closeCreateModal();
   });
 
-  createForm?.addEventListener("submit", (event) => {
+  createForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const name = document.getElementById("keyName")?.value || "";
     try {
-      window.ZwimaApiKeyService.createKey(name);
+      await window.ZwimaApiKeyService.createKey(name);
       closeCreateModal();
       renderKeys();
     } catch (err) {

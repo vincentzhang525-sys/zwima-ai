@@ -21,6 +21,7 @@
 
   function getAdapter() {
     const name = getProviderName();
+    if (name === "supabase" && window.ZwimaSupabaseAuthAdapter) return window.ZwimaSupabaseAuthAdapter;
     if (name === "api" && window.ZwimaApiAuthAdapter) return window.ZwimaApiAuthAdapter;
     if (name === "supabase" && window.ZwimaSupabaseAuthAdapter) return window.ZwimaSupabaseAuthAdapter;
     if (name === "firebase" && window.ZwimaFirebaseAuthAdapter) return window.ZwimaFirebaseAuthAdapter;

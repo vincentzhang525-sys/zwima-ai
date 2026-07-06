@@ -251,34 +251,41 @@ function removeStreamingAssistant() {
 }
 
 function saveToHistory(firstPrompt) {
-  let history = window.ZwimaStorage.get("PLAYGROUND_HISTORY", []);
   const provider = window.ZwimaPlaygroundService.getProviders()[getSelectedProviderId()];
-
-  history.unshift({
-    id: Date.now(),
+  const payload = {
     title: truncate(firstPrompt, 48),
     provider: provider?.name || getSelectedProviderId(),
     model: getSelectedModelLabel(),
     messages: [...messages],
+  };
+
+  const savePromise = window.ZwimaConversationService?.saveConversation?.(payload);
+  if (savePromise?.then) {
+    savePromise.then(() => renderHistory()).catch((err) => console.warn("[Playground history]", err));
+    return;
+  }
+
+  let history = window.ZwimaStorage.get("PLAYGROUND_HISTORY", []);
+  history.unshift({
+    id: Date.now(),
+    ...payload,
     timestamp: new Date().toISOString(),
   });
-
   window.ZwimaStorage.set("PLAYGROUND_HISTORY", history.slice(0, 5));
   renderHistory();
 }
 
 function renderHistory() {
   if (!historyList) return;
-  const history = window.ZwimaStorage.get("PLAYGROUND_HISTORY", []);
+  const renderRows = (history) => {
+    if (!history.length) {
+      historyList.innerHTML = '<li class="history-item-meta">No recent conversations.</li>';
+      return;
+    }
 
-  if (!history.length) {
-    historyList.innerHTML = '<li class="history-item-meta">No recent conversations.</li>';
-    return;
-  }
-
-  historyList.innerHTML = history
-    .map(
-      (item) => `
+    historyList.innerHTML = history
+      .map(
+        (item) => `
         <li>
           <button class="history-item" type="button" data-history-id="${item.id}">
             <span class="history-item-title">${escapeHtml(item.title)}</span>
@@ -286,27 +293,45 @@ function renderHistory() {
           </button>
         </li>
       `
-    )
-    .join("");
+      )
+      .join("");
+  };
+
+  const historyPromise = window.ZwimaConversationService?.getHistory?.();
+  if (historyPromise?.then) {
+    historyPromise.then(renderRows).catch(() => renderRows([]));
+    return;
+  }
+
+  renderRows(window.ZwimaStorage.get("PLAYGROUND_HISTORY", []));
 }
 
 function loadHistoryItem(id) {
+  const applyItem = (item) => {
+    if (!item) return;
+    messages = [...item.messages];
+    sessionInputTokens = 0;
+    sessionOutputTokens = 0;
+    lastResponseMs = null;
+
+    messages.forEach((msg) => {
+      const tokens = Math.max(1, Math.ceil(msg.content.length / 4));
+      if (msg.role === "user") sessionInputTokens += tokens;
+      else sessionOutputTokens += tokens;
+    });
+
+    renderMessages();
+    updateUsageDisplay();
+  };
+
+  const itemPromise = window.ZwimaConversationService?.findById?.(id);
+  if (itemPromise?.then) {
+    itemPromise.then(applyItem);
+    return;
+  }
+
   const item = window.ZwimaStorage.get("PLAYGROUND_HISTORY", []).find((row) => row.id === Number(id));
-  if (!item) return;
-
-  messages = [...item.messages];
-  sessionInputTokens = 0;
-  sessionOutputTokens = 0;
-  lastResponseMs = null;
-
-  messages.forEach((msg) => {
-    const tokens = Math.max(1, Math.ceil(msg.content.length / 4));
-    if (msg.role === "user") sessionInputTokens += tokens;
-    else sessionOutputTokens += tokens;
-  });
-
-  renderMessages();
-  updateUsageDisplay();
+  applyItem(item);
 }
 
 function clearConversation() {
@@ -902,13 +927,14 @@ async function recordSuccessfulRequest(prompt, result) {
   const providerName =
     window.ZwimaPlaygroundService.getProviders()[providerId]?.name || result.provider;
 
-  window.ZwimaCreditsService?.spend?.(
+  const spendResult = window.ZwimaCreditsService?.spend?.(
     totalTokens,
     `Playground: ${providerName} · ${getSelectedModelLabel()}`
   );
+  if (spendResult?.then) await spendResult;
 
   const remainingCredits = window.ZwimaCreditsService?.getWallet?.()?.balance ?? 0;
-  window.ZwimaUsageService?.addRecord?.({
+  const usageResult = window.ZwimaUsageService?.addRecord?.({
     provider: providerName,
     model: getSelectedModelLabel(),
     prompt,
@@ -919,6 +945,7 @@ async function recordSuccessfulRequest(prompt, result) {
     remainingCredits,
     status: "Success",
   });
+  if (usageResult?.then) await usageResult;
 
   saveToHistory(prompt);
 }

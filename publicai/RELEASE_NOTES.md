@@ -1,3 +1,29 @@
+# ZWIMA AI — Sprint 41 Release Notes
+
+**Production URL:** https://zwima-group.info  
+**Status:** Public Beta — Operations & Legal Ready
+
+## Operations
+
+- **SMTP:** IONOS-ready via nodemailer (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`)
+- **Fallback:** `EMAIL_PROVIDER=mock` or missing SMTP config → mock mode (production safe)
+- **Email templates:** welcome, password reset, billing receipt, credit purchase, API key created
+- **Contact:** API form with validation, honeypot, rate limits, mailto fallback
+
+## Legal (complete set)
+
+Impressum, Privacy, Cookie Policy, Terms, DPA, GDPR Export, Delete Account, API Terms, Rate Limit Policy, Refund Policy
+
+## Documentation
+
+Getting Started, API reference, Python/Node examples, rate limits, pricing, credits, models
+
+## Support
+
+hello@zwima-group.info
+
+---
+
 # ZWIMA AI — Sprint 40 Final Release Notes
 
 **Production URL:** https://zwima-group.info  

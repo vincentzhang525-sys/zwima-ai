@@ -495,7 +495,11 @@ module.exports = async function handler(req, res) {
       });
 
       try {
-        await sendTransactional("billingNotice", user.email, { plan, amount: total });
+        await sendTransactional("billingReceipt", user.email, {
+          plan,
+          amount: total,
+          orderNumber,
+        });
       } catch (mailErr) {
         console.error("[billing] billing notice email", mailErr);
       }

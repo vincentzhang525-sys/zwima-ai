@@ -1,5 +1,21 @@
 # Changelog
 
+## Sprint 41 — Production Operations & Legal Readiness (2026-07-07)
+
+### Added
+- Production SMTP via nodemailer (IONOS) with automatic mock fallback
+- Email templates: billingReceipt, apiKeyCreated, contactMessage
+- Contact API (`POST /api/contact`) with honeypot and rate limiting
+- Legal pages: API Terms, Rate Limit Policy, Refund Policy
+- KNOWN_LIMITATIONS.md, ROADMAP.md
+- `scripts/verify-sprint41-ops.mjs`
+
+### Changed
+- Contact form submits via API with mailto fallback
+- Billing sends billing receipt email on plan upgrade
+- API key creation sends notification email
+- Documentation: Python/Node SDK examples, pricing, credits, models
+
 ## Sprint 40 Final — Launch Readiness (2026-07-07)
 
 ### Added

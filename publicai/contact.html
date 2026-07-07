@@ -37,23 +37,28 @@
 
     <section class="section">
       <div class="container contact-grid">
-        <form class="contact-form" action="mailto:hello@zwima-group.info" method="post" enctype="text/plain">
+        <form class="contact-form" id="contactForm" novalidate>
           <label for="name">Name</label>
-          <input id="name" name="Name" type="text" autocomplete="name" required>
+          <input id="name" name="name" type="text" autocomplete="name" required minlength="2">
 
           <label for="company">Company</label>
-          <input id="company" name="Company" type="text" autocomplete="organization" required>
+          <input id="company" name="company" type="text" autocomplete="organization" required minlength="2">
 
           <label for="email">Email</label>
-          <input id="email" name="Email" type="email" autocomplete="email" required>
+          <input id="email" name="email" type="email" autocomplete="email" required>
 
           <label for="usecase">Primary API use case</label>
-          <input id="usecase" name="Use case" type="text">
+          <input id="usecase" name="usecase" type="text">
 
           <label for="message">Message</label>
-          <textarea id="message" name="Message" rows="6" required></textarea>
+          <textarea id="message" name="message" rows="6" required minlength="10"></textarea>
 
-          <button class="button button-primary" type="submit">Request Access</button>
+          <label class="sr-only" for="website">Website</label>
+          <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" class="sr-only" aria-hidden="true">
+
+          <p id="contactFormStatus" class="muted" role="status"></p>
+          <button class="button button-primary" type="submit">Send Message</button>
+          <p class="muted" style="margin-top:12px;">Or email <a href="mailto:hello@zwima-group.info">hello@zwima-group.info</a> directly.</p>
         </form>
 
         <aside class="contact-panel">

@@ -1,5 +1,6 @@
 const MockEmailProvider = require("./MockEmailProvider");
 const SmtpEmailProvider = require("./SmtpEmailProvider");
+const { smtpConfigured } = SmtpEmailProvider;
 const { renderTemplate } = require("./templates");
 const { appendEmailLog } = require("./emailLogs");
 
@@ -14,13 +15,22 @@ function sendingDisabled() {
 }
 
 function resolveEmailProvider() {
-  if (sendingDisabled() || (isDevMode() && String(process.env.EMAIL_PROVIDER || "mock").toLowerCase() === "mock")) {
+  if (sendingDisabled()) {
     return new MockEmailProvider();
   }
+
   const provider = String(process.env.EMAIL_PROVIDER || "mock").toLowerCase();
-  if (provider === "smtp" || provider === "resend" || provider === "postmark" || provider === "ionos") {
-    return new SmtpEmailProvider();
+  if (provider === "mock") {
+    return new MockEmailProvider();
   }
+
+  if (provider === "smtp" || provider === "ionos" || provider === "resend" || provider === "postmark") {
+    if (smtpConfigured()) {
+      return new SmtpEmailProvider();
+    }
+    return new MockEmailProvider();
+  }
+
   return new MockEmailProvider();
 }
 
@@ -46,9 +56,10 @@ async function sendEmail({ template, to, data }) {
     template,
     to,
     subject: rendered.subject,
-    provider: result.provider || provider.name,
-    status: result.ok ? "sent" : "failed",
+    provider: result.fallback ? "mock" : result.provider || provider.name,
+    status: result.ok ? (result.fallback ? "fallback" : "sent") : "failed",
     messageId: result.messageId,
+    detail: result.smtpError || result.fallback ? "smtp_fallback" : undefined,
   });
   return result;
 }
@@ -74,5 +85,6 @@ module.exports = {
   renderTemplate,
   isDevMode,
   sendingDisabled,
+  smtpConfigured,
   getEmailLogs: require("./emailLogs").getEmailLogs,
 };

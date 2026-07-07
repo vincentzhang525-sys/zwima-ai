@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rate Limit Policy | ZWIMA AI</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body>
+  <header class="site-header"><nav class="navbar"><a class="logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a></nav></header>
+  <main>
+    <section class="page-hero"><div class="container narrow"><p class="eyebrow">Legal</p><h1>Rate Limit Policy</h1></div></section>
+    <section class="section legal-content"><div class="container narrow">
+      <p>Rate limits protect platform stability and fair usage across all customers.</p>
+      <h2>Default limits</h2>
+      <ul>
+        <li>Gateway chat: 180 requests per minute per IP (platform-wide burst protection)</li>
+        <li>API keys: 60 management requests per minute per IP</li>
+        <li>Contact form: 5 submissions per 5 minutes per IP</li>
+        <li>Registration: 5 attempts per minute per IP</li>
+      </ul>
+      <h2>Plan-based limits</h2>
+      <p>Subscription plans may include higher per-key rate limits. See <a href="pricing.html">Pricing</a> and your <a href="billing.html">Billing</a> dashboard.</p>
+      <h2>HTTP 429</h2>
+      <p>When rate limited, the API returns HTTP 429. Retry after a short delay with exponential backoff.</p>
+      <p>Enterprise customers may request custom limits: <a href="mailto:hello@zwima-group.info">hello@zwima-group.info</a></p>
+    </div></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-grid"><div><a class="logo footer-logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a></div></div></footer>
+  <script src="script.js"></script><script src="launch.js"></script>
+</body>
+</html>

@@ -82,8 +82,10 @@
         <section class="dash-section" id="authentication">
           <div class="docs-panel">
             <h2>Authentication</h2>
-            <p>All requests require a Bearer token in the Authorization header. Generate keys in the <a href="apikeys.html">API Key Center</a>.</p>
-            <p class="docs-value"><code>Authorization: Bearer YOUR_API_KEY</code></p>
+            <p>Gateway chat requests pass your API key in the JSON body as <code>apiKey</code>. Dashboard APIs use a Bearer JWT from login.</p>
+            <p class="docs-value">Gateway: <code>{ "apiKey": "zw_live_..." }</code></p>
+            <p class="docs-value">Dashboard: <code>Authorization: Bearer &lt;session_token&gt;</code></p>
+            <p>API terms: <a href="api-terms.html">API Terms of Use</a></p>
           </div>
         </section>
 
@@ -157,6 +159,57 @@
               <li><code>429</code> — Rate limit exceeded</li>
               <li><code>500</code> — Internal server error</li>
             </ul>
+          </div>
+        </section>
+
+        <section class="dash-section" id="pricing-docs">
+          <div class="docs-panel">
+            <h2>Pricing &amp; Credits</h2>
+            <p>Plans and credit packages are listed on the <a href="pricing.html">Pricing page</a>. Credits are deducted per API request based on token usage.</p>
+            <p>View your balance in <a href="credits.html">Credits</a> and purchase top-ups in <a href="billing.html">Billing</a>.</p>
+            <p>Refund terms: <a href="refund-policy.html">Refund Policy</a>. Rate limits: <a href="rate-limit-policy.html">Rate Limit Policy</a>.</p>
+          </div>
+        </section>
+
+        <section class="dash-section" id="models-docs">
+          <div class="docs-panel">
+            <h2>Models</h2>
+            <p>Live models: OpenAI (GPT-4o, GPT-4.1) and Google Gemini (2.5 Flash, 2.5 Pro). See <a href="models.html">Models Marketplace</a> and <a href="status.html">Provider Status</a>.</p>
+            <p>List models via <code>GET /api/gateway/models</code>.</p>
+          </div>
+        </section>
+
+        <section class="dash-section" id="python-sdk">
+          <div class="docs-panel">
+            <h2>Python SDK (example)</h2>
+            <p>Install: <code>pip install requests</code></p>
+            <pre class="code-block"><code>import os, requests
+
+API_KEY = os.environ["ZWIMA_API_KEY"]
+resp = requests.post(
+    "https://zwima-group.info/api/gateway/chat",
+    json={"apiKey": API_KEY, "prompt": "Hello", "model": "gpt-4o"},
+    timeout=60,
+)
+resp.raise_for_status()
+print(resp.json()["content"])</code></pre>
+          </div>
+        </section>
+
+        <section class="dash-section" id="node-sdk">
+          <div class="docs-panel">
+            <h2>Node.js SDK (example)</h2>
+            <pre class="code-block"><code>const API_KEY = process.env.ZWIMA_API_KEY;
+
+export async function zwimaChat(prompt, model = "gpt-4o") {
+  const res = await fetch("https://zwima-group.info/api/gateway/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ apiKey: API_KEY, prompt, model }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}</code></pre>
           </div>
         </section>
 

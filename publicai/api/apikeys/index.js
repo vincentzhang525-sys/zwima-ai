@@ -11,6 +11,7 @@ const {
   getClientIp,
 } = require("../lib/supabase");
 const { ensureProgress } = require("../onboarding/index.js");
+const { sendTransactional } = require("../lib/email");
 
 const KEY_PREFIX = "zw_live_";
 const CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -103,6 +104,12 @@ module.exports = async function handler(req, res) {
         await ensureProgress(admin, user.id, { api_key_created: true });
       } catch (onbErr) {
         console.error("[apikeys] onboarding", onbErr);
+      }
+
+      try {
+        await sendTransactional("apiKeyCreated", user.email, { name, email: user.email });
+      } catch (mailErr) {
+        console.error("[apikeys] email", mailErr);
       }
 
       return json(res, 200, { key: mapKey(data, secret) });

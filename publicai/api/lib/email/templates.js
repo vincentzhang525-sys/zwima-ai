@@ -19,10 +19,25 @@ const templates = {
     const text = `Your subscription was updated to ${plan}. Amount: €${amount}.`;
     return { subject, text, html: `<p>${text}</p>` };
   },
+  billingReceipt({ plan, amount, orderNumber }) {
+    const subject = "ZWIMA AI billing receipt";
+    const text = `Payment received. Plan: ${plan || "—"}. Amount: €${amount}.${orderNumber ? ` Order: ${orderNumber}.` : ""}`;
+    return { subject, text, html: `<p>${text}</p><p>Thank you for your business.</p>` };
+  },
   creditPurchase({ credits, amount }) {
     const subject = "ZWIMA AI credit purchase confirmation";
     const text = `You purchased ${credits} credits for €${amount}. Credits are now available in your wallet.`;
     return { subject, text, html: `<p>${text}</p>` };
+  },
+  apiKeyCreated({ name, email }) {
+    const subject = "ZWIMA AI API key created";
+    const text = `A new API key "${name || "API Key"}" was created for ${email || "your account"}. Store your key securely — it is shown only once at creation.`;
+    return { subject, text, html: `<p>${text}</p><p><a href="https://zwima-group.info/apikeys.html">API Key Center</a></p>` };
+  },
+  contactMessage({ name, company, email, usecase, message }) {
+    const subject = `ZWIMA AI contact: ${company || name || "Inquiry"}`;
+    const text = `From: ${name}\nCompany: ${company}\nEmail: ${email}\nUse case: ${usecase || "—"}\n\n${message}`;
+    return { subject, text, html: `<pre>${text}</pre>` };
   },
 };
 

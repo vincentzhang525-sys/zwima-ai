@@ -25,6 +25,7 @@
         <a href="#security" class="sidebar-link" data-section="security">Security</a>
         <a href="#logs" class="sidebar-link" data-section="logs">Logs</a>
         <a href="#billing" class="sidebar-link" data-section="billing">Commerce</a>
+        <a href="#enterprise" class="sidebar-link" data-section="enterprise">Enterprise</a>
         <a href="#apikeys" class="sidebar-link" data-section="apikeys">API Keys</a>
         <a href="#audit" class="sidebar-link" data-section="audit">Audit Log</a>
         <a href="dashboard.html" class="sidebar-link">← Console</a>
@@ -157,6 +158,30 @@
             <table class="data-table">
               <thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
               <tbody id="billingInvoicesBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="enterprise" class="dash-section admin-panel">
+          <div class="dash-section-header"><h2>Enterprise Operations</h2></div>
+          <div class="overview-grid" style="margin-bottom:16px;">
+            <article class="overview-card"><span>Organizations</span><strong id="entOrgCount">—</strong></article>
+            <article class="overview-card"><span>Teams</span><strong id="entTeamCount">—</strong></article>
+            <article class="overview-card"><span>Members</span><strong id="entMemberCount">—</strong></article>
+            <article class="overview-card"><span>Enterprise Revenue</span><strong id="entTotalRevenue">—</strong></article>
+          </div>
+          <h3 style="margin: 0 0 10px;font-size:1rem;">Organizations</h3>
+          <div class="data-table-wrap" style="margin-bottom:16px;">
+            <table class="data-table">
+              <thead><tr><th>Company</th><th>Country</th><th>Plan</th><th>Credits</th><th>Members</th><th>Teams</th><th>Revenue</th></tr></thead>
+              <tbody id="enterpriseOrgsBody"></tbody>
+            </table>
+          </div>
+          <h3 style="margin: 0 0 10px;font-size:1rem;">Workspace Roles</h3>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Role</th><th>Permissions</th></tr></thead>
+              <tbody id="enterpriseRolesBody"></tbody>
             </table>
           </div>
         </section>

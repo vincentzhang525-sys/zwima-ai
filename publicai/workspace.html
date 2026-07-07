@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workspace | ZWIMA AI</title>
+  <meta name="description" content="Enterprise workspace for organizations, teams, and shared resources.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body class="dashboard-body" data-page="workspace">
+  <div class="dashboard-layout">
+    <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation">
+      <a class="sidebar-logo" href="index.html">
+        <span class="logo-mark">Z</span>
+        <span>ZWIMA AI</span>
+      </a>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link">Overview</a>
+        <a href="workspace.html" class="sidebar-link active" aria-current="page">Workspace</a>
+        <a href="models.html" class="sidebar-link">Models</a>
+        <a href="apikeys.html" class="sidebar-link">API Keys</a>
+        <a href="playground.html" class="sidebar-link">Playground</a>
+        <a href="credits.html" class="sidebar-link">Credits</a>
+        <a href="usage.html" class="sidebar-link">Usage</a>
+        <a href="billing.html" class="sidebar-link">Billing</a>
+        <a href="settings.html" class="sidebar-link">Settings</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="index.html" class="sidebar-back">← Back to website</a>
+      </div>
+    </aside>
+
+    <div class="dashboard-main-wrap">
+      <header class="dashboard-topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-expanded="false" aria-controls="dashboardSidebar">
+          <span class="sr-only">Toggle sidebar</span><span></span><span></span><span></span>
+        </button>
+        <div class="topbar-heading">
+          <h1>Enterprise Workspace</h1>
+          <p>Manage your organization, teams, and shared resources.</p>
+        </div>
+        <div class="topbar-user" id="topbarUserPanel"></div>
+      </header>
+
+      <main class="dashboard-content">
+        <section class="dash-section">
+          <div class="dash-section-header">
+            <h2>Organization</h2>
+            <div class="composer-actions">
+              <select id="orgSelect" class="admin-toolbar-input"></select>
+              <button class="button button-primary button-sm" type="button" id="createOrgBtn">Create Organization</button>
+            </div>
+          </div>
+          <div class="overview-grid">
+            <article class="overview-card"><span>Company</span><strong id="wsOrgName">—</strong></article>
+            <article class="overview-card"><span>VAT Number</span><strong id="wsVat">—</strong></article>
+            <article class="overview-card"><span>Country</span><strong id="wsCountry">—</strong></article>
+            <article class="overview-card"><span>Industry</span><strong id="wsIndustry">—</strong></article>
+            <article class="overview-card"><span>Plan</span><strong id="wsPlan">—</strong></article>
+            <article class="overview-card"><span>Credits</span><strong id="wsCredits">—</strong></article>
+            <article class="overview-card"><span>Your Role</span><strong id="wsRole">—</strong></article>
+            <article class="overview-card"><span>Members</span><strong id="wsMembers">—</strong></article>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Teams</h2></div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Team</th><th>Members</th><th>Credits Allocated</th><th>Status</th></tr></thead>
+              <tbody id="teamsBody"><tr><td colspan="4" class="muted">No teams yet.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header">
+            <h2>Members</h2>
+            <div class="composer-actions">
+              <input type="email" id="inviteEmail" placeholder="Email" class="admin-toolbar-input">
+              <select id="inviteRole" class="admin-toolbar-input">
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="developer" selected>Developer</option>
+                <option value="viewer">Viewer</option>
+              </select>
+              <button class="button button-secondary button-sm" type="button" id="inviteMemberBtn">Invite</button>
+              <input type="text" id="memberSearch" placeholder="Search members" class="admin-toolbar-input">
+            </div>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Email / User</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="membersBody"><tr><td colspan="4" class="muted">No members yet.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Workspace Resources</h2></div>
+          <div class="overview-grid">
+            <article class="overview-card"><span>API Keys</span><strong id="wsApiKeys">—</strong></article>
+            <article class="overview-card"><span>Usage Requests</span><strong id="wsUsage">—</strong></article>
+            <article class="overview-card"><span>Shared Prompts</span><strong id="wsPrompts">—</strong></article>
+            <article class="overview-card"><span>Audit Entries</span><strong id="wsAudit">—</strong></article>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Enterprise Dashboard</h2></div>
+          <div class="overview-grid">
+            <article class="overview-card"><span>Org Requests</span><strong id="entRequests">—</strong></article>
+            <article class="overview-card"><span>Org Credits Used</span><strong id="entCredits">—</strong></article>
+            <article class="overview-card"><span>Revenue</span><strong id="entRevenue">—</strong></article>
+            <article class="overview-card"><span>Teams</span><strong id="entTeams">—</strong></article>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Audit Log</h2></div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Time</th><th>Action</th><th>Detail</th></tr></thead>
+              <tbody id="auditBody"><tr><td colspan="3" class="muted">No audit entries.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <p class="auth-success" id="wsSuccess" hidden></p>
+        <p class="auth-error" id="wsError" hidden></p>
+      </main>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="config.runtime.js"></script>
+  <script src="services/db/dbMode.js"></script>
+  <script src="services/db/supabaseApi.js"></script>
+  <script src="services/auth/supabaseAuthAdapter.js"></script>
+  <script src="auth/permissionManager.js"></script>
+  <script src="auth/jwtManager.js"></script>
+  <script src="services/userStore.js"></script>
+  <script src="services/auth/localStorageAuthAdapter.js"></script>
+  <script src="auth/authState.js"></script>
+  <script src="auth/sessionManager.js"></script>
+  <script src="auth/authEngine.js"></script>
+  <script src="auth/authGuard.js"></script>
+  <script src="utils/constants.js"></script>
+  <script src="utils/storage.js"></script>
+  <script src="utils/format.js"></script>
+  <script src="services/auth/apiAuthAdapter.js"></script>
+  <script src="services/authService.js"></script>
+  <script src="services/appEvents.js"></script>
+  <script src="layouts/sidebar.js"></script>
+  <script src="layouts/header.js"></script>
+  <script src="platform.js"></script>
+  <script src="user-session.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="workspace.js"></script>
+</body>
+</html>

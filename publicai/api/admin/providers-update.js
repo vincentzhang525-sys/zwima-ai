@@ -1,4 +1,4 @@
-const { parseBody, json, handleOptions, withCors } = require("../lib/supabase");
+const { parseBody, json, handleOptions, withCors, writeAuditLog, getClientIp } = require("../lib/supabase");
 const { requireAdmin } = require("./_common");
 const providerRuntime = require("../../gateway/providerRuntime.js");
 const providerRegistry = require("../../config/providerRegistry.js");
@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
   withCors(res);
   if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
   try {
-    await requireAdmin(req);
+    const { user } = await requireAdmin(req);
     const body = parseBody(req);
     const providerId = String(body.providerId || "").trim();
     if (!providerId) return json(res, 400, { error: "providerId is required." });
@@ -23,6 +23,14 @@ module.exports = async function handler(req, res) {
 
     const updated = providerRuntime.updateProvider(providerId, patch);
     const view = providerRegistry.getById(providerId, { [providerId]: updated });
+    await writeAuditLog({
+      userId: user.id,
+      eventType: "provider",
+      action: "provider_updated",
+      target: providerId,
+      detail: JSON.stringify(patch),
+      ip: getClientIp(req),
+    });
     return json(res, 200, { success: true, provider: view });
   } catch (err) {
     console.error("[admin/providers-update]", err);

@@ -26,6 +26,7 @@ const requiredPages = [
   "gateway.html",
   "playground.html",
   "billing.html",
+  "workspace.html",
   "profile.html",
   "notifications.html",
   "documentation.html",

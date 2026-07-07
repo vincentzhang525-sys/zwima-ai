@@ -178,6 +178,30 @@ function renderCommerce(data) {
   }
 }
 
+function renderEnterprise(data) {
+  setText("entOrgCount", Number(data?.totals?.organizations || 0).toLocaleString());
+  setText("entTeamCount", Number(data?.totals?.teams || 0).toLocaleString());
+  setText("entMemberCount", Number(data?.totals?.members || 0).toLocaleString());
+  setText("entTotalRevenue", `€${Number(data?.totals?.totalRevenue || 0).toLocaleString()}`);
+
+  const revMap = new Map((data?.revenueByOrganization || []).map((r) => [r.organizationId, r]));
+  const orgBody = document.getElementById("enterpriseOrgsBody");
+  if (orgBody) {
+    orgBody.innerHTML = (data?.organizations || [])
+      .map((o) => {
+        const rev = revMap.get(o.id) || {};
+        return `<tr><td>${esc(o.name)}</td><td>${esc(o.country)}</td><td>${esc(o.subscriptionPlan)}</td><td>${Number(o.credits).toLocaleString()}</td><td>${rev.memberCount || 0}</td><td>${rev.teamCount || 0}</td><td>€${Number(rev.revenue || 0).toFixed(2)}</td></tr>`;
+      })
+      .join("");
+  }
+  const rolesBody = document.getElementById("enterpriseRolesBody");
+  if (rolesBody) {
+    rolesBody.innerHTML = (data?.permissions || [])
+      .map((p) => `<tr><td>${esc(p.role)}</td><td class="muted">${(p.permissions || []).join(", ")}</td></tr>`)
+      .join("");
+  }
+}
+
 function renderApiKeys(rows) {
   const body = document.getElementById("apikeysTableBody");
   if (!body) return;
@@ -201,7 +225,7 @@ async function loadAll() {
     status: document.getElementById("userStatusFilter")?.value || "",
     sort: document.getElementById("userSort")?.value || "created_at_desc",
   };
-  const [exec, users, providers, revenue, health, security, logs, audit, billing, commerce, apikeys] = await Promise.all([
+  const [exec, users, providers, revenue, health, security, logs, audit, billing, commerce, enterprise, apikeys] = await Promise.all([
     admin().getExecutive(),
     admin().getUsers(userParams.q ? userParams.q : "").then(async () => {
       const qp = new URLSearchParams(userParams);
@@ -219,6 +243,7 @@ async function loadAll() {
     admin().getAuditLog(),
     admin().getBilling(),
     admin().getCommerce(),
+    admin().getEnterprise(),
     admin().getApiKeys(),
   ]);
   renderExecutive(exec);
@@ -231,6 +256,7 @@ async function loadAll() {
   renderAudit(audit);
   renderBilling(billing);
   renderCommerce(commerce);
+  renderEnterprise(enterprise);
   renderApiKeys(apikeys);
 }
 

@@ -32,6 +32,9 @@
     getCommerce() {
       return query("/api/admin/commerce", "GET");
     },
+    getEnterprise() {
+      return query("/api/admin/enterprise", "GET");
+    },
     getApiKeys() {
       return query("/api/admin/apikeys", "GET");
     },

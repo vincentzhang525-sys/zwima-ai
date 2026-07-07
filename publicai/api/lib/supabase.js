@@ -160,6 +160,8 @@ async function enforceRateLimit({
 
 async function writeAuditLog({
   userId = null,
+  organizationId = null,
+  teamId = null,
   eventType,
   action,
   target = "",
@@ -172,6 +174,8 @@ async function writeAuditLog({
     const admin = getAdminClient();
     await admin.from("audit_logs").insert({
       user_id: userId,
+      organization_id: organizationId || null,
+      team_id: teamId || null,
       event_type: eventType,
       action,
       target,

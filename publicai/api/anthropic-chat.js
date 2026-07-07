@@ -1,17 +1,12 @@
+const Anthropic = require("@anthropic-ai/sdk");
 const modelConfig = require("../config/models.js");
-
-const ANTHROPIC_MODEL_MAP = {
-  "claude-4-sonnet": "claude-sonnet-4-20250514",
-  "claude-4-opus": "claude-opus-4-20250514",
-  "claude-3-5-haiku": "claude-3-5-haiku-latest",
-};
 
 function resolveModel(modelRef) {
   return modelConfig.resolveId(modelRef);
 }
 
 function resolveApiModel(modelId) {
-  return ANTHROPIC_MODEL_MAP[modelId] || modelId;
+  return modelConfig.resolveApiId(modelId);
 }
 
 function parseBody(req) {
@@ -111,42 +106,25 @@ module.exports = async function handler(req, res) {
   const started = Date.now();
 
   try {
-    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: apiModel,
-        max_tokens: maxTokens,
-        temperature,
-        system: buildSystem(body.instructions),
-        messages,
-      }),
+    const client = new Anthropic({ apiKey });
+    const response = await client.messages.create({
+      model: apiModel,
+      max_tokens: maxTokens,
+      temperature,
+      system: buildSystem(body.instructions),
+      messages,
     });
 
-    const json = await anthropicRes.json().catch(() => ({}));
-
-    if (!anthropicRes.ok) {
-      console.error("[anthropic-chat] API error:", JSON.stringify(json, null, 2));
-      return res.status(anthropicRes.status).json({
-        error: json?.error?.message || `Anthropic API error ${anthropicRes.status}`,
-        details: json?.error || json,
-      });
-    }
-
-    const content = extractText(json.content);
+    const content = extractText(response.content);
     if (!content) {
-      console.error("[anthropic-chat] Empty output:", JSON.stringify(json, null, 2));
+      console.error("[anthropic-chat] Empty output:", JSON.stringify(response, null, 2));
       return res.status(502).json({
         error: "Anthropic returned an empty response",
-        details: json,
+        details: response,
       });
     }
 
-    const usage = mapUsage(json.usage);
+    const usage = mapUsage(response.usage);
 
     return res.status(200).json({
       content,
@@ -156,8 +134,10 @@ module.exports = async function handler(req, res) {
     });
   } catch (err) {
     console.error("[anthropic-chat] Request failed:", err);
-    return res.status(500).json({
+    const statusCode = Number(err?.status) || 500;
+    return res.status(statusCode).json({
       error: err.message || "Anthropic request failed",
+      details: err?.error || undefined,
     });
   }
 };

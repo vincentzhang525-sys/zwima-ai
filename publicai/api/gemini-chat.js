@@ -1,16 +1,11 @@
 const modelConfig = require("../config/models.js");
 
-const GEMINI_MODEL_MAP = {
-  "gemini-2-flash": "gemini-2.5-flash",
-  "gemini-2-pro": "gemini-2.5-pro",
-};
-
 function resolveModel(modelRef) {
   return modelConfig.resolveId(modelRef);
 }
 
 function resolveApiModel(modelId) {
-  return GEMINI_MODEL_MAP[modelId] || modelId;
+  return modelConfig.resolveApiId(modelId);
 }
 
 function parseBody(req) {

@@ -44,6 +44,7 @@
     },
     {
       id: "claude-4-sonnet",
+      apiId: "claude-sonnet-4-20250514",
       displayName: "Claude 4 Sonnet",
       provider: "anthropic",
       contextWindow: 200000,
@@ -52,6 +53,7 @@
     },
     {
       id: "claude-4-opus",
+      apiId: "claude-opus-4-20250514",
       displayName: "Claude 4 Opus",
       provider: "anthropic",
       contextWindow: 200000,
@@ -60,6 +62,7 @@
     },
     {
       id: "claude-3-5-haiku",
+      apiId: "claude-3-5-haiku-latest",
       displayName: "Claude 3.5 Haiku",
       provider: "anthropic",
       contextWindow: 200000,
@@ -68,7 +71,8 @@
     },
     {
       id: "gemini-2-flash",
-      displayName: "Gemini 2.0 Flash",
+      apiId: "gemini-2.5-flash",
+      displayName: "Gemini 2.5 Flash",
       provider: "google",
       contextWindow: 1000000,
       inputPrice: 0.1,
@@ -76,7 +80,8 @@
     },
     {
       id: "gemini-2-pro",
-      displayName: "Gemini 2.0 Pro",
+      apiId: "gemini-2.5-pro",
+      displayName: "Gemini 2.5 Pro",
       provider: "google",
       contextWindow: 2000000,
       inputPrice: 1.25,

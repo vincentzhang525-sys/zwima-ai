@@ -11,12 +11,13 @@
     "test:all": "node tests/test-user-system-v1.js && node tests/test-supabase-migration-v1.js",
     "test:openai-models": "node tests/test-openai-models-v1.js",
     "test:openai-live": "node scripts/test-openai-models.mjs",
+    "test:providers-live": "node scripts/test-providers-live.mjs",
     "migrate:remote": "node scripts/run-migrations.mjs",
     "verify:sprint27": "node scripts/sprint27-verify.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
     "@supabase/supabase-js": "^2.49.1",
     "pg": "^8.14.1"
-  },
-  "devDependencies": {}
+  }
 }

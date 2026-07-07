@@ -21,7 +21,7 @@ function renderKeys() {
   const keys = window.ZwimaApiKeyService.getKeys();
 
   if (!keys.length) {
-    tableBody.innerHTML = '<tr><td colspan="6" class="muted">No API keys yet.</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7" class="muted">No API keys yet.</td></tr>';
     return;
   }
 
@@ -42,13 +42,14 @@ function renderKeys() {
           <td><span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status)}</span></td>
           <td class="muted">${escapeHtml(item.createdAt)}</td>
           <td class="muted">${escapeHtml(item.lastUsed)}</td>
+          <td class="muted">${Number(item.totalUsage || 0).toLocaleString()} credits</td>
           <td class="actions-cell">
             <div class="key-actions">
               <button class="key-action-btn" type="button" data-action="copy" data-id="${escapeHtml(item.id)}">Copy</button>
               <button class="key-action-btn" type="button" data-action="rename" data-id="${escapeHtml(item.id)}">Rename</button>
               ${
                 isActive
-                  ? `<button class="key-action-btn" type="button" data-action="disable" data-id="${escapeHtml(item.id)}">Disable</button>`
+                  ? `<button class="key-action-btn" type="button" data-action="disable" data-id="${escapeHtml(item.id)}">Revoke</button>`
                   : `<button class="key-action-btn" type="button" data-action="enable" data-id="${escapeHtml(item.id)}">Enable</button>`
               }
               <button class="key-action-btn danger" type="button" data-action="delete" data-id="${escapeHtml(item.id)}">Delete</button>

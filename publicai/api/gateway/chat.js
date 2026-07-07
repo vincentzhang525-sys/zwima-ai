@@ -210,7 +210,13 @@ module.exports = async function handler(req, res) {
     });
     if (usageError) throw usageError;
 
-    await admin.from("api_keys").update({ last_used: new Date().toISOString() }).eq("id", keyRow.id);
+    await admin
+      .from("api_keys")
+      .update({
+        last_used: new Date().toISOString(),
+        total_usage: (Number(keyRow.total_usage) || 0) + creditsToDeduct,
+      })
+      .eq("id", keyRow.id);
 
     return json(res, 200, {
       content: result.content,

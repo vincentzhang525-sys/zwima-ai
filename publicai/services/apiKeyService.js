@@ -106,6 +106,7 @@
         key: generateSecret(),
         createdAt: today(),
         lastUsed: "Never",
+        totalUsage: 0,
         status: "Active",
       };
       store.keys.push(record);

@@ -25,6 +25,7 @@ function mapKey(row, secret) {
     key: secret || `${row.key_prefix}...`,
     createdAt: row.created_at?.slice?.(0, 10) || row.created_at,
     lastUsed: row.last_used ? new Date(row.last_used).toLocaleString("en-GB") : "Never",
+    totalUsage: Number(row.total_usage) || 0,
     status: row.status,
   };
 }

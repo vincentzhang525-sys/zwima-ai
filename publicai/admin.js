@@ -142,6 +142,22 @@ function renderStats(stats) {
   }
 }
 
+function renderOverview(users, statistics) {
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  const totalUsers = Array.isArray(users) ? users.length : 0;
+  const totalCredits = (users || []).reduce((sum, row) => sum + (Number(row.credits) || 0), 0);
+  const providerUsage = (statistics?.providerUsage || []).slice().sort((a, b) => b.tokens - a.tokens);
+  const topProvider = providerUsage[0];
+
+  set("adminUsersCount", totalUsers.toLocaleString());
+  set("adminCreditsTotal", totalCredits.toLocaleString());
+  set("adminUsageTotal", Number(statistics?.tokenUsage || 0).toLocaleString());
+  set("adminProviderTop", topProvider ? `${topProvider.provider} (${Number(topProvider.tokens).toLocaleString()})` : "—");
+}
+
 function renderAudit(rows) {
   const body = document.getElementById("auditTableBody");
   if (!body) return;
@@ -166,6 +182,7 @@ async function loadAll(q) {
   renderBilling(billing);
   renderApiKeys(apikeys);
   renderStats(statistics);
+  renderOverview(users, statistics);
   renderAudit(audit);
 }
 

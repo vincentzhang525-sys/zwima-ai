@@ -30,7 +30,7 @@
         <a href="documentation.html" class="sidebar-link">Documentation</a>
       </nav>
       <div class="sidebar-footer">
-        <a href="index.html" class="sidebar-back">??Back to website</a>
+        <a href="index.html" class="sidebar-back">← Back to website</a>
       </div>
     </aside>
 
@@ -93,7 +93,7 @@
           <section class="dash-section routing-panel">
             <h2>Fallback Strategy</h2>
             <div class="fallback-panel">
-              <p class="fallback-flow">If Provider Failed <span>??/span> Automatically switch</p>
+              <p class="fallback-flow">If provider fails <span>→</span> automatically switch</p>
               <label for="retryCount">Retry Count</label>
               <select id="retryCount">
                 <option value="1">1</option>
@@ -108,11 +108,11 @@
             <div class="optimizer-grid">
               <article class="overview-card">
                 <span>Estimated Monthly Saving</span>
-                <strong id="monthlySaving">??20</strong>
+                <strong id="monthlySaving">€20</strong>
               </article>
               <article class="overview-card">
                 <span>Estimated Token Cost</span>
-                <strong id="tokenCost">??.082 / 1K</strong>
+                <strong id="tokenCost">€0.082 / 1K</strong>
               </article>
               <article class="overview-card">
                 <span>Average Latency</span>
@@ -160,10 +160,11 @@
     <div class="modal-card" role="dialog" aria-labelledby="routingResultTitle" aria-modal="true">
       <h2 id="routingResultTitle">Routing Result</h2>
       <dl class="routing-result-list">
-        <div><dt>Selected Provider</dt><dd id="resultProvider">??/dd></div>
-        <div><dt>Reason</dt><dd id="resultReason">??/dd></div>
-        <div><dt>Estimated Cost</dt><dd id="resultCost">??/dd></div>
-        <div><dt>Estimated Latency</dt><dd id="resultLatency">??/dd></div>
+        <div><dt>Selected Provider</dt><dd id="resultProvider">—</dd></div>
+        <div><dt>Selected Model</dt><dd id="resultModel">—</dd></div>
+        <div><dt>Reason</dt><dd id="resultReason">—</dd></div>
+        <div><dt>Estimated Cost</dt><dd id="resultCost">—</dd></div>
+        <div><dt>Estimated Latency</dt><dd id="resultLatency">—</dd></div>
       </dl>
       <p class="routing-complete">Simulation Complete</p>
       <div class="modal-actions">

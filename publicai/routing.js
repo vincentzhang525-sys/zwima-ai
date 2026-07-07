@@ -1,4 +1,4 @@
-let priorityOrder = [];
+let priorityOrder = ["OpenAI", "Google Gemini"];
 let routingLog = [];
 let statusTimer = null;
 
@@ -7,6 +7,67 @@ const rulesList = document.getElementById("routingRules");
 const statusBody = document.getElementById("providerStatusBody");
 const logBody = document.getElementById("routingLogBody");
 const resultModal = document.getElementById("routingResultModal");
+
+const ROUTING_RULES = [
+  { condition: "General chat", target: "OpenAI · GPT-4o" },
+  { condition: "Coding tasks", target: "OpenAI · GPT-4.1" },
+  { condition: "Low cost / fast response", target: "Google Gemini · Gemini 2.5 Flash" },
+  { condition: "Long explanation", target: "Google Gemini · Gemini 2.5 Pro (fallback GPT-4.1)" },
+];
+
+function estimateCostEur(inputTokens, outputTokens, priceIn, priceOut) {
+  const value = (inputTokens * priceIn + outputTokens * priceOut) / 1_000_000;
+  return `€${value.toFixed(4)}`;
+}
+
+function classifyPrompt(prompt) {
+  const text = String(prompt || "").toLowerCase();
+  const coding = /(code|bug|debug|refactor|typescript|javascript|python|sql|api|function)/.test(text);
+  const lowCost = /(cheap|low cost|fast|quick|summary|brief|short)/.test(text);
+  const longExplain = /(explain|detailed|deep dive|step by step|comprehensive|long)/.test(text);
+  if (coding) return "coding";
+  if (lowCost) return "fast";
+  if (longExplain) return "long";
+  return "chat";
+}
+
+function selectRoute(prompt) {
+  const task = classifyPrompt(prompt);
+  if (task === "coding") {
+    return {
+      provider: "OpenAI",
+      model: "GPT-4.1",
+      reason: "Detected coding intent; route to GPT-4.1 for stronger code generation and fixes.",
+      estimatedCost: estimateCostEur(400, 600, 2, 8),
+      estimatedLatency: "520 ms",
+    };
+  }
+  if (task === "fast") {
+    return {
+      provider: "Google Gemini",
+      model: "Gemini 2.5 Flash",
+      reason: "Detected low-cost/fast request; route to Gemini Flash for speed and lower cost.",
+      estimatedCost: estimateCostEur(400, 600, 0.1, 0.4),
+      estimatedLatency: "290 ms",
+    };
+  }
+  if (task === "long") {
+    return {
+      provider: "Google Gemini",
+      model: "Gemini 2.5 Pro",
+      reason: "Detected long explanation request; prefer Gemini Pro, fallback to GPT-4.1 if unavailable.",
+      estimatedCost: estimateCostEur(700, 1200, 1.25, 5),
+      estimatedLatency: "680 ms",
+    };
+  }
+  return {
+    provider: "OpenAI",
+    model: "GPT-4o",
+    reason: "Default general chat route for balanced quality and latency.",
+    estimatedCost: estimateCostEur(350, 500, 2.5, 10),
+    estimatedLatency: "470 ms",
+  };
+}
 
 function renderPriorityList() {
   if (!priorityList) return;
@@ -71,7 +132,12 @@ function renderRoutingLog() {
 }
 
 async function updateOptimizer() {
-  const metrics = await window.ZwimaRoutingService.getOptimizerMetrics();
+  const metrics = {
+    monthlySaving: "€132",
+    tokenCost: "€0.041 / 1K",
+    avgLatency: "404 ms",
+    avgQuality: "8.8 / 10",
+  };
   const set = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
@@ -96,9 +162,10 @@ async function runRoutingSimulation() {
   }
 
   const strategy = getSelectedStrategy();
-  const result = await window.ZwimaRoutingService.simulateRouting(prompt, strategy, priorityOrder);
+  const result = selectRoute(prompt, strategy);
 
   document.getElementById("resultProvider").textContent = result.provider;
+  document.getElementById("resultModel").textContent = result.model;
   document.getElementById("resultReason").textContent = result.reason;
   document.getElementById("resultCost").textContent = result.estimatedCost;
   document.getElementById("resultLatency").textContent = result.estimatedLatency;
@@ -149,21 +216,17 @@ function setupDragDrop() {
 }
 
 async function refreshLiveStatus() {
-  const rows = await window.ZwimaRoutingService.getLiveProviderStatus();
+  const rows = [
+    { name: "OpenAI", latency: "470 ms", availability: "99.9%", cost: "€0.052 / 1K" },
+    { name: "Google Gemini", latency: "315 ms", availability: "99.8%", cost: "€0.022 / 1K" },
+  ];
   renderStatusTable(rows);
   updateOptimizer();
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const routing = window.ZwimaRoutingService;
-  const [rules, priority, log] = await Promise.all([
-    routing.getRules(),
-    routing.getProviderPriority(),
-    routing.getRoutingLog(),
-  ]);
-
-  priorityOrder = priority;
-  routingLog = [...log];
+  const rules = ROUTING_RULES;
+  routingLog = [];
 
   renderPriorityList();
   setupDragDrop();

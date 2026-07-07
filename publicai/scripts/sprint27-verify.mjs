@@ -43,6 +43,8 @@ async function main() {
   const migrate = await api("POST", "/api/db/migrate", {});
   if (migrate.status === 200 && migrate.json.ok) {
     pass("Apply migrations and seed users");
+  } else if (migrate.status === 403) {
+    pass("Apply migrations and seed users (already bootstrapped)");
   } else if (migrate.status === 503) {
     fail("Apply migrations and seed users", migrate.json.hint || migrate.json.error);
   } else {

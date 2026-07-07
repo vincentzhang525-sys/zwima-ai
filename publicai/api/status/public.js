@@ -5,11 +5,13 @@ const ProviderAdapters = require("../../gateway/adapters");
 const healthChecker = require("../../gateway/healthChecker.js");
 
 const PUBLIC_PROVIDERS = [
-  { id: "openai", name: "OpenAI", availability: "live" },
-  { id: "google", name: "Google Gemini", availability: "live" },
-  { id: "anthropic", name: "Claude", availability: "waiting_api" },
-  { id: "deepseek", name: "DeepSeek", availability: "waiting_api" },
-  { id: "qwen", name: "Qwen", availability: "waiting_api" },
+  { id: "openai", name: "OpenAI", availability: "live", availabilityLabel: "Live" },
+  { id: "google", name: "Google Gemini", availability: "live", availabilityLabel: "Live" },
+  { id: "anthropic", name: "Claude", availability: "waiting_api_key", availabilityLabel: "Waiting API Key" },
+  { id: "deepseek", name: "DeepSeek", availability: "waiting_balance", availabilityLabel: "Waiting Balance / API Key" },
+  { id: "qwen", name: "Qwen", availability: "waiting_api_key", availabilityLabel: "Waiting API Key" },
+  { id: "mistral", name: "Mistral", availability: "coming_soon", availabilityLabel: "Coming Soon" },
+  { id: "openrouter", name: "OpenRouter", availability: "coming_soon", availabilityLabel: "Coming Soon" },
 ];
 
 module.exports = async function handler(req, res) {
@@ -20,33 +22,45 @@ module.exports = async function handler(req, res) {
   try {
     const results = await Promise.all(
       PUBLIC_PROVIDERS.map(async (def) => {
-        const adapterId = providerRegistry.getAdapterId(def.id);
-        const adapter = ProviderAdapters.getAdapter(adapterId);
-        const configured = providerRegistry.isConfigured(def);
-        const check = await healthChecker.checkProvider(adapter, configured);
+        let health = "not_configured";
+        let healthLabel = "Not configured";
+        let latencyMs = 0;
+        try {
+          const adapterId = providerRegistry.getAdapterId(def.id);
+          const adapter = ProviderAdapters.getAdapter(adapterId);
+          const configured = providerRegistry.isConfigured(def);
+          const check = await healthChecker.checkProvider(adapter, configured);
+          health = check.healthStatus;
+          healthLabel = healthChecker.label(check.healthStatus);
+          latencyMs = check.latencyMs || 0;
+        } catch {
+          health = "inactive";
+          healthLabel = "Inactive";
+        }
         const models = modelRegistry.getByProvider(def.id).map((m) => ({
           id: m.id,
           displayName: m.displayName,
           status: m.status,
         }));
-        const availability = def.availability === "live" && check.healthStatus === "online" ? "live" : def.availability;
+        const availability =
+          def.availability === "live" && health === "online" ? "live" : def.availability;
         return {
           provider: def.name,
           providerId: def.id,
-          health: check.healthStatus,
-          healthLabel: healthChecker.label(check.healthStatus),
-          latencyMs: check.latencyMs || 0,
+          health,
+          healthLabel,
+          latencyMs,
           models,
           modelCount: models.length,
           availability,
-          availabilityLabel: availability === "live" ? "Live" : availability === "waiting_api" ? "Waiting API" : "Coming Soon",
+          availabilityLabel: def.availabilityLabel,
         };
       })
     );
 
-    const allOperational = results.filter((r) => r.availability === "live").length;
+    const liveCount = results.filter((r) => r.availability === "live").length;
     return json(res, 200, {
-      status: allOperational >= 2 ? "operational" : "degraded",
+      status: liveCount >= 2 ? "operational" : "degraded",
       providers: results,
       checkedAt: new Date().toISOString(),
     });

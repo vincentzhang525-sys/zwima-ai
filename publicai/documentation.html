@@ -49,11 +49,33 @@
       </header>
 
       <main class="dashboard-content docs-content">
+        <section class="dash-section" id="getting-started">
+          <div class="docs-panel">
+            <h2>Getting Started</h2>
+            <ol>
+              <li><a href="signup.html">Create a free account</a> — receive 500 starter credits.</li>
+              <li><a href="apikeys.html">Create an API key</a> in the API Key Center.</li>
+              <li>Send your first request via <a href="playground.html">Playground</a> or <code>POST /api/gateway/chat</code>.</li>
+              <li>Monitor usage in <a href="usage.html">Usage</a> and <a href="credits.html">Credits</a>.</li>
+              <li>Upgrade plans in <a href="billing.html">Billing</a> when you need more volume.</li>
+            </ol>
+          </div>
+        </section>
+
         <section class="dash-section" id="rest-api">
           <div class="docs-panel">
             <h2>REST API</h2>
             <p>The ZWIMA AI API is a REST interface for secure chat completions through OpenAI and Google Gemini.</p>
             <p class="docs-value">Base URL: <code>https://zwima-group.info</code></p>
+          </div>
+        </section>
+
+        <section class="dash-section" id="api-keys">
+          <div class="docs-panel">
+            <h2>API Keys</h2>
+            <p>Create keys in the <a href="apikeys.html">API Key Center</a>. Keys are shown once at creation — store them securely.</p>
+            <p>Pass your key in the request body as <code>apiKey</code> for gateway chat requests.</p>
+            <p class="docs-value"><code>zw_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></p>
           </div>
         </section>
 

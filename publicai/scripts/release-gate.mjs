@@ -91,14 +91,14 @@ async function main() {
   gate("Integration tests", true, "covered by production verify scripts below");
 
   await runVerify("verify-sprint37-gateway.mjs", "API Gateway verification");
-  await runVerify("verify-sprint34-security.mjs", "Authentication verification");
+  await runVerify("verify-sprint34-security.mjs", "Authentication & security verification");
   await runVerify("verify-sprint38-commerce.mjs", "Billing verification");
   await runVerify("verify-sprint31-live.mjs", "Credits verification");
 
   const statusApi = await api("/api/status/public");
   gate(
     "Provider verification",
-    statusApi.ok && (statusApi.json?.providers || []).length >= 5,
+    statusApi.ok && (statusApi.json?.providers || []).length >= 7,
     statusApi.ok ? `${statusApi.json.providers.length} providers` : statusApi.json?.error || `HTTP ${statusApi.status}`
   );
 
@@ -107,6 +107,7 @@ async function main() {
   await runVerify("verify-sprint35-portal.mjs", "Regression — Sprint 35 portal");
   await runVerify("verify-sprint39-enterprise.mjs", "Regression — Sprint 39 enterprise");
   await runVerify("verify-sprint40-launch.mjs", "Regression — Sprint 40 launch");
+  await runVerify("verify-sprint40-final.mjs", "Regression — Sprint 40 final");
 
   const login = await api("/api/user/login", "POST", { email: "admin@zwima-group.info", password: "admin123", remember: true });
   gate("Production login", login.ok && !!login.json?.session?.access_token, login.json?.error || `HTTP ${login.status}`);
@@ -119,6 +120,12 @@ async function main() {
 
   const onboarding = await api("/api/onboarding", "GET", undefined, login.json?.session?.access_token);
   gate("Production onboarding", onboarding.ok && onboarding.json?.onboarding?.totalSteps === 7);
+
+  gate(
+    "Mobile responsive check",
+    landing.ok && landing.text.includes("viewport") && landing.text.includes("polish.css"),
+    "viewport + polish.css"
+  );
 
   gate("Production deployment", landing.ok && gateway.ok, baseUrl);
 

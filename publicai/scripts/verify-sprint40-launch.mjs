@@ -41,7 +41,7 @@ async function main() {
   else fail("Provider status page", `HTTP ${statusPage.status}`);
 
   const statusApi = await api("/api/status/public");
-  if (statusApi.ok && (statusApi.json?.providers || []).length >= 5) {
+  if (statusApi.ok && (statusApi.json?.providers || []).length >= 7) {
     const live = statusApi.json.providers.filter((p) => p.availability === "live").map((p) => p.provider);
     pass("Provider status API", `${statusApi.json.providers.length} providers, live: ${live.join(", ")}`);
   } else fail("Provider status API", statusApi.json?.error || `HTTP ${statusApi.status}`);
@@ -119,6 +119,12 @@ async function main() {
   const responsive = landing.ok && landing.text.includes('viewport');
   if (responsive) pass("Responsive meta");
   else fail("Responsive meta");
+
+  if (landing.ok && landing.text.includes("launch.js")) pass("Beta mode UI");
+  else fail("Beta mode UI");
+
+  if (emailLogs.ok && Array.isArray(emailLogs.json?.logs)) pass("Email logs API");
+  else fail("Email logs API");
 
   const deploy = await api("/api/gateway/health");
   if (deploy.ok || deploy.status === 200) pass("Production deployment");

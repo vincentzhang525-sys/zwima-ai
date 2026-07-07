@@ -19,9 +19,11 @@
   const PROVIDER_STATUS = {
     openai: { label: "OpenAI", status: "live", statusLabel: "Live" },
     google: { label: "Google Gemini", status: "live", statusLabel: "Live" },
-    anthropic: { label: "Claude", status: "coming_soon", statusLabel: "Coming Soon" },
-    deepseek: { label: "DeepSeek", status: "waiting_api", statusLabel: "Waiting API" },
-    qwen: { label: "Qwen", status: "waiting_api", statusLabel: "Waiting API" },
+    anthropic: { label: "Claude", status: "waiting_api_key", statusLabel: "Waiting API Key" },
+    deepseek: { label: "DeepSeek", status: "waiting_balance", statusLabel: "Waiting Balance / API Key" },
+    qwen: { label: "Qwen", status: "waiting_api_key", statusLabel: "Waiting API Key" },
+    mistral: { label: "Mistral", status: "coming_soon", statusLabel: "Coming Soon" },
+    openrouter: { label: "OpenRouter", status: "coming_soon", statusLabel: "Coming Soon" },
   };
 
   function formatContext(n) {
@@ -56,9 +58,11 @@
     return [
       { name: "GPT-4o", provider: "OpenAI", status: "Live" },
       { name: "Gemini 2.5 Flash", provider: "Google Gemini", status: "Live" },
-      { name: "Claude 4 Sonnet", provider: "Anthropic", status: "Coming Soon" },
-      { name: "DeepSeek Chat", provider: "DeepSeek", status: "Waiting API" },
-      { name: "Qwen Turbo", provider: "Qwen", status: "Waiting API" },
+      { name: "Claude 4 Sonnet", provider: "Anthropic", status: "Waiting API Key" },
+      { name: "DeepSeek Chat", provider: "DeepSeek", status: "Waiting Balance / API Key" },
+      { name: "Qwen Turbo", provider: "Qwen", status: "Waiting API Key" },
+      { name: "Mistral Large", provider: "Mistral", status: "Coming Soon" },
+      { name: "OpenRouter", provider: "OpenRouter", status: "Coming Soon" },
     ];
   }
 

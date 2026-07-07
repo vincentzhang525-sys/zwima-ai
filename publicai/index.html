@@ -59,7 +59,7 @@
               <span><strong>Current Credit Balance</strong>12,450 API credits</span>
               <span><strong>Monthly Token Usage</strong>3.2M model tokens</span>
               <span><strong>Active API Keys</strong>4 business keys</span>
-              <span><strong>Provider Routing</strong>OpenAI, Anthropic, Mistral</span>
+              <span><strong>Provider Routing</strong>OpenAI, Google Gemini (live)</span>
               <span><strong>Estimated Cost</strong>€1,840 this period</span>
               <span><strong>Billing Status</strong>Invoice ready</span>
             </div>
@@ -81,9 +81,11 @@
         <div class="landing-model-grid" id="landingModelGrid">
           <article class="landing-model-card"><h3>GPT-4o</h3><p class="muted">OpenAI</p><span class="status-pill active">Live</span></article>
           <article class="landing-model-card"><h3>Gemini 2.5 Flash</h3><p class="muted">Google Gemini</p><span class="status-pill active">Live</span></article>
-          <article class="landing-model-card"><h3>Claude 4 Sonnet</h3><p class="muted">Anthropic</p><span class="status-pill planned">Coming Soon</span></article>
-          <article class="landing-model-card"><h3>DeepSeek Chat</h3><p class="muted">DeepSeek</p><span class="status-pill planned">Waiting API</span></article>
-          <article class="landing-model-card"><h3>Qwen Turbo</h3><p class="muted">Qwen</p><span class="status-pill planned">Waiting API</span></article>
+          <article class="landing-model-card"><h3>Claude 4 Sonnet</h3><p class="muted">Anthropic</p><span class="status-pill planned">Waiting API Key</span></article>
+          <article class="landing-model-card"><h3>DeepSeek Chat</h3><p class="muted">DeepSeek</p><span class="status-pill planned">Waiting Balance / API Key</span></article>
+          <article class="landing-model-card"><h3>Qwen Turbo</h3><p class="muted">Qwen</p><span class="status-pill planned">Waiting API Key</span></article>
+          <article class="landing-model-card"><h3>Mistral Large</h3><p class="muted">Mistral</p><span class="status-pill planned">Coming Soon</span></article>
+          <article class="landing-model-card"><h3>OpenRouter</h3><p class="muted">OpenRouter</p><span class="status-pill planned">Coming Soon</span></article>
         </div>
         <p style="text-align:center;margin-top:20px;"><a class="button button-secondary" href="models.html">Browse Model Cards</a> <a class="button button-secondary" href="status.html">Provider Status</a></p>
       </div>
@@ -241,11 +243,11 @@
       <div class="container narrow">
         <div class="section-heading">
           <p class="eyebrow">FAQ</p>
-          <h2>Commercial beta questions</h2>
+          <h2>Launch FAQ</h2>
         </div>
         <div class="faq-list">
           <details><summary>How do free credits work?</summary><p>New accounts receive 500 free API credits. Upgrade anytime from the billing center.</p></details>
-          <details><summary>Which providers are live?</summary><p>OpenAI and Google Gemini are live in production. Claude, DeepSeek and Qwen are prepared and activate when API keys are funded.</p></details>
+          <details><summary>Which providers are live?</summary><p>OpenAI and Google Gemini are live in production. Claude and Qwen are waiting for API keys. DeepSeek is waiting for balance/API key. Mistral and OpenRouter are coming soon.</p></details>
           <details><summary>Do I need separate provider accounts?</summary><p>No. ZWIMA AI provides managed API access through a single gateway and unified billing.</p></details>
           <details><summary>Is this suitable for enterprise teams?</summary><p>Yes. Sprint 39 added organizations, teams, roles, workspace sharing and enterprise dashboards.</p></details>
           <details><summary>Where is my data processed?</summary><p>ZWIMA AI is built for European businesses with GDPR-focused controls and provider transparency.</p></details>
@@ -302,7 +304,8 @@
       <div><a class="logo footer-logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a><p>AI API Distribution Platform for European Businesses.</p></div>
       <div><h2>Contact</h2><p><a href="mailto:hello@zwima-group.info">hello@zwima-group.info</a></p></div>
       <div><h2>Website</h2><p><a href="https://zwima-group.info">zwima-group.info</a></p></div>
-      <div><h2>Legal</h2><p><a href="impressum.html">Impressum</a><br><a href="privacy.html">Privacy Policy</a><br><a href="terms.html">Terms of Service</a></p></div>
+      <div><h2>Legal</h2><p><a href="impressum.html">Impressum</a><br><a href="privacy.html">Privacy Policy</a><br><a href="terms.html">Terms of Service</a><br><a href="cookie-policy.html">Cookie Policy</a><br><a href="dpa.html">DPA (placeholder)</a></p></div>
+      <div><h2>Product</h2><p><a href="status.html">Provider Status</a><br><a href="documentation.html">Documentation</a><br><a href="index.html#roadmap">Roadmap</a><br><a href="gdpr-export.html">GDPR Export</a><br><a href="delete-account.html">Delete Account</a></p></div>
     </div>
   </footer>
 
@@ -314,5 +317,6 @@
   <script src="services/authService.js"></script>
   <script src="auth/authState.js"></script>
   <script src="script.js"></script>
+  <script src="launch.js"></script>
 </body>
 </html>

@@ -61,6 +61,24 @@ function buildGatewaySystem() {
   return "You are a helpful AI assistant on the ZWIMA API Gateway.";
 }
 
+function extractOpenAIText(json) {
+  if (typeof json?.output_text === "string" && json.output_text.trim()) {
+    return json.output_text.trim();
+  }
+  const output = Array.isArray(json?.output) ? json.output : [];
+  const messageItems = output.filter((item) => item.type === "message" && item.role === "assistant");
+  for (let i = messageItems.length - 1; i >= 0; i -= 1) {
+    const parts = Array.isArray(messageItems[i]?.content) ? messageItems[i].content : [];
+    const text = parts
+      .filter((part) => part.type === "output_text" && part.text)
+      .map((part) => part.text)
+      .join("\n")
+      .trim();
+    if (text) return text;
+  }
+  return "";
+}
+
 async function callOpenAI(prompt, modelId, maxTokens) {
   const apiModel = modelConfig.resolveApiId(modelId);
   const payload = {
@@ -83,7 +101,7 @@ async function callOpenAI(prompt, modelId, maxTokens) {
   if (!response.ok) {
     throw new Error(data?.error?.message || `OpenAI request failed (${response.status})`);
   }
-  const content = String(data.output_text || "").trim();
+  const content = extractOpenAIText(data);
   if (!content) throw new Error("OpenAI returned empty output.");
   const usage = {
     inputTokens: Number(data?.usage?.input_tokens) || 0,

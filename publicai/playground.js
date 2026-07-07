@@ -192,8 +192,15 @@ function renderAssistantContent(content, streaming) {
 }
 
 function formatMessageBody(msg) {
-  if (msg.role === "user") return renderUserContent(msg.content);
-  return renderAssistantContent(msg.content, Boolean(msg.streaming));
+  const body = msg.role === "user" ? renderUserContent(msg.content) : renderAssistantContent(msg.content, Boolean(msg.streaming));
+  if (msg.role !== "assistant") return body;
+  const badges = [];
+  if (msg.provider) badges.push(`<span class="chat-meta-badge">${escapeHtml(msg.provider)}</span>`);
+  if (msg.model) badges.push(`<span class="chat-meta-badge">${escapeHtml(msg.model)}</span>`);
+  if (msg.durationMs != null) badges.push(`<span class="chat-meta-badge">${Number(msg.durationMs)} ms</span>`);
+  if (msg.status) badges.push(`<span class="chat-meta-badge ${msg.status === "error" ? "error" : ""}">${escapeHtml(msg.status)}</span>`);
+  const meta = badges.length ? `<div class="chat-meta-row">${badges.join("")}</div>` : "";
+  return `${body}${meta}`;
 }
 
 function renderMessages() {
@@ -249,6 +256,14 @@ function removeStreamingAssistant() {
   messages.splice(streamingMessageIndex, 1);
   streamingMessageIndex = -1;
   renderMessages();
+}
+
+function decorateAssistantMessage(index, result, status) {
+  if (index < 0 || !messages[index]) return;
+  messages[index].provider = result?.provider || getSelectedProviderId();
+  messages[index].model = result?.model || getSelectedModelLabel();
+  messages[index].durationMs = Number(result?.latencyMs) || null;
+  messages[index].status = status || "ok";
 }
 
 function saveToHistory(firstPrompt) {
@@ -1003,9 +1018,17 @@ async function sendMessage() {
 
     if (streamingMessageIndex >= 0) {
       messages[streamingMessageIndex].content = result.content;
+      decorateAssistantMessage(streamingMessageIndex, result, "ok");
       finalizeStreamingAssistant();
     } else {
-      messages.push({ role: "assistant", content: result.content });
+      messages.push({
+        role: "assistant",
+        content: result.content,
+        provider: result.provider,
+        model: result.model,
+        durationMs: result.latencyMs,
+        status: "ok",
+      });
     }
 
     sessionInputTokens += result.usage.inputTokens;
@@ -1035,6 +1058,10 @@ async function sendMessage() {
     messages.push({
       role: "assistant",
       content: err.message || "Request failed.",
+      provider: getSelectedProviderId(),
+      model: getSelectedModelLabel(),
+      durationMs: null,
+      status: "error",
     });
     renderMessages();
   } finally {

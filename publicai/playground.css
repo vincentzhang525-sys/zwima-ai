@@ -352,6 +352,29 @@
   text-decoration: underline;
 }
 
+.chat-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.chat-meta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--blue-100);
+  color: var(--blue-850);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.chat-meta-badge.error {
+  background: #fef2f2;
+  color: #9b1c1c;
+}
+
 .chat-composer {
   margin-top: auto;
   padding-top: 14px;

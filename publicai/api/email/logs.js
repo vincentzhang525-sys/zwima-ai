@@ -7,9 +7,10 @@ module.exports = async function handler(req, res) {
   if (req.method !== "GET") return json(res, 405, { error: "Method not allowed" });
 
   const limit = Math.min(100, Number(req.query?.limit) || 50);
+  const logs = await getEmailLogs(limit);
   return json(res, 200, {
-    logs: getEmailLogs(limit),
-    count: getEmailLogs(limit).length,
-    note: "Transactional email logs (mock/dev). Mass sending disabled.",
+    logs,
+    count: logs.length,
+    note: "Transactional email logs (persisted). Mass sending disabled.",
   });
 };

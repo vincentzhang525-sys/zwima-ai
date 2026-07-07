@@ -30,7 +30,7 @@ async function sendEmail({ template, to, data }) {
   const kind = resolveProviderKind();
 
   if (sendingDisabled()) {
-    const row = appendEmailLog({
+    const row = await appendEmailLog({
       template,
       to,
       subject: rendered.subject,
@@ -42,7 +42,7 @@ async function sendEmail({ template, to, data }) {
   }
 
   const result = await provider.send({ to, subject: rendered.subject, html: rendered.html, text: rendered.text });
-  appendEmailLog({
+  await appendEmailLog({
     template,
     to,
     subject: rendered.subject,

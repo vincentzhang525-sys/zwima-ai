@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
       from: process.env.SMTP_FROM || null,
       userConfigured: Boolean(process.env.SMTP_USER),
     },
-    recentLogs: getEmailLogs(10),
+    recentLogs: await getEmailLogs(10),
     templates: templates.map((name) => {
       const sample = renderTemplate(name, {
         name: "Beta User",

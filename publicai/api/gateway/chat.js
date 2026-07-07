@@ -123,7 +123,20 @@ async function callGemini(prompt, modelId, maxTokens) {
 
 async function runModel(prompt, modelId, maxTokens) {
   const provider = modelConfig.getById(modelId)?.provider;
-  if (provider === "google") return { ...(await callGemini(prompt, modelId, maxTokens)), provider };
+  if (provider === "google") {
+    try {
+      return { ...(await callGemini(prompt, modelId, maxTokens)), provider };
+    } catch (err) {
+      const fallbackModel = "gpt-4.1";
+      const fallback = await callOpenAI(prompt, fallbackModel, maxTokens);
+      return {
+        ...fallback,
+        provider: "openai",
+        fallbackReason: err.message,
+        fallbackModel,
+      };
+    }
+  }
   return { ...(await callOpenAI(prompt, modelId, maxTokens)), provider: "openai" };
 }
 
@@ -159,6 +172,7 @@ module.exports = async function handler(req, res) {
     const picked = chooseModel(prompt, body.model, body.routingMode);
     const started = Date.now();
     const result = await runModel(prompt, picked.modelId, body.maxTokens);
+    const effectiveModelId = result.fallbackModel || picked.modelId;
     const elapsedMs = Date.now() - started;
 
     const usage = {
@@ -167,7 +181,7 @@ module.exports = async function handler(req, res) {
       totalTokens: Number(result.usage.totalTokens) || 0,
     };
     const creditsToDeduct = Math.max(1, usage.totalTokens || usage.inputTokens + usage.outputTokens);
-    const cost = estimatedCost(usage.inputTokens, usage.outputTokens, picked.modelId);
+    const cost = estimatedCost(usage.inputTokens, usage.outputTokens, effectiveModelId);
 
     const { data: walletRow, error: walletError } = await admin
       .from("credit_wallets")
@@ -199,7 +213,7 @@ module.exports = async function handler(req, res) {
     const { error: usageError } = await admin.from("usage_records").insert({
       user_id: keyRow.user_id,
       provider: result.provider === "google" ? "Google Gemini" : "OpenAI",
-      model: modelConfig.getById(picked.modelId)?.displayName || picked.modelId,
+      model: modelConfig.getById(effectiveModelId)?.displayName || effectiveModelId,
       prompt,
       input_tokens: usage.inputTokens,
       output_tokens: usage.outputTokens,
@@ -223,9 +237,10 @@ module.exports = async function handler(req, res) {
     return json(res, 200, {
       content: result.content,
       provider: result.provider === "google" ? "Google Gemini" : "OpenAI",
-      model: modelConfig.getById(picked.modelId)?.displayName || picked.modelId,
-      selectedModelId: picked.modelId,
+      model: modelConfig.getById(effectiveModelId)?.displayName || effectiveModelId,
+      selectedModelId: effectiveModelId,
       routingReason: picked.reason,
+      fallbackReason: result.fallbackReason || null,
       estimatedCost: cost,
       usage,
       creditsDeducted: creditsToDeduct,

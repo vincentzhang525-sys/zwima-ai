@@ -25,12 +25,11 @@
         <a href="credits.html" class="sidebar-link">Credits</a>
         <a href="dashboard.html#usage" class="sidebar-link">Usage</a>
         <a href="dashboard.html#billing" class="sidebar-link">Billing</a>
-        <a href="models.html" class="sidebar-link">Models</a>
         <a href="dashboard.html#settings" class="sidebar-link">Settings</a>
         <a href="documentation.html" class="sidebar-link active" aria-current="page">Documentation</a>
       </nav>
       <div class="sidebar-footer">
-        <a href="index.html" class="sidebar-back">??Back to website</a>
+        <a href="index.html" class="sidebar-back">← Back to website</a>
       </div>
     </aside>
 
@@ -53,8 +52,8 @@
         <section class="dash-section" id="rest-api">
           <div class="docs-panel">
             <h2>REST API</h2>
-            <p>The ZWIMA AI API is a RESTful interface for chat completions, embeddings and model discovery.</p>
-            <p class="docs-value">Base URL: <code>https://api.zwima-group.info/v1</code></p>
+            <p>The ZWIMA AI API is a REST interface for secure chat completions through OpenAI and Google Gemini.</p>
+            <p class="docs-value">Base URL: <code>https://zwima-group.info</code></p>
           </div>
         </section>
 
@@ -70,9 +69,9 @@
           <div class="docs-panel">
             <h2>Endpoints</h2>
             <ul class="docs-endpoint-list">
-              <li><code>POST /chat/completions</code> ??Chat Completion</li>
-              <li><code>POST /embeddings</code> ??Embeddings</li>
-              <li><code>GET /models</code> ??Models API</li>
+              <li><code>POST /api/gateway/chat</code> — Chat completion gateway</li>
+              <li><code>GET /api/apikeys</code> — API key management</li>
+              <li><code>GET /api/usage</code> — Usage records</li>
             </ul>
           </div>
         </section>
@@ -81,15 +80,26 @@
           <div class="docs-panel">
             <h2>Chat Completion</h2>
             <p>Send a chat request with a provider-prefixed model identifier.</p>
-            <p class="docs-value"><code>POST /chat/completions</code></p>
-          </div>
-        </section>
-
-        <section class="dash-section" id="embeddings">
-          <div class="docs-panel">
-            <h2>Embeddings</h2>
-            <p>Generate vector embeddings for text input using supported embedding models.</p>
-            <p class="docs-value"><code>POST /embeddings</code></p>
+            <p class="docs-value"><code>POST /api/gateway/chat</code></p>
+            <pre class="code-block"><code>{
+  "apiKey": "zw_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "prompt": "Explain vector databases in simple terms.",
+  "model": "gpt-4.1",
+  "routingMode": "intelligent"
+}</code></pre>
+            <p class="docs-note">Example response:</p>
+            <pre class="code-block"><code>{
+  "content": "A vector database stores embeddings...",
+  "provider": "OpenAI",
+  "model": "GPT-4.1",
+  "selectedModelId": "gpt-4.1",
+  "routingReason": "Coding task routed to GPT-4.1.",
+  "estimatedCost": 0.0042,
+  "usage": { "inputTokens": 420, "outputTokens": 610, "totalTokens": 1030 },
+  "creditsDeducted": 1030,
+  "remainingCredits": 28720,
+  "latencyMs": 612
+}</code></pre>
           </div>
         </section>
 
@@ -100,10 +110,10 @@
             <p class="docs-value"><code>GET /models</code></p>
             <p class="docs-note">Model parameter examples:</p>
             <ul class="docs-model-list">
-              <li><code>openai/gpt-5</code></li>
-              <li><code>anthropic/claude-4-sonnet</code></li>
-              <li><code>google/gemini-2.5-pro</code></li>
-              <li><code>deepseek/deepseek-r1</code></li>
+              <li><code>gpt-4o</code></li>
+              <li><code>gpt-4.1</code></li>
+              <li><code>gemini-2-flash</code> (Gemini 2.5 Flash)</li>
+              <li><code>gemini-2-pro</code> (Gemini 2.5 Pro)</li>
             </ul>
           </div>
         </section>
@@ -119,11 +129,11 @@
           <div class="docs-panel">
             <h2>Error Codes</h2>
             <ul class="docs-endpoint-list">
-              <li><code>400</code> ??Invalid request or model parameter</li>
-              <li><code>401</code> ??Invalid or missing API key</li>
-              <li><code>402</code> ??Insufficient credits</li>
-              <li><code>429</code> ??Rate limit exceeded</li>
-              <li><code>500</code> ??Internal server error</li>
+              <li><code>400</code> — Invalid request payload</li>
+              <li><code>401</code> — Invalid or missing API key</li>
+              <li><code>402</code> — Insufficient credits</li>
+              <li><code>429</code> — Rate limit exceeded</li>
+              <li><code>500</code> — Internal server error</li>
             </ul>
           </div>
         </section>
@@ -132,39 +142,40 @@
           <div class="docs-panel">
             <h2>Examples</h2>
             <h3 class="docs-subheading">curl</h3>
-            <pre class="code-block"><code>curl https://api.zwima-group.info/v1/chat/completions \
+            <pre class="code-block"><code>curl https://zwima-group.info/api/gateway/chat \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Authorization: Bearer USER_JWT_TOKEN" \
   -d '{
-    "model": "openai/gpt-5",
-    "messages": [
-      {"role": "user", "content": "Hello, ZWIMA AI."}
-    ]
+    "apiKey":"zw_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "prompt":"Hello, ZWIMA AI.",
+    "routingMode":"intelligent"
   }'</code></pre>
 
             <h3 class="docs-subheading">Python</h3>
             <pre class="code-block"><code>import requests
 
 response = requests.post(
-    "https://api.zwima-group.info/v1/chat/completions",
-    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    "https://zwima-group.info/api/gateway/chat",
+    headers={"Authorization": "Bearer USER_JWT_TOKEN"},
     json={
-        "model": "anthropic/claude-4-sonnet",
-        "messages": [{"role": "user", "content": "Hello, ZWIMA AI."}],
+        "apiKey": "zw_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "prompt": "Hello, ZWIMA AI.",
+        "routingMode": "intelligent"
     },
 )
 print(response.json())</code></pre>
 
             <h3 class="docs-subheading">Node.js</h3>
-            <pre class="code-block"><code>const response = await fetch("https://api.zwima-group.info/v1/chat/completions", {
+            <pre class="code-block"><code>const response = await fetch("https://zwima-group.info/api/gateway/chat", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    Authorization: "Bearer YOUR_API_KEY",
+    Authorization: "Bearer USER_JWT_TOKEN",
   },
   body: JSON.stringify({
-    model: "google/gemini-2.5-pro",
-    messages: [{ role: "user", content: "Hello, ZWIMA AI." }],
+    apiKey: "zw_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    prompt: "Hello, ZWIMA AI.",
+    routingMode: "intelligent",
   }),
 });
 

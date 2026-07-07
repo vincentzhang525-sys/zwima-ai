@@ -111,6 +111,7 @@ async function main() {
   await runVerify("verify-sprint41-ops.mjs", "Sprint 41 ops & legal");
   await runVerify("verify-sprint41-1-email.mjs", "Sprint 41.1 email cleanup");
   await runVerify("verify-sprint42-business.mjs", "Sprint 42 business E2E");
+  await runVerify("verify-sprint43-beta.mjs", "Sprint 43 public beta simulation");
 
   const login = await api("/api/user/login", "POST", { email: "admin@zwima-group.info", password: "admin123", remember: true });
   gate("Production login", login.ok && !!login.json?.session?.access_token, login.json?.error || `HTTP ${login.status}`);

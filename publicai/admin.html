@@ -17,13 +17,15 @@
         <span>ZWIMA AI</span>
       </a>
       <nav class="sidebar-nav">
+        <a href="#executive" class="sidebar-link active" data-section="executive">Executive</a>
         <a href="#users" class="sidebar-link active" data-section="users">Users</a>
         <a href="#providers" class="sidebar-link" data-section="providers">Providers</a>
-        <a href="#pricing" class="sidebar-link" data-section="pricing">Pricing</a>
+        <a href="#revenue" class="sidebar-link" data-section="revenue">Revenue</a>
+        <a href="#health" class="sidebar-link" data-section="health">System Health</a>
+        <a href="#security" class="sidebar-link" data-section="security">Security</a>
+        <a href="#logs" class="sidebar-link" data-section="logs">Logs</a>
         <a href="#billing" class="sidebar-link" data-section="billing">Billing</a>
         <a href="#apikeys" class="sidebar-link" data-section="apikeys">API Keys</a>
-        <a href="#statistics" class="sidebar-link" data-section="statistics">Statistics</a>
-        <a href="#security" class="sidebar-link" data-section="security">Security</a>
         <a href="#audit" class="sidebar-link" data-section="audit">Audit Log</a>
         <a href="dashboard.html" class="sidebar-link">← Console</a>
       </nav>
@@ -46,14 +48,22 @@
       </header>
 
       <main class="dashboard-content admin-content">
-        <section class="dash-section admin-panel">
-          <div class="dash-section-header"><h2>Admin Overview</h2></div>
+        <section id="executive" class="dash-section admin-panel">
+          <div class="dash-section-header"><h2>Executive Overview</h2></div>
           <div class="overview-grid">
-            <article class="overview-card"><span>Users</span><strong id="adminUsersCount">—</strong></article>
-            <article class="overview-card"><span>Credits</span><strong id="adminCreditsTotal">—</strong></article>
-            <article class="overview-card"><span>API Usage</span><strong id="adminUsageTotal">—</strong></article>
-            <article class="overview-card"><span>Provider Usage</span><strong id="adminProviderTop">—</strong></article>
-            <article class="overview-card"><span>Revenue</span><strong id="adminRevenuePlaceholder">Coming soon</strong></article>
+            <article class="overview-card"><span>Total Users</span><strong id="execTotalUsers">—</strong></article>
+            <article class="overview-card"><span>New Users Today</span><strong id="execNewUsersToday">—</strong></article>
+            <article class="overview-card"><span>Active Users</span><strong id="execActiveUsers">—</strong></article>
+            <article class="overview-card"><span>Total API Requests</span><strong id="execTotalRequests">—</strong></article>
+            <article class="overview-card"><span>Today's Requests</span><strong id="execTodayRequests">—</strong></article>
+            <article class="overview-card"><span>Monthly Requests</span><strong id="execMonthRequests">—</strong></article>
+            <article class="overview-card"><span>Credits Sold</span><strong id="execCreditsSold">—</strong></article>
+            <article class="overview-card"><span>Credits Consumed</span><strong id="execCreditsConsumed">—</strong></article>
+            <article class="overview-card"><span>MRR</span><strong id="execMrr">—</strong></article>
+            <article class="overview-card"><span>Estimated Revenue</span><strong id="execRevenue">—</strong></article>
+            <article class="overview-card"><span>Estimated Provider Cost</span><strong id="execProviderCost">—</strong></article>
+            <article class="overview-card"><span>Estimated Gross Profit</span><strong id="execGrossProfit">—</strong></article>
+            <article class="overview-card"><span>System Health</span><strong id="execSystemHealth">—</strong></article>
           </div>
         </section>
 
@@ -61,38 +71,47 @@
           <div class="dash-section-header"><h2>User Management</h2></div>
           <div class="admin-toolbar">
             <input type="search" id="userSearch" placeholder="Search users...">
+            <select id="userRoleFilter"><option value="">All Roles</option><option value="owner">Owner</option><option value="admin">Admin</option><option value="support">Support</option><option value="customer">Customer</option></select>
+            <select id="userStatusFilter"><option value="">All Statuses</option><option value="active">Active</option><option value="disabled">Disabled</option><option value="suspended">Suspended</option></select>
+            <select id="userSort"><option value="created_at_desc">Newest</option><option value="created_at_asc">Oldest</option></select>
             <button class="button button-secondary button-sm" type="button" id="userSearchBtn">Search</button>
           </div>
           <div class="data-table-wrap">
             <table class="data-table">
               <thead>
-                <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Credits</th><th>Actions</th></tr>
+                <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Credits</th><th>Usage</th><th>Actions</th></tr>
               </thead>
               <tbody id="usersTableBody"></tbody>
             </table>
           </div>
+          <div class="usage-toolbar">
+            <button class="button button-secondary button-sm" type="button" id="usersPrevPage">Previous</button>
+            <span class="muted" id="usersPageLabel">Page 1</span>
+            <button class="button button-secondary button-sm" type="button" id="usersNextPage">Next</button>
+          </div>
         </section>
 
         <section id="providers" class="dash-section admin-panel">
-          <div class="dash-section-header"><h2>Provider Management</h2></div>
+          <div class="dash-section-header"><h2>Provider Status</h2></div>
           <div class="data-table-wrap">
             <table class="data-table">
               <thead>
-                <tr><th>Provider</th><th>Enabled</th><th>Priority</th><th>Weight</th><th>Health</th><th>Latency</th><th>Actions</th></tr>
+                <tr><th>Provider</th><th>Status</th><th>Latency</th><th>Last Request</th><th>Credits Used</th><th>Error Count</th><th>Daily Requests</th><th>API Key Status</th><th>Actions</th></tr>
               </thead>
               <tbody id="providersTableBody"></tbody>
             </table>
           </div>
         </section>
 
-        <section id="pricing" class="dash-section admin-panel">
-          <div class="dash-section-header"><h2>Pricing Manager</h2></div>
+        <section id="revenue" class="dash-section admin-panel">
+          <div class="dash-section-header"><h2>Revenue Dashboard</h2></div>
+          <div class="placeholder-panel"><p id="revenueSummaryText">Loading revenue metrics…</p></div>
           <div class="data-table-wrap">
             <table class="data-table">
               <thead>
-                <tr><th>Provider</th><th>Model</th><th>Token Cost</th><th>Sell Price</th><th>Margin %</th><th>Actions</th></tr>
+                <tr><th>Chart</th><th>Latest Value</th></tr>
               </thead>
-              <tbody id="pricingTableBody"></tbody>
+              <tbody id="revenueChartsBody"></tbody>
             </table>
           </div>
         </section>
@@ -131,14 +150,12 @@
           </div>
         </section>
 
-        <section id="statistics" class="dash-section admin-panel">
-          <div class="dash-section-header"><h2>Statistics</h2></div>
-          <div class="admin-stat-grid" id="statsGrid"></div>
-          <h3 style="margin: 16px 0 10px;font-size:1rem;">Top Customers</h3>
+        <section id="health" class="dash-section admin-panel">
+          <div class="dash-section-header"><h2>System Health</h2></div>
           <div class="data-table-wrap">
             <table class="data-table">
-              <thead><tr><th>Customer</th><th>Revenue</th><th>Credits</th></tr></thead>
-              <tbody id="topCustomersBody"></tbody>
+              <thead><tr><th>Service</th><th>Health Status</th></tr></thead>
+              <tbody id="healthTableBody"></tbody>
             </table>
           </div>
         </section>
@@ -155,6 +172,23 @@
             <table class="data-table">
               <thead><tr><th>Time</th><th>Action</th><th>Detail</th></tr></thead>
               <tbody id="securityActivitiesBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="logs" class="dash-section admin-panel">
+          <div class="dash-section-header"><h2>Live Logs</h2></div>
+          <div class="admin-toolbar">
+            <input type="search" id="logsSearch" placeholder="Search logs...">
+            <input type="text" id="logsUserFilter" placeholder="User ID">
+            <input type="date" id="logsDateFilter">
+            <button class="button button-secondary button-sm" type="button" id="logsSearchBtn">Filter</button>
+            <button class="button button-secondary button-sm" type="button" id="logsExportBtn">Export CSV</button>
+          </div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Time</th><th>User</th><th>Provider</th><th>Action</th><th>Detail</th><th>IP</th></tr></thead>
+              <tbody id="logsTableBody"></tbody>
             </table>
           </div>
         </section>

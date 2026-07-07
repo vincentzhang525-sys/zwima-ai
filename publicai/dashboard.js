@@ -110,8 +110,10 @@ function renderDashboardFromLive(user) {
     overviewValues[1].textContent = monthlyUsageLabel;
     overviewValues[2].textContent = `${activeKeyCount} business keys`;
     overviewValues[3].textContent = estimatedCostLabel;
-    overviewValues[4].textContent = "Invoice ready";
+    overviewValues[4].textContent = user.status || "active";
   }
+  const statusBadge = document.getElementById("overviewAccountStatus");
+  if (statusBadge) statusBadge.textContent = user.status || "active";
 
   const activityList = document.querySelector("#recentActivityList") || document.querySelector("#overview .activity-list");
   if (activityList) {
@@ -224,8 +226,10 @@ async function renderDashboardFromMock(user) {
     overviewValues[1].textContent = monthlyUsageLabel;
     overviewValues[2].textContent = `${activeKeyCount} business keys`;
     overviewValues[3].textContent = `${usage.estimatedCost} this period`;
-    overviewValues[4].textContent = "Invoice ready";
+    overviewValues[4].textContent = user.status || "active";
   }
+  const statusBadge = document.getElementById("overviewAccountStatus");
+  if (statusBadge) statusBadge.textContent = user.status || "active";
 
   const activityList = document.querySelector("#recentActivityList") || document.querySelector("#overview .activity-list");
   if (activityList) {

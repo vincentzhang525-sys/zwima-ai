@@ -16,7 +16,7 @@
   }
 
   window.ZwimaSupabaseApiKeys = {
-    async refreshFromDb,
+    refreshFromDb,
     getCachedKeys() {
       return keysCache;
     },

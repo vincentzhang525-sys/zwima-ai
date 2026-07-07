@@ -21,7 +21,7 @@
   }
 
   window.ZwimaSupabaseCredits = {
-    async refreshFromDb,
+    refreshFromDb,
     getCachedWallet() {
       return walletCache;
     },

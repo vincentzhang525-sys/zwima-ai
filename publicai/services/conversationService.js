@@ -22,7 +22,7 @@
       return window.ZwimaDbMode?.isSupabaseMode?.();
     },
 
-    async refreshFromDb,
+    refreshFromDb,
     getCached() {
       return conversationsCache;
     },

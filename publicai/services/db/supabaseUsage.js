@@ -12,7 +12,7 @@
   }
 
   window.ZwimaSupabaseUsage = {
-    async refreshFromDb,
+    refreshFromDb,
     getCachedRecords() {
       return recordsCache;
     },

@@ -29,6 +29,9 @@
     getBilling() {
       return query("/api/admin/billing", "GET");
     },
+    getCommerce() {
+      return query("/api/admin/commerce", "GET");
+    },
     getApiKeys() {
       return query("/api/admin/apikeys", "GET");
     },

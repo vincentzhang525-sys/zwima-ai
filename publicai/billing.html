@@ -61,6 +61,7 @@
           </div>
           <div class="composer-actions">
             <button class="button button-secondary" type="button" data-plan="starter">Upgrade to Starter</button>
+            <button class="button button-secondary" type="button" data-plan="professional">Upgrade to Professional</button>
             <button class="button button-primary" type="button" data-plan="business">Upgrade to Business</button>
             <button class="button button-secondary" type="button" data-plan="enterprise">Upgrade to Enterprise</button>
             <button class="button button-secondary" type="button" id="cancelSubscriptionBtn">Cancel Subscription</button>
@@ -70,10 +71,62 @@
         </section>
 
         <section class="dash-section">
+          <div class="dash-section-header"><h2>Credit Packages</h2></div>
+          <div class="composer-actions" id="creditPackagesActions">
+            <span class="muted">Loading packages…</span>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Orders</h2></div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Order</th><th>Type</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody id="ordersBody"><tr><td colspan="5" class="muted">No orders yet.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Transactions</h2></div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Date</th><th>Provider</th><th>Amount</th><th>Status</th></tr></thead>
+              <tbody id="transactionsBody"><tr><td colspan="4" class="muted">No transactions yet.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Payment Methods</h2></div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Provider</th><th>Type</th><th>Label</th><th>Default</th></tr></thead>
+              <tbody id="paymentMethodsBody"><tr><td colspan="4" class="muted">No payment methods yet.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Referral Program</h2></div>
+          <div class="overview-grid">
+            <article class="overview-card"><span>Your Code</span><strong id="referralCode">—</strong></article>
+            <article class="overview-card"><span>Invitations</span><strong id="referralInvites">—</strong></article>
+            <article class="overview-card"><span>Credits Earned</span><strong id="referralCredits">—</strong></article>
+          </div>
+          <div class="composer-actions" style="margin-top:12px;">
+            <input type="text" id="referralInput" placeholder="Enter referral code" class="admin-toolbar-input">
+            <button class="button button-secondary" type="button" id="applyReferralBtn">Apply Referral</button>
+            <input type="text" id="couponInput" placeholder="Coupon code" class="admin-toolbar-input">
+            <button class="button button-secondary" type="button" id="applyCouponBtn">Validate Coupon</button>
+          </div>
+        </section>
+
+        <section class="dash-section">
           <div class="dash-section-header"><h2>Invoices</h2></div>
           <div class="data-table-wrap">
             <table class="data-table">
-              <thead><tr><th>Date</th><th>Amount</th><th>Status</th><th>Invoice</th></tr></thead>
+              <thead><tr><th>Date</th><th>Invoice #</th><th>Amount</th><th>Status</th><th>Invoice</th></tr></thead>
               <tbody id="invoicesBody"><tr><td colspan="4" class="muted">No invoices yet.</td></tr></tbody>
             </table>
           </div>

@@ -140,13 +140,40 @@ function renderBilling(data) {
   const payBody = document.getElementById("billingPaymentsBody");
   const invBody = document.getElementById("billingInvoicesBody");
   if (payBody) {
-    payBody.innerHTML = (data?.payments || [])
-      .map((p) => `<tr><td class="muted">${(p.createdAt || "").slice(0, 10)}</td><td>€${Number(p.amountEur || 0).toFixed(2)}</td><td>${p.credits}</td><td><span class="status-pill ${pill(p.status)}">${p.status}</span></td><td class="muted">${p.sessionId || "—"}</td></tr>`)
+    const orders = data?.orders || data?.payments || [];
+    payBody.innerHTML = orders
+      .map((p) => `<tr><td class="muted">${(p.createdAt || "").slice(0, 10)}</td><td>${esc(p.orderNumber || p.sessionId || "—")}</td><td>€${Number(p.amountEur || 0).toFixed(2)}</td><td><span class="status-pill ${pill(p.status)}">${esc(p.status)}</span></td><td class="muted">${esc(p.provider || "—")}</td></tr>`)
       .join("");
   }
   if (invBody) {
     invBody.innerHTML = (data?.invoices || [])
-      .map((i) => `<tr><td>${i.id}</td><td class="muted">${i.date}</td><td>€${Number(i.amountEur || 0).toFixed(2)}</td><td>${i.credits}</td><td><span class="status-pill ${pill(i.status)}">${i.status}</span></td></tr>`)
+      .map((i) => `<tr><td>${esc(i.invoiceNumber || i.id)}</td><td class="muted">${i.date || (i.createdAt || "").slice(0, 10)}</td><td>€${Number(i.amountEur || 0).toFixed(2)}</td><td><span class="status-pill ${pill(i.status)}">${esc(i.status)}</span></td></tr>`)
+      .join("");
+  }
+}
+
+function renderCommerce(data) {
+  setText("commerceRevenue", `€${Number(data?.revenue?.totalRevenue || 0).toLocaleString()}`);
+  setText("commerceSubs", Number(data?.revenue?.activeSubscriptions || 0).toLocaleString());
+  setText("commerceOrders", Number(data?.revenue?.orderCount || 0).toLocaleString());
+  setText("commerceInvoices", Number(data?.revenue?.invoiceCount || 0).toLocaleString());
+
+  const plansBody = document.getElementById("commercePlansBody");
+  if (plansBody) {
+    plansBody.innerHTML = (data?.plans || [])
+      .map((p) => `<tr><td>${esc(p.name)}</td><td>${Number(p.monthlyCredits).toLocaleString()}</td><td>€${p.monthlyPrice}</td><td>€${p.annualPrice}</td><td>${p.rateLimit}/min</td><td><span class="status-pill ${pill(p.status)}">${esc(p.status)}</span></td></tr>`)
+      .join("");
+  }
+  const pkgBody = document.getElementById("commercePackagesBody");
+  if (pkgBody) {
+    pkgBody.innerHTML = (data?.creditPackages || [])
+      .map((p) => `<tr><td>${esc(p.name)}</td><td>${Number(p.credits).toLocaleString()}</td><td>€${p.price}</td><td>${(p.taxRate * 100).toFixed(0)}%</td><td><span class="status-pill ${pill(p.status)}">${esc(p.status)}</span></td></tr>`)
+      .join("");
+  }
+  const couponBody = document.getElementById("commerceCouponsBody");
+  if (couponBody) {
+    couponBody.innerHTML = (data?.coupons || [])
+      .map((c) => `<tr><td>${esc(c.code)}</td><td>${esc(c.discountType)}</td><td>${c.discountValue}${c.discountType === "percentage" ? "%" : ""}</td><td>${c.usageCount}${c.usageLimit ? `/${c.usageLimit}` : ""}</td><td><span class="status-pill ${pill(c.status)}">${esc(c.status)}</span></td></tr>`)
       .join("");
   }
 }
@@ -174,7 +201,7 @@ async function loadAll() {
     status: document.getElementById("userStatusFilter")?.value || "",
     sort: document.getElementById("userSort")?.value || "created_at_desc",
   };
-  const [exec, users, providers, revenue, health, security, logs, audit, billing, apikeys] = await Promise.all([
+  const [exec, users, providers, revenue, health, security, logs, audit, billing, commerce, apikeys] = await Promise.all([
     admin().getExecutive(),
     admin().getUsers(userParams.q ? userParams.q : "").then(async () => {
       const qp = new URLSearchParams(userParams);
@@ -191,6 +218,7 @@ async function loadAll() {
     }),
     admin().getAuditLog(),
     admin().getBilling(),
+    admin().getCommerce(),
     admin().getApiKeys(),
   ]);
   renderExecutive(exec);
@@ -202,6 +230,7 @@ async function loadAll() {
   renderLogs(logs);
   renderAudit(audit);
   renderBilling(billing);
+  renderCommerce(commerce);
   renderApiKeys(apikeys);
 }
 

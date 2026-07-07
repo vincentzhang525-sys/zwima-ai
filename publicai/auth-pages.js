@@ -1,4 +1,25 @@
 (function () {
+  function setSubmitting(formId, active, text) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    const button = form.querySelector('button[type="submit"]');
+    if (!button) return;
+    if (active) {
+      button.dataset.originalLabel = button.textContent;
+      button.textContent = text || "Please wait...";
+      button.disabled = true;
+      return;
+    }
+    button.textContent = button.dataset.originalLabel || button.textContent;
+    button.disabled = false;
+  }
+
+  function showSuccess(el, message) {
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = !message;
+  }
+
   function showError(el, message) {
     if (!el) return;
     el.textContent = message;
@@ -14,6 +35,7 @@
     event.preventDefault();
     const errorEl = document.getElementById("loginError");
     showError(errorEl, "");
+    setSubmitting("loginForm", true, "Signing in...");
     try {
       await window.ZwimaAuthService.login({
         email: document.getElementById("loginEmail")?.value,
@@ -21,25 +43,37 @@
       });
       redirectAfterAuth();
     } catch (err) {
-      showError(errorEl, err.message || "Sign in failed.");
+      showError(errorEl, err.message || "Sign in failed. Please check your email and password.");
+    } finally {
+      setSubmitting("loginForm", false);
     }
   });
 
   document.getElementById("signupForm")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const errorEl = document.getElementById("signupError");
+    const successEl = document.getElementById("signupSuccess");
     showError(errorEl, "");
+    showSuccess(successEl, "");
+    setSubmitting("signupForm", true, "Creating account...");
     try {
-      await window.ZwimaAuthService.register({
+      const result = await window.ZwimaAuthService.register({
         company: document.getElementById("signupCompany")?.value,
         email: document.getElementById("signupEmail")?.value,
         password: document.getElementById("signupPassword")?.value,
         country: document.getElementById("signupCountry")?.value,
         role: "customer",
       });
-      window.location.href = "verify-email.html";
+      if (result?.user) {
+        showSuccess(successEl, "Account created successfully. Redirecting to dashboard...");
+        setTimeout(() => redirectAfterAuth(), 700);
+      } else {
+        window.location.href = "verify-email.html";
+      }
     } catch (err) {
-      showError(errorEl, err.message || "Sign up failed.");
+      showError(errorEl, err.message || "Sign up failed. Please verify your input and try again.");
+    } finally {
+      setSubmitting("signupForm", false);
     }
   });
 
@@ -48,17 +82,17 @@
     const errorEl = document.getElementById("forgotError");
     const successEl = document.getElementById("forgotSuccess");
     showError(errorEl, "");
-    if (successEl) successEl.hidden = true;
+    showSuccess(successEl, "");
+    setSubmitting("forgotForm", true, "Sending...");
     try {
       const result = await window.ZwimaAuthService.forgotPassword({
         email: document.getElementById("forgotEmail")?.value,
       });
-      if (successEl) {
-        successEl.textContent = result.message;
-        successEl.hidden = false;
-      }
+      showSuccess(successEl, result.message || "Password reset instructions sent.");
     } catch (err) {
-      showError(errorEl, err.message || "Request failed.");
+      showError(errorEl, err.message || "Request failed. Please try again.");
+    } finally {
+      setSubmitting("forgotForm", false);
     }
   });
 
@@ -67,18 +101,18 @@
     const errorEl = document.getElementById("verifyError");
     const successEl = document.getElementById("verifySuccess");
     showError(errorEl, "");
-    if (successEl) successEl.hidden = true;
+    showSuccess(successEl, "");
+    setSubmitting("verifyForm", true, "Verifying...");
     try {
       await window.ZwimaAuthService.verifyEmail(document.getElementById("verifyCode")?.value);
-      if (successEl) {
-        successEl.textContent = "Email verified successfully. Redirecting to dashboard…";
-        successEl.hidden = false;
-      }
+      showSuccess(successEl, "Email verified successfully. Redirecting to dashboard...");
       setTimeout(() => {
-        window.location.href = "dashboard.html";
+        redirectAfterAuth();
       }, 900);
     } catch (err) {
       showError(errorEl, err.message || "Verification failed.");
+    } finally {
+      setSubmitting("verifyForm", false);
     }
   });
 
@@ -93,19 +127,19 @@
     const errorEl = document.getElementById("resetError");
     const successEl = document.getElementById("resetSuccess");
     showError(errorEl, "");
-    if (successEl) successEl.hidden = true;
+    showSuccess(successEl, "");
+    setSubmitting("resetForm", true, "Updating...");
     try {
       const result = await window.ZwimaAuthService.resetPassword({
         email: document.getElementById("resetEmail")?.value,
         code: document.getElementById("resetCode")?.value,
         password: document.getElementById("resetPassword")?.value,
       });
-      if (successEl) {
-        successEl.textContent = result.message || "Password updated. You can sign in now.";
-        successEl.hidden = false;
-      }
+      showSuccess(successEl, result.message || "Password updated. You can sign in now.");
     } catch (err) {
       showError(errorEl, err.message || "Reset failed.");
+    } finally {
+      setSubmitting("resetForm", false);
     }
   });
 })();

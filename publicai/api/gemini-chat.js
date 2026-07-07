@@ -105,7 +105,7 @@ function extractText(candidates) {
 }
 
 async function handleNonStream(req, res, body) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const { modelId, apiModel, requestBody } = buildRequestBody(body);
   const started = Date.now();
 
@@ -146,7 +146,7 @@ async function handleNonStream(req, res, body) {
 }
 
 async function handleStream(req, res, body) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const { apiModel, requestBody } = buildRequestBody(body);
 
   const geminiRes = await fetch(
@@ -202,9 +202,9 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: "Gemini API key not configured" });
+    return res.status(500).json({ error: "Gemini API key not configured (GEMINI_API_KEY/GOOGLE_API_KEY)" });
   }
 
   const body = parseBody(req);

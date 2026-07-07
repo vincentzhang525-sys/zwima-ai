@@ -92,9 +92,9 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: "Anthropic API key not configured" });
+    return res.status(500).json({ error: "Anthropic API key not configured (ANTHROPIC_API_KEY/CLAUDE_API_KEY)" });
   }
 
   const body = parseBody(req);

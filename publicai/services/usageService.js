@@ -81,6 +81,8 @@
         outputTokens,
         totalTokens,
         estimatedCost: payload.estimatedCost ?? estimateCost(totalTokens),
+        creditsDeducted: Number(payload.creditsDeducted) || 0,
+        requestTimeMs: Number(payload.requestTimeMs) || 0,
         remainingCredits: Number(payload.remainingCredits) || 0,
         status: payload.status || "Success",
       };

@@ -62,9 +62,9 @@ function renderTable() {
           <td>${Number(row.inputTokens).toLocaleString()}</td>
           <td>${Number(row.outputTokens).toLocaleString()}</td>
           <td>${Number(row.totalTokens).toLocaleString()}</td>
-          <td>€${Number(row.estimatedCost).toFixed(4)}</td>
-          <td>${Number(row.remainingCredits).toLocaleString()}</td>
-          <td><span class="status-pill active">${escapeHtml(row.status)}</span></td>
+          <td>${Number(row.creditsDeducted || row.totalTokens || 0).toLocaleString()}</td>
+          <td>€${Number(row.estimatedCost || 0).toFixed(4)}</td>
+          <td>${Number(row.requestTimeMs || 0)} ms</td>
         </tr>
       `
     )

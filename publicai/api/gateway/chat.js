@@ -205,6 +205,8 @@ module.exports = async function handler(req, res) {
       output_tokens: usage.outputTokens,
       total_tokens: usage.totalTokens,
       estimated_cost: cost,
+      credits_deducted: creditsToDeduct,
+      request_time_ms: elapsedMs,
       remaining_credits: remaining,
       status: "Success",
     });

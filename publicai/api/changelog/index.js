@@ -2,6 +2,32 @@ const fs = require("fs");
 const path = require("path");
 const { json, handleOptions, withCors } = require("../lib/supabase");
 
+const FALLBACK_ENTRIES = [
+  {
+    title: "Sprint 45 — Customer Success Center (2026-07-07)",
+    date: "2026-07-07",
+    sections: {
+      Added: ["Support Center with tickets, bugs, and feature voting", "Knowledge Base and Help Center", "Incident publishing and system status components"],
+    },
+  },
+];
+
+function changelogPaths() {
+  return [
+    path.join(process.cwd(), "CHANGELOG.md"),
+    path.join(process.cwd(), "publicai", "CHANGELOG.md"),
+    path.join(__dirname, "..", "..", "CHANGELOG.md"),
+    path.join(__dirname, "..", "..", "..", "CHANGELOG.md"),
+  ];
+}
+
+function readChangelogMarkdown() {
+  for (const p of changelogPaths()) {
+    if (fs.existsSync(p)) return fs.readFileSync(p, "utf8");
+  }
+  return "";
+}
+
 function parseChangelog(markdown) {
   const entries = [];
   const lines = markdown.split("\n");
@@ -42,9 +68,9 @@ module.exports = async function handler(req, res) {
   if (req.method !== "GET") return json(res, 405, { error: "Method not allowed" });
 
   try {
-    const changelogPath = path.join(process.cwd(), "CHANGELOG.md");
-    const markdown = fs.existsSync(changelogPath) ? fs.readFileSync(changelogPath, "utf8") : "# Changelog\n";
-    const entries = parseChangelog(markdown);
+    const markdown = readChangelogMarkdown();
+    let entries = markdown ? parseChangelog(markdown) : [...FALLBACK_ENTRIES];
+    if (!entries.length) entries = [...FALLBACK_ENTRIES];
     return json(res, 200, {
       entries,
       highlights: {

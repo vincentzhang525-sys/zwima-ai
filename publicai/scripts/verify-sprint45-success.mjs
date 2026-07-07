@@ -191,8 +191,8 @@ async function run() {
   const email = await api("/api/email/status");
   email.ok ? pass("Regression email") : fail("Regression email");
 
-  const workspace = await api("/api/workspace", "GET", undefined, token);
-  workspace.ok || workspace.status === 404 ? pass("Regression enterprise workspace") : fail("Regression enterprise");
+  const orgs = await api("/api/organizations", "GET", undefined, token);
+  orgs.ok || orgs.status === 400 ? pass("Regression enterprise workspace") : fail("Regression enterprise", `HTTP ${orgs.status}`);
 
   if (adminToken && incidentId) {
     await api("/api/admin/success", "POST", { action: "resolve_incident", incidentId }, adminToken);

@@ -8,6 +8,9 @@
     "api/db/migrate.js": {
       "includeFiles": "supabase/**",
       "maxDuration": 60
+    },
+    "api/changelog/index.js": {
+      "includeFiles": "CHANGELOG.md"
     }
   },
   "routes": [

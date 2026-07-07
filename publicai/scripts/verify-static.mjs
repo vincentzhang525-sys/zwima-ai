@@ -39,6 +39,10 @@ const requiredPages = [
   "workspace.html",
   "profile.html",
   "notifications.html",
+  "support.html",
+  "help.html",
+  "incidents.html",
+  "changelog.html",
   "documentation.html",
   "admin.html",
 ];

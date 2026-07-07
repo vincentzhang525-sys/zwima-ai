@@ -9,6 +9,11 @@
     "routing.html",
     "gateway.html",
     "admin.html",
+    "support.html",
+    "billing.html",
+    "profile.html",
+    "notifications.html",
+    "workspace.html",
   ];
 
   function currentPage() {

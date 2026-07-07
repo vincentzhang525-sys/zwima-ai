@@ -1,5 +1,18 @@
 # Changelog
 
+## Sprint 45 — Customer Success Center (2026-07-07)
+
+### Added
+- Support Center: tickets (ZW-YYYY-000001), bug reports, feature requests with voting
+- Knowledge Base API and Help Center (`help.html`)
+- System status extensions: Gateway, Authentication, Billing, Database, SMTP components
+- Incident history page and admin incident publishing
+- Changelog page (`/api/changelog`, `changelog.html`)
+- Customer Success dashboard widgets (`/api/success/overview`)
+- Admin Success Center (`/api/admin/success`) with ticket queue and analytics
+- Notifications for ticket updates, feature releases, and incidents
+- `scripts/verify-sprint45-success.mjs` and release gate gates
+
 ## Sprint 41 — Production Operations & Legal Readiness (2026-07-07)
 
 ### Added

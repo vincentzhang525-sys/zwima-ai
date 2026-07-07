@@ -27,13 +27,18 @@
     <div class="container narrow">
       <div class="section-heading">
         <p class="eyebrow">System Status</p>
-        <h1>Provider Status</h1>
+        <h1>System Status</h1>
         <p id="statusSummary" class="muted">Loading provider health…</p>
       </div>
+      <div id="statusIncidents" style="margin-bottom:20px;"></div>
+      <h2 style="font-size:1.1rem;margin:0 0 12px;">AI Providers</h2>
       <div class="status-page-grid" id="statusGrid">
         <p class="zwima-skeleton" style="height:80px;"></p>
         <p class="zwima-skeleton" style="height:80px;"></p>
       </div>
+      <h2 style="font-size:1.1rem;margin:24px 0 12px;">Platform Components</h2>
+      <div class="status-page-grid" id="componentsGrid"></div>
+      <p style="margin-top:16px;"><a href="incidents.html">Incident history</a> · <a href="changelog.html">Changelog</a> · <a href="help.html">Help Center</a></p>
       <p class="muted" id="statusCheckedAt" style="margin-top:16px;"></p>
     </div>
   </main>

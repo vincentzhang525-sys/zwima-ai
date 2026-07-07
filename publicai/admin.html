@@ -28,6 +28,7 @@
         <a href="#enterprise" class="sidebar-link" data-section="enterprise">Enterprise</a>
         <a href="#apikeys" class="sidebar-link" data-section="apikeys">API Keys</a>
         <a href="#audit" class="sidebar-link" data-section="audit">Audit Log</a>
+        <a href="#success" class="sidebar-link" data-section="success">Success Center</a>
         <a href="dashboard.html" class="sidebar-link">← Console</a>
       </nav>
       <div class="sidebar-footer">
@@ -251,6 +252,46 @@
             <table class="data-table">
               <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead>
               <tbody id="auditTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="success" class="dash-section admin-panel">
+          <div class="dash-section-header"><h2>Customer Success Center</h2></div>
+          <div class="overview-grid" style="margin-bottom:16px;">
+            <article class="overview-card"><span>Open Tickets</span><strong id="successQueueCount">—</strong></article>
+            <article class="overview-card"><span>Avg Resolution (h)</span><strong id="successAvgResolution">—</strong></article>
+            <article class="overview-card"><span>Open Bugs</span><strong id="successOpenBugs">—</strong></article>
+            <article class="overview-card"><span>Critical Bugs</span><strong id="successCriticalBugs">—</strong></article>
+            <article class="overview-card"><span>Feature Votes</span><strong id="successTotalVotes">—</strong></article>
+            <article class="overview-card"><span>Customer Satisfaction</span><strong id="successSatisfaction">—</strong></article>
+            <article class="overview-card"><span>Provider Complaints</span><strong id="successProviderComplaints">—</strong></article>
+          </div>
+          <h3 style="margin:0 0 10px;font-size:1rem;">Ticket Queue</h3>
+          <div class="data-table-wrap" style="margin-bottom:16px;">
+            <table class="data-table">
+              <thead><tr><th>Number</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="successTicketsBody"></tbody>
+            </table>
+          </div>
+          <h3 style="margin:0 0 10px;font-size:1rem;">Top Requested Models / Features</h3>
+          <div class="data-table-wrap" style="margin-bottom:16px;">
+            <table class="data-table">
+              <thead><tr><th>Feature</th><th>Votes</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="successFeaturesBody"></tbody>
+            </table>
+          </div>
+          <h3 style="margin:0 0 10px;font-size:1rem;">Publish Incident / Maintenance</h3>
+          <form id="incidentForm" class="admin-toolbar" style="flex-wrap:wrap;gap:8px;">
+            <input type="text" id="incidentTitle" placeholder="Incident title" style="min-width:200px;">
+            <select id="incidentComponent"><option value="openai">OpenAI</option><option value="gemini">Gemini</option><option value="gateway">Gateway</option><option value="smtp">SMTP</option><option value="database">Database</option></select>
+            <select id="incidentImpact"><option value="degraded">Degraded</option><option value="offline">Offline</option><option value="maintenance">Maintenance</option></select>
+            <button class="button button-primary button-sm" type="submit">Publish</button>
+          </form>
+          <div class="data-table-wrap" style="margin-top:12px;">
+            <table class="data-table">
+              <thead><tr><th>Component</th><th>Title</th><th>Impact</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="successIncidentsBody"></tbody>
             </table>
           </div>
         </section>

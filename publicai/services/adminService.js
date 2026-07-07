@@ -75,5 +75,20 @@
     getUserDetails(userId) {
       return query(`/api/admin/user-details?userId=${encodeURIComponent(userId)}`, "GET");
     },
+    getSuccess() {
+      return query("/api/admin/success", "GET");
+    },
+    updateTicket(ticketId, patch) {
+      return query("/api/admin/success", "POST", { action: "update_ticket", ticketId, ...patch });
+    },
+    updateFeature(featureId, patch) {
+      return query("/api/admin/success", "POST", { action: "update_feature", featureId, ...patch });
+    },
+    publishIncident(payload) {
+      return query("/api/admin/success", "POST", { action: "publish_incident", ...payload });
+    },
+    resolveIncident(incidentId) {
+      return query("/api/admin/success", "POST", { action: "resolve_incident", incidentId });
+    },
   };
 })();

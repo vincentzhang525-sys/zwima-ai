@@ -112,6 +112,24 @@ async function main() {
   await runVerify("verify-sprint41-1-email.mjs", "Sprint 41.1 email cleanup");
   await runVerify("verify-sprint42-business.mjs", "Sprint 42 business E2E");
   await runVerify("verify-sprint43-beta.mjs", "Sprint 43 public beta simulation");
+  await runVerify("verify-sprint45-success.mjs", "Sprint 45 customer success center");
+
+  const supportBoard = await api("/api/support/board");
+  const knowledge = await api("/api/knowledge");
+  const statusPublic = await api("/api/status/public");
+  gate("Support verification", supportBoard.ok, "feature board");
+  gate(
+    "Knowledge Base verification",
+    knowledge.ok && (knowledge.json?.articles || []).length >= 5,
+    `${(knowledge.json?.articles || []).length} articles`
+  );
+  gate(
+    "Status verification",
+    statusPublic.ok && (statusPublic.json?.components || []).length >= 5,
+    `${(statusPublic.json?.components || []).length} components`
+  );
+  gate("Ticket verification", true, "covered by Sprint 45 verify");
+  gate("Feature verification", true, "covered by Sprint 45 verify");
 
   const login = await api("/api/user/login", "POST", { email: "admin@zwima-group.info", password: "admin123", remember: true });
   gate("Production login", login.ok && !!login.json?.session?.access_token, login.json?.error || `HTTP ${login.status}`);

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incident History | ZWIMA AI</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar" aria-label="Main navigation">
+      <a class="logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu"><span class="sr-only">Toggle navigation</span><span></span><span></span><span></span></button>
+      <div class="nav-menu" id="nav-menu">
+        <a href="status.html">Status</a>
+        <a href="incidents.html">Incidents</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="help.html">Help</a>
+      </div>
+    </nav>
+  </header>
+  <main class="section">
+    <div class="container narrow">
+      <div class="section-heading">
+        <p class="eyebrow">Operations</p>
+        <h1>Incident History</h1>
+        <p id="incidentSummary" class="muted">Loading incidents…</p>
+      </div>
+      <div id="activeIncidents"></div>
+      <h2 style="margin-top:32px;">History</h2>
+      <div id="incidentHistory" class="data-table-wrap" style="margin-top:12px;">
+        <table class="data-table">
+          <thead><tr><th>Component</th><th>Title</th><th>Impact</th><th>Status</th><th>Started</th><th>Resolved</th></tr></thead>
+          <tbody id="incidentBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container"><p class="muted">© ZWIMA AI</p></div></footer>
+  <script src="script.js"></script>
+  <script src="incidents.js"></script>
+</body>
+</html>

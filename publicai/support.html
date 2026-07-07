@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Center | ZWIMA AI</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body class="dashboard-body" data-page="support">
+  <div class="dashboard-layout">
+    <aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation">
+      <a class="sidebar-logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="sidebar-link">Overview</a>
+        <a href="support.html" class="sidebar-link active" aria-current="page">Support</a>
+        <a href="help.html" class="sidebar-link">Help Center</a>
+        <a href="status.html" class="sidebar-link">System Status</a>
+        <a href="incidents.html" class="sidebar-link">Incidents</a>
+        <a href="changelog.html" class="sidebar-link">Changelog</a>
+        <a href="notifications.html" class="sidebar-link">Notifications</a>
+        <a href="billing.html" class="sidebar-link">Billing</a>
+      </nav>
+      <div class="sidebar-footer"><a href="index.html" class="sidebar-back">← Back to website</a></div>
+    </aside>
+    <div class="dashboard-main-wrap">
+      <header class="dashboard-topbar">
+        <div class="topbar-heading"><h1>Support Center</h1><p>Submit tickets, report bugs, and request features.</p></div>
+        <div class="topbar-user" id="topbarUserPanel"></div>
+      </header>
+      <main class="dashboard-content">
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>My Tickets</h2></div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Number</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th><th>Created</th></tr></thead>
+              <tbody id="ticketsBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Submit Ticket</h2></div>
+          <form id="ticketForm" class="notice-box" style="display:grid;gap:12px;max-width:640px;">
+            <label>Category<select id="ticketCategory" required></select></label>
+            <label>Priority<select id="ticketPriority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></label>
+            <label>Title<input type="text" id="ticketTitle" required placeholder="Brief summary"></label>
+            <label>Description<textarea id="ticketDescription" rows="4" required placeholder="Describe your issue"></textarea></label>
+            <button class="button button-primary" type="submit">Submit Ticket</button>
+          </form>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Report Bug</h2></div>
+          <form id="bugForm" class="notice-box" style="display:grid;gap:12px;max-width:640px;">
+            <label>Title<input type="text" id="bugTitle" required></label>
+            <label>Description<textarea id="bugDescription" rows="3" required></textarea></label>
+            <label>Steps to reproduce<textarea id="bugSteps" rows="3"></textarea></label>
+            <label>Browser<input type="text" id="bugBrowser" placeholder="Chrome 120"></label>
+            <label>Operating System<input type="text" id="bugOs" placeholder="Windows 11"></label>
+            <label>Severity<select id="bugSeverity"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></label>
+            <label>Screenshot (optional)<input type="file" id="bugScreenshot" accept="image/*"></label>
+            <button class="button button-primary" type="submit">Submit Bug Report</button>
+          </form>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Feature Requests & Voting</h2></div>
+          <form id="featureForm" class="notice-box" style="display:grid;gap:12px;max-width:640px;margin-bottom:20px;">
+            <label>Feature title<input type="text" id="featureTitle" required placeholder="e.g. Support Claude"></label>
+            <label>Description<textarea id="featureDescription" rows="2"></textarea></label>
+            <button class="button button-secondary" type="submit">Submit Feature Request</button>
+          </form>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Feature</th><th>Votes</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="featuresBody"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="config.js"></script>
+  <script src="config.runtime.js"></script>
+  <script src="services/db/supabaseApi.js"></script>
+  <script src="services/auth/supabaseAuthAdapter.js"></script>
+  <script src="services/auth/localStorageAuthAdapter.js"></script>
+  <script src="services/authService.js"></script>
+  <script src="auth/authState.js"></script>
+  <script src="auth/authGuard.js"></script>
+  <script src="layouts/header.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="support.js"></script>
+</body>
+</html>

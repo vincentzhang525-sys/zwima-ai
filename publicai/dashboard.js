@@ -336,6 +336,37 @@ async function renderDashboardFromMock(user) {
   }
 }
 
+async function loadSuccessOverview() {
+  if (!isSupabaseMode() || !window.ZwimaSupabaseApi?.apiFetch) return;
+  try {
+    const res = await window.ZwimaSupabaseApi.apiFetch("/api/success/overview", "GET");
+    const data = res?.data || res;
+    const set = (id, v) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = v;
+    };
+    set("successOpenTickets", String((data.openTickets || []).length));
+    set("successRecentTickets", String((data.recentTickets || []).length));
+    set("successFeatureVotes", String((data.votes || []).length));
+    set("successSystemHealth", data.systemHealth || "—");
+    set("successIncidents", String((data.announcements || []).length));
+    set("successAnnouncements", String((data.announcements || []).length));
+    const list = document.getElementById("successTicketList");
+    if (list) {
+      const tickets = data.recentTickets || [];
+      list.innerHTML = tickets.length
+        ? tickets
+            .map(
+              (t) => `<article class="activity-item"><span class="activity-type">${t.ticketNumber}</span><p>${t.title} · ${t.status}</p></article>`
+            )
+            .join("")
+        : '<article class="activity-item"><span class="activity-type">No tickets</span><p><a href="support.html">Submit a support ticket</a></p></article>';
+    }
+  } catch (err) {
+    console.warn("[Dashboard] Success overview failed:", err);
+  }
+}
+
 async function loadDashboardData() {
   const user = window.ZwimaUserService.getSessionSync();
 
@@ -343,6 +374,7 @@ async function loadDashboardData() {
     try {
       await refreshLiveData();
       await renderDashboardFromLive(user);
+      await loadSuccessOverview();
       const onboarding = await window.ZwimaOnboardingService?.loadAndRender?.("onboardingBar");
       const onboardingSection = document.getElementById("onboarding");
       if (onboardingSection) {

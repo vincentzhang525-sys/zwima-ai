@@ -216,6 +216,67 @@ function renderApiKeys(rows) {
     .join("");
 }
 
+function renderSuccess(data) {
+  if (!data) return;
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = v;
+  };
+  set("successQueueCount", data.analytics?.openTickets ?? "—");
+  set("successAvgResolution", data.averageResolutionHours ?? "—");
+  set("successOpenBugs", data.openBugs ?? "—");
+  set("successCriticalBugs", data.criticalBugs ?? "—");
+  set("successTotalVotes", data.totalVotes ?? "—");
+  set("successSatisfaction", data.customerSatisfaction != null ? `${data.customerSatisfaction}/5` : "—");
+  set("successProviderComplaints", data.providerComplaints ?? "—");
+
+  const ticketsBody = document.getElementById("successTicketsBody");
+  if (ticketsBody) {
+    ticketsBody.innerHTML = (data.ticketQueue || [])
+      .map(
+        (t) => `<tr data-ticket-id="${t.id}">
+        <td>${esc(t.ticketNumber)}</td><td>${esc(t.title)}</td><td>${esc(t.category || "—")}</td>
+        <td>${esc(t.priority)}</td><td>${esc(t.status)}</td>
+        <td class="admin-actions">
+          <button class="button button-sm button-secondary" data-action="assign-ticket">Assign</button>
+          <button class="button button-sm button-secondary" data-action="resolve-ticket">Resolve</button>
+          <button class="button button-sm button-secondary" data-action="close-ticket">Close</button>
+        </td></tr>`
+      )
+      .join("") || '<tr><td colspan="6" class="muted">No open tickets.</td></tr>';
+  }
+
+  const featuresBody = document.getElementById("successFeaturesBody");
+  if (featuresBody) {
+    featuresBody.innerHTML = (data.topRequestedModels || [])
+      .map(
+        (f, i) => {
+          const feat = (data.featureVotes || [])[i];
+          const id = feat?.id || "";
+          return `<tr data-feature-id="${id}">
+          <td>${esc(f.title)}</td><td>${f.votes}</td><td>${esc(f.status || "pending")}</td>
+          <td class="admin-actions">
+            <button class="button button-sm button-secondary" data-action="approve-feature">Approve</button>
+            <button class="button button-sm button-secondary" data-action="release-feature">Released</button>
+          </td></tr>`;
+        }
+      )
+      .join("") || '<tr><td colspan="4" class="muted">No feature requests.</td></tr>';
+  }
+
+  const incBody = document.getElementById("successIncidentsBody");
+  if (incBody) {
+    incBody.innerHTML = (data.incidents || [])
+      .map(
+        (i) => `<tr data-incident-id="${i.id}">
+        <td>${esc(i.component)}</td><td>${esc(i.title)}</td><td>${esc(i.impact)}</td><td>${esc(i.incidentStatus)}</td>
+        <td>${i.incidentStatus !== "resolved" ? `<button class="button button-sm button-secondary" data-action="resolve-incident">Resolve</button>` : "—"}</td>
+      </tr>`
+      )
+      .join("") || '<tr><td colspan="5" class="muted">No incidents.</td></tr>';
+  }
+}
+
 async function loadAll() {
   const userParams = {
     page: state.usersPage,
@@ -225,7 +286,7 @@ async function loadAll() {
     status: document.getElementById("userStatusFilter")?.value || "",
     sort: document.getElementById("userSort")?.value || "created_at_desc",
   };
-  const [exec, users, providers, revenue, health, security, logs, audit, billing, commerce, enterprise, apikeys] = await Promise.all([
+  const [exec, users, providers, revenue, health, security, logs, audit, billing, commerce, enterprise, apikeys, success] = await Promise.all([
     admin().getExecutive(),
     admin().getUsers(userParams.q ? userParams.q : "").then(async () => {
       const qp = new URLSearchParams(userParams);
@@ -245,6 +306,7 @@ async function loadAll() {
     admin().getCommerce(),
     admin().getEnterprise(),
     admin().getApiKeys(),
+    admin().getSuccess(),
   ]);
   renderExecutive(exec);
   renderUsers(users);
@@ -258,6 +320,7 @@ async function loadAll() {
   renderCommerce(commerce);
   renderEnterprise(enterprise);
   renderApiKeys(apikeys);
+  renderSuccess(success);
 }
 
 function exportLogsCsv() {
@@ -344,6 +407,52 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("logsSearchBtn")?.addEventListener("click", () => loadAll());
   document.getElementById("logsExportBtn")?.addEventListener("click", exportLogsCsv);
+
+  document.getElementById("incidentForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await admin().publishIncident({
+      title: document.getElementById("incidentTitle")?.value,
+      component: document.getElementById("incidentComponent")?.value,
+      impact: document.getElementById("incidentImpact")?.value,
+      description: document.getElementById("incidentTitle")?.value,
+    });
+    e.target.reset();
+    await loadAll();
+  });
+
+  document.getElementById("successTicketsBody")?.addEventListener("click", async (e) => {
+    const row = e.target.closest("tr[data-ticket-id]");
+    const btn = e.target.closest("[data-action]");
+    if (!row || !btn) return;
+    const ticketId = row.dataset.ticketId;
+    const status =
+      btn.dataset.action === "assign-ticket"
+        ? "assigned"
+        : btn.dataset.action === "resolve-ticket"
+          ? "resolved"
+          : btn.dataset.action === "close-ticket"
+            ? "closed"
+            : null;
+    if (status) await admin().updateTicket(ticketId, { status });
+    await loadAll();
+  });
+
+  document.getElementById("successFeaturesBody")?.addEventListener("click", async (e) => {
+    const row = e.target.closest("tr[data-feature-id]");
+    const btn = e.target.closest("[data-action]");
+    if (!row || !btn || !row.dataset.featureId) return;
+    const roadmapStatus = btn.dataset.action === "release-feature" ? "released" : "approved";
+    await admin().updateFeature(row.dataset.featureId, { roadmapStatus });
+    await loadAll();
+  });
+
+  document.getElementById("successIncidentsBody")?.addEventListener("click", async (e) => {
+    const row = e.target.closest("tr[data-incident-id]");
+    const btn = e.target.closest('[data-action="resolve-incident"]');
+    if (!row || !btn) return;
+    await admin().resolveIncident(row.dataset.incidentId);
+    await loadAll();
+  });
 
   document.querySelectorAll(".admin-nav [data-section]").forEach((link) => {
     link.addEventListener("click", () => {

@@ -62,7 +62,7 @@ async function main() {
     pass("OpenAI provider", `latency ${openaiChat.json.latencyMs || "?"}ms`);
   } else fail("OpenAI provider", openaiChat.json?.error || `HTTP ${openaiChat.status}`);
 
-  const geminiChat = await api("/api/gemini-chat", "POST", { prompt: "Reply with exactly: OK", model: "gemini-2-flash", maxTokens: 16 });
+  const geminiChat = await api("/api/gemini-chat", "POST", { prompt: "Reply with exactly: OK", model: "gemini-2-flash", maxTokens: 256 });
   if (geminiChat.ok && String(geminiChat.json?.content || "").trim()) {
     pass("Gemini provider", `latency ${geminiChat.json.latencyMs || "?"}ms`);
   } else fail("Gemini provider", geminiChat.json?.error || `HTTP ${geminiChat.status}`);

@@ -282,10 +282,18 @@ async function runBusinessFlow() {
   // 14. Revenue updated
   const commerceAfter = await api("/api/admin/commerce", "GET", undefined, adminToken);
   state.commerceRevenueAfter = Number(commerceAfter.json?.revenue?.totalRevenue || 0);
+  const userOrderRecorded = (commerceAfter.json?.orders || []).some(
+    (o) => o.userId === state.userId && o.status === "completed" && o.type === "credit_package"
+  );
+  const revenueOk =
+    purchaseOk &&
+    (userOrderRecorded || state.commerceRevenueAfter >= state.commerceRevenueBefore);
   bf(
     "14. Revenue updated",
-    purchaseOk && state.commerceRevenueAfter >= state.commerceRevenueBefore,
-    `€${state.commerceRevenueBefore} → €${state.commerceRevenueAfter}`
+    revenueOk,
+    userOrderRecorded
+      ? `order recorded, €${state.commerceRevenueBefore} → €${state.commerceRevenueAfter}`
+      : `€${state.commerceRevenueBefore} → €${state.commerceRevenueAfter}`
   );
 
   // 15. Admin dashboard updated

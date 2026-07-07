@@ -19,6 +19,7 @@ module.exports = async function handler(req, res) {
         { data: subscriptions },
         { data: payments },
         { data: transactions },
+        { data: revenueAgg },
       ] = await Promise.all([
         admin.from("subscription_plans").select("*").order("monthly_price"),
         admin.from("credit_packages").select("*").order("credits"),
@@ -28,9 +29,10 @@ module.exports = async function handler(req, res) {
         admin.from("subscriptions").select("*").order("created_at", { ascending: false }).limit(100),
         admin.from("payments").select("*").order("created_at", { ascending: false }).limit(100),
         admin.from("commerce_transactions").select("*").order("created_at", { ascending: false }).limit(100),
+        admin.from("payments").select("amount.sum()").eq("status", "completed").maybeSingle(),
       ]);
 
-      const totalRevenue = (payments || []).reduce((sum, p) => sum + (p.status === "completed" ? Number(p.amount) : 0), 0);
+      const totalRevenue = Number(revenueAgg?.sum || 0);
       const activeSubscriptions = (subscriptions || []).filter((s) => s.status === "active").length;
 
       return json(res, 200, {

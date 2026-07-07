@@ -18,7 +18,10 @@ function maskKey(key) {
 
 function renderKeys() {
   if (!tableBody) return;
-  const keys = window.ZwimaApiKeyService.getKeys();
+  const search = String(document.getElementById("apiKeySearch")?.value || "").toLowerCase();
+  const keys = window.ZwimaApiKeyService
+    .getKeys()
+    .filter((item) => !search || String(item.name || "").toLowerCase().includes(search));
 
   if (!keys.length) {
     tableBody.innerHTML = '<tr><td colspan="7" class="muted">No API keys yet.</td></tr>';
@@ -160,4 +163,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (new URLSearchParams(window.location.search).get("create") === "1") {
     openCreateModal();
   }
+  document.getElementById("apiKeySearch")?.addEventListener("input", renderKeys);
 });

@@ -123,6 +123,7 @@ async function main() {
   if (landing.ok && landing.text.includes("launch.js")) pass("Beta mode UI");
   else fail("Beta mode UI");
 
+  const emailLogs = await api("/api/email/logs");
   if (emailLogs.ok && Array.isArray(emailLogs.json?.logs)) pass("Email logs API");
   else fail("Email logs API");
 

@@ -7,6 +7,7 @@
   <meta name="description" content="Browse and access leading AI models through one unified ZWIMA API.">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="polish.css">
 </head>
 <body class="dashboard-body" data-page="models">
   <div class="dashboard-layout">
@@ -72,12 +73,18 @@
         </section>
 
         <section class="dash-section">
-          <div class="provider-list" id="providerList"></div>
+          <div class="model-cards-grid" id="providerList">
+            <p class="zwima-skeleton" style="height:120px;"></p>
+            <p class="zwima-skeleton" style="height:120px;"></p>
+          </div>
         </section>
       </main>
     </div>
   </div>
 
+  <script src="config/providerRegistry.js"></script>
+  <script src="config/modelRegistry.js"></script>
+  <script src="config/modelCards.js"></script>
   <script src="config.js"></script>
   <script src="auth/permissionManager.js"></script>
   <script src="auth/jwtManager.js"></script>

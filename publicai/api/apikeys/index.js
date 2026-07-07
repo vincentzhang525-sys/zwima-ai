@@ -1,5 +1,6 @@
 const {
   getAuthedClient,
+  getAdminClient,
   parseBody,
   hashApiKey,
   json,
@@ -9,6 +10,7 @@ const {
   writeAuditLog,
   getClientIp,
 } = require("../lib/supabase");
+const { ensureProgress } = require("../onboarding/index.js");
 
 const KEY_PREFIX = "zw_live_";
 const CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -95,6 +97,13 @@ module.exports = async function handler(req, res) {
         notify: true,
         notificationCategory: "system",
       });
+
+      try {
+        const admin = getAdminClient();
+        await ensureProgress(admin, user.id, { api_key_created: true });
+      } catch (onbErr) {
+        console.error("[apikeys] onboarding", onbErr);
+      }
 
       return json(res, 200, { key: mapKey(data, secret) });
     }

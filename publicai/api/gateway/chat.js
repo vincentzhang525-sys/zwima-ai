@@ -1,4 +1,5 @@
 const { getAdminClient, hashApiKey, enforceRateLimit, getClientIp, writeAuditLog } = require("../lib/supabase");
+const { ensureProgress } = require("../onboarding/index.js");
 const modelRegistry = require("../../config/modelRegistry.js");
 const universalRouter = require("../../gateway/universalRouter.js");
 
@@ -133,6 +134,12 @@ module.exports = async function handler(req, res) {
       detail: `Gateway request processed. credits=${creditsToDeduct}`,
       ip: getClientIp(req),
     });
+
+    try {
+      await ensureProgress(admin, keyRow.user_id, { first_api_call: true });
+    } catch (onbErr) {
+      console.error("[gateway/chat] onboarding", onbErr);
+    }
 
     return json(res, 200, {
       content: result.content,

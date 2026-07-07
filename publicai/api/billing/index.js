@@ -1,6 +1,8 @@
 const { getAuthedClient, getAdminClient, parseBody, json, handleOptions, withCors, writeAuditLog, getClientIp } = require("../lib/supabase");
 const { resolvePaymentProvider } = require("../lib/payments");
 const commerce = require("../lib/commerce");
+const { sendTransactional } = require("../lib/email");
+const { ensureProgress } = require("../onboarding/index.js");
 
 const PLAN_ORDER = commerce.PLAN_ORDER;
 
@@ -347,6 +349,15 @@ module.exports = async function handler(req, res) {
           await admin.from("coupons").update({ usage_count: (Number(coupon?.usage_count) || 0) + 1 }).eq("id", couponId);
         }
 
+        try {
+          await sendTransactional("creditPurchase", user.email, {
+            credits: Number(pkg.credits),
+            amount: total,
+          });
+        } catch (mailErr) {
+          console.error("[billing] credit purchase email", mailErr);
+        }
+
         return json(res, 200, {
           ok: true,
           orderNumber,
@@ -482,6 +493,19 @@ module.exports = async function handler(req, res) {
         notify: true,
         notificationCategory: "billing",
       });
+
+      try {
+        await sendTransactional("billingNotice", user.email, { plan, amount: total });
+      } catch (mailErr) {
+        console.error("[billing] billing notice email", mailErr);
+      }
+
+      try {
+        const admin = getAdminClient();
+        await ensureProgress(admin, user.id, { plan_upgraded: true });
+      } catch (onbErr) {
+        console.error("[billing] onboarding", onbErr);
+      }
 
       return json(res, 200, {
         ok: true,

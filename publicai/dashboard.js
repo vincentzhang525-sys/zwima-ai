@@ -343,6 +343,11 @@ async function loadDashboardData() {
     try {
       await refreshLiveData();
       await renderDashboardFromLive(user);
+      const onboarding = await window.ZwimaOnboardingService?.loadAndRender?.("onboardingBar");
+      const onboardingSection = document.getElementById("onboarding");
+      if (onboardingSection) {
+        onboardingSection.style.display = onboarding && !onboarding.completed ? "" : "none";
+      }
     } catch (err) {
       console.warn("[Dashboard] Supabase refresh failed:", err);
     }

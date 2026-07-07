@@ -8,6 +8,7 @@ const {
   writeSecurityEvent,
   getClientIp,
 } = require("../lib/supabase");
+const { sendTransactional } = require("../lib/email");
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
@@ -46,6 +47,15 @@ module.exports = async function handler(req, res) {
       detail: "Password reset requested",
       ip,
     });
+
+    try {
+      await sendTransactional("passwordReset", email, {
+        email,
+        link: `https://zwima-group.info/forgot-password.html?email=${encodeURIComponent(email)}`,
+      });
+    } catch (mailErr) {
+      console.error("[user/forgot-password] email", mailErr);
+    }
 
     return json(res, 200, {
       message: "If an account exists for this email, reset instructions have been sent.",

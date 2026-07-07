@@ -1068,6 +1068,10 @@ async function sendMessage() {
 
     renderMessages();
     updateUsageDisplay();
+
+    try {
+      await window.ZwimaOnboardingService?.completeStep?.("first_api_call");
+    } catch {}
   } catch (err) {
     if (streamAbortController?.signal.aborted) return;
     console.error("[Playground Send Error]", err);
@@ -1170,4 +1174,5 @@ document.addEventListener("DOMContentLoaded", () => {
   updateUsageDisplay();
   updateProviderStatusNote();
   bindEvents();
+  window.ZwimaOnboardingService?.completeStep?.("playground_opened").catch(() => {});
 });

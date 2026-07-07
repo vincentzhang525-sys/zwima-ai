@@ -1,0 +1,158 @@
+/* Sprint 40 — commercial polish */
+.zwima-skeleton {
+  background: linear-gradient(90deg, var(--gray-100) 25%, #f3f6fa 50%, var(--gray-100) 75%);
+  background-size: 200% 100%;
+  animation: zwima-shimmer 1.2s ease-in-out infinite;
+  border-radius: 8px;
+  min-height: 14px;
+}
+
+@keyframes zwima-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.zwima-loading {
+  color: var(--gray-600);
+  padding: 24px;
+  text-align: center;
+}
+
+.landing-model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.landing-model-card {
+  padding: 20px;
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+  background: var(--white);
+}
+
+.landing-model-card h3 {
+  margin: 0 0 6px;
+  color: var(--blue-950);
+  font-size: 1rem;
+}
+
+.model-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.model-card {
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  background: var(--white);
+  display: grid;
+  gap: 10px;
+}
+
+.model-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.model-card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  font-size: 0.92rem;
+}
+
+.model-card-meta span {
+  color: var(--gray-600);
+}
+
+.model-card-meta strong {
+  color: var(--blue-950);
+  display: block;
+}
+
+.status-page-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.status-provider-card {
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  background: var(--white);
+}
+
+.onboarding-bar {
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  background: var(--gray-50);
+}
+
+.onboarding-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.onboarding-step {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  border: 1px solid var(--gray-300);
+  color: var(--gray-600);
+}
+
+.onboarding-step.done {
+  background: #e8f5ee;
+  border-color: #86c8a5;
+  color: #1f6b42;
+}
+
+.error-page {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.error-page h1 {
+  font-size: 4rem;
+  margin: 0;
+  color: var(--blue-950);
+}
+
+@media (max-width: 768px) {
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions .button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .model-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-model-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-model-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,5 +1,6 @@
 const {
   getAnonClient,
+  getAdminClient,
   parseBody,
   loadProfile,
   enforceRateLimit,
@@ -9,6 +10,25 @@ const {
   handleOptions,
   withCors,
 } = require("../lib/supabase");
+const { ensureProgress } = require("../onboarding/index.js");
+const { sendTransactional } = require("../lib/email");
+
+const FREE_CREDITS = 500;
+
+async function grantWelcomeCredits(admin, userId) {
+  const { data: wallet } = await admin.from("credit_wallets").select("*").eq("user_id", userId).maybeSingle();
+  if (wallet) return false;
+  await admin.from("credit_wallets").insert({ user_id: userId, balance: FREE_CREDITS, currency: "EUR" });
+  await admin.from("credit_transactions").insert({
+    user_id: userId,
+    type: "bonus",
+    amount: FREE_CREDITS,
+    description: "Welcome free credits",
+    txn_date: new Date().toISOString().slice(0, 10),
+    status: "completed",
+  });
+  return true;
+}
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
@@ -66,11 +86,36 @@ module.exports = async function handler(req, res) {
     }
 
     if (!data.session) {
+      const admin = getAdminClient();
+      if (data.user?.id) {
+        await ensureProgress(admin, data.user.id, { registered: true });
+      }
+      try {
+        await sendTransactional("verifyEmail", email, {
+          email,
+          link: "https://zwima-group.info/verify-email.html",
+        });
+      } catch (mailErr) {
+        console.error("[user/register] verify email", mailErr);
+      }
       return json(res, 200, {
         pending: true,
         email,
         message: "Registration created. Sign in after email confirmation is disabled in Supabase.",
       });
+    }
+
+    const admin = getAdminClient();
+    const granted = await grantWelcomeCredits(admin, data.user.id);
+    await ensureProgress(admin, data.user.id, {
+      registered: true,
+      email_verified: true,
+      credits_received: granted,
+    });
+    try {
+      await sendTransactional("welcome", email, { name: company, company });
+    } catch (mailErr) {
+      console.error("[user/register] welcome email", mailErr);
     }
 
     const authed = getAnonClient(data.session.access_token);

@@ -24,8 +24,6 @@
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(options.headers || {}),
       },
-    });
-
     }).then(async (response) => {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {

@@ -6,6 +6,7 @@
   <title>ZWIMA AI | AI API Distribution Platform for European Businesses</title>
   <meta name="description" content="ZWIMA AI helps European businesses access AI models through managed API credits, provider routing, usage monitoring and unified billing.">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="polish.css">
 </head>
 <body>
   <header class="site-header">
@@ -14,13 +15,15 @@
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu"><span class="sr-only">Toggle navigation</span><span></span><span></span><span></span></button>
       <div class="nav-menu" id="nav-menu">
         <a href="index.html">Home</a>
-        <a href="index.html#platform">Platform</a>
+        <a href="index.html#features">Platform</a>
         <a href="pricing.html">Pricing</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
+        <a href="signup.html">Start Free</a>
+        <a href="status.html">Status</a>
         <a href="login.html">Login</a>
         <a href="dashboard.html">Dashboard</a>
-        <a class="nav-cta" href="contact.html">Request Access</a>
+        <a class="nav-cta" href="signup.html">Start Free</a>
       </div>
     </nav>
   </header>
@@ -30,11 +33,13 @@
       <div class="container hero-grid">
         <div class="hero-content">
           <p class="eyebrow">ZWIMA AI</p>
-          <h1>AI API Access, Token Credits and Intelligent Routing.</h1>
-          <p class="hero-subtitle">ZWIMA AI helps European businesses access AI models through managed API credits, provider routing, usage monitoring and unified billing.</p>
+          <h1>Commercial AI API Gateway for European Businesses.</h1>
+          <p class="hero-subtitle">Buy credits once. Route across OpenAI and Gemini today. Scale to Claude, DeepSeek and Qwen as providers go live. Unified billing, API keys, and enterprise workspace included.</p>
           <div class="hero-actions">
-            <a class="button button-primary" href="pricing.html">View Pricing</a>
-            <a class="button button-secondary" href="contact.html">Request Access</a>
+            <a class="button button-primary" href="signup.html">Start Free</a>
+            <a class="button button-secondary" href="apikeys.html">Get API Key</a>
+            <a class="button button-secondary" href="playground.html">Open Playground</a>
+            <a class="button button-secondary" href="contact.html">Request Enterprise Demo</a>
           </div>
           <div class="trust-row" aria-label="Platform trust points">
             <span>European business focus</span>
@@ -67,10 +72,27 @@
       </div>
     </section>
 
-    <section class="section" id="platform">
+    <section class="section section-muted" id="models">
       <div class="container">
         <div class="section-heading">
-          <p class="eyebrow">Platform</p>
+          <p class="eyebrow">Supported Models</p>
+          <h2>Production models live today. More providers coming soon.</h2>
+        </div>
+        <div class="landing-model-grid" id="landingModelGrid">
+          <article class="landing-model-card"><h3>GPT-4o</h3><p class="muted">OpenAI</p><span class="status-pill active">Live</span></article>
+          <article class="landing-model-card"><h3>Gemini 2.5 Flash</h3><p class="muted">Google Gemini</p><span class="status-pill active">Live</span></article>
+          <article class="landing-model-card"><h3>Claude 4 Sonnet</h3><p class="muted">Anthropic</p><span class="status-pill planned">Coming Soon</span></article>
+          <article class="landing-model-card"><h3>DeepSeek Chat</h3><p class="muted">DeepSeek</p><span class="status-pill planned">Waiting API</span></article>
+          <article class="landing-model-card"><h3>Qwen Turbo</h3><p class="muted">Qwen</p><span class="status-pill planned">Waiting API</span></article>
+        </div>
+        <p style="text-align:center;margin-top:20px;"><a class="button button-secondary" href="models.html">Browse Model Cards</a> <a class="button button-secondary" href="status.html">Provider Status</a></p>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Features</p>
           <h2>AI API access, credits, routing and billing in one place.</h2>
           <p>Customers buy API token credits from ZWIMA AI, receive managed API access, and rely on ZWIMA AI for provider routing, usage management, billing and compliance support.</p>
         </div>
@@ -197,6 +219,54 @@
       </div>
     </section>
 
+    <section class="section" id="enterprise">
+      <div class="container split">
+        <div>
+          <p class="eyebrow">Enterprise</p>
+          <h2>Organizations, teams, roles, and shared workspace.</h2>
+          <p>Multi-tenant enterprise workspace with Owner, Admin, Manager, Developer and Viewer roles. Shared API keys, credits, billing, audit logs and team usage dashboards.</p>
+          <a class="button button-primary" href="workspace.html">Open Workspace</a>
+          <a class="button button-secondary" href="contact.html" style="margin-left:12px;">Request Enterprise Demo</a>
+        </div>
+        <div class="text-panel">
+          <p>Organization-level billing and credit pools</p>
+          <p>Team-based usage and credit allocation</p>
+          <p>Configurable permissions per role</p>
+          <p>Audit logs for login, API keys, billing and admin actions</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-muted" id="faq">
+      <div class="container narrow">
+        <div class="section-heading">
+          <p class="eyebrow">FAQ</p>
+          <h2>Commercial beta questions</h2>
+        </div>
+        <div class="faq-list">
+          <details><summary>How do free credits work?</summary><p>New accounts receive 500 free API credits. Upgrade anytime from the billing center.</p></details>
+          <details><summary>Which providers are live?</summary><p>OpenAI and Google Gemini are live in production. Claude, DeepSeek and Qwen are prepared and activate when API keys are funded.</p></details>
+          <details><summary>Do I need separate provider accounts?</summary><p>No. ZWIMA AI provides managed API access through a single gateway and unified billing.</p></details>
+          <details><summary>Is this suitable for enterprise teams?</summary><p>Yes. Sprint 39 added organizations, teams, roles, workspace sharing and enterprise dashboards.</p></details>
+          <details><summary>Where is my data processed?</summary><p>ZWIMA AI is built for European businesses with GDPR-focused controls and provider transparency.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="container narrow">
+        <div class="section-heading">
+          <p class="eyebrow">Contact</p>
+          <h2>Start your commercial beta</h2>
+          <p>Email <a href="mailto:hello@zwima-group.info">hello@zwima-group.info</a> or use the contact form.</p>
+        </div>
+        <div class="cta-card" style="margin-top: 2rem; text-align: center; flex-direction: column;">
+          <a class="button button-primary" href="signup.html">Start Free</a>
+          <a class="button button-secondary" href="contact.html" style="margin-top:12px;">Contact Sales</a>
+        </div>
+      </div>
+    </section>
+
     <section class="section" id="pricing">
       <div class="container narrow">
         <div class="section-heading">
@@ -204,9 +274,10 @@
           <h2>API Credit Packages</h2>
           <p>Starter Credits, Business Credits, Volume Credits and Enterprise Access are available without fixed monthly subscription prices on this website.</p>
         </div>
-        <div class="cta-card" style="margin-top: 2rem; text-align: center;">
-          <a class="button button-primary" href="pricing.html">View Pricing</a>
-          <a class="button button-secondary" href="contact.html" style="margin-left: 12px;">Request Pricing</a>
+        <div class="cta-card" style="margin-top: 2rem; text-align: center; flex-wrap: wrap; justify-content: center; gap: 12px;">
+          <a class="button button-primary" href="signup.html">Start Free</a>
+          <a class="button button-secondary" href="pricing.html">View Pricing</a>
+          <a class="button button-secondary" href="playground.html">Open Playground</a>
         </div>
       </div>
     </section>
@@ -215,10 +286,13 @@
       <div class="container cta-card">
         <div>
           <p class="eyebrow">Request Access</p>
-          <h2>Start with managed API credits and intelligent provider routing.</h2>
-          <p>Contact ZWIMA AI at hello@zwima-group.info.</p>
+          <h2>Ready for commercial beta?</h2>
+          <p>Start free. Create an API key. Run your first request in minutes.</p>
         </div>
-        <a class="button button-secondary" href="contact.html">Request Access</a>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;">
+          <a class="button button-secondary" href="signup.html">Start Free</a>
+          <a class="button button-secondary" href="playground.html">Open Playground</a>
+        </div>
       </div>
     </section>
   </main>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provider Status | ZWIMA AI</title>
+  <meta name="description" content="Live provider health, latency and model availability for ZWIMA AI.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar" aria-label="Main navigation">
+      <a class="logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu"><span class="sr-only">Toggle navigation</span><span></span><span></span><span></span></button>
+      <div class="nav-menu" id="nav-menu">
+        <a href="index.html">Home</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="status.html">Status</a>
+        <a href="signup.html">Start Free</a>
+        <a href="login.html">Login</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="section">
+    <div class="container narrow">
+      <div class="section-heading">
+        <p class="eyebrow">System Status</p>
+        <h1>Provider Status</h1>
+        <p id="statusSummary" class="muted">Loading provider health…</p>
+      </div>
+      <div class="status-page-grid" id="statusGrid">
+        <p class="zwima-skeleton" style="height:80px;"></p>
+        <p class="zwima-skeleton" style="height:80px;"></p>
+      </div>
+      <p class="muted" id="statusCheckedAt" style="margin-top:16px;"></p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div><a class="logo footer-logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a><p>AI API Distribution Platform for European Businesses.</p></div>
+      <div><h2>Contact</h2><p><a href="mailto:hello@zwima-group.info">hello@zwima-group.info</a></p></div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script src="status.js"></script>
+</body>
+</html>

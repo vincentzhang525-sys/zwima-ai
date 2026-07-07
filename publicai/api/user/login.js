@@ -95,6 +95,13 @@ module.exports = async function handler(req, res) {
       user_agent: String(req.headers["user-agent"] || ""),
     });
 
+    try {
+      const { ensureProgress } = require("../onboarding/index.js");
+      await ensureProgress(admin, data.user.id, { email_verified: true });
+    } catch (onbErr) {
+      console.error("[user/login] onboarding", onbErr);
+    }
+
     return json(res, 200, {
       user: profile,
       session: {

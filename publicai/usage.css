@@ -15,6 +15,16 @@
   font: inherit;
 }
 
+.usage-toolbar input {
+  min-width: 180px;
+  padding: 11px 14px;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  font: inherit;
+}
+
 .usage-table td.prompt-cell {
   max-width: 240px;
   white-space: nowrap;

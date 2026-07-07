@@ -1,6 +1,7 @@
 const tableBody = document.getElementById("usageTableBody");
 const filterProvider = document.getElementById("filterProvider");
 const filterModel = document.getElementById("filterModel");
+const usageSearch = document.getElementById("usageSearch");
 
 function escapeHtml(text) {
   return window.ZwimaFormat?.escapeHtml?.(text) ?? String(text);
@@ -44,6 +45,7 @@ function renderTable() {
   const rows = window.ZwimaUsageService.getRecords({
     provider: filterProvider?.value || "",
     model: filterModel?.value || "",
+    search: usageSearch?.value || "",
   });
 
   if (!rows.length) {
@@ -71,6 +73,49 @@ function renderTable() {
     .join("");
 }
 
+function exportCsv() {
+  const rows = window.ZwimaUsageService.getRecords({
+    provider: filterProvider?.value || "",
+    model: filterModel?.value || "",
+    search: usageSearch?.value || "",
+  });
+  const header = [
+    "date_time",
+    "provider",
+    "model",
+    "prompt",
+    "input_tokens",
+    "output_tokens",
+    "total_tokens",
+    "credits_deducted",
+    "cost_per_request_eur",
+    "request_time_ms",
+  ];
+  const lines = [header.join(",")];
+  for (const row of rows) {
+    const cols = [
+      row.dateTime || "",
+      row.provider || "",
+      row.model || "",
+      row.prompt || "",
+      row.inputTokens || 0,
+      row.outputTokens || 0,
+      row.totalTokens || 0,
+      row.creditsDeducted || 0,
+      Number(row.estimatedCost || 0).toFixed(6),
+      row.requestTimeMs || 0,
+    ].map((value) => `"${String(value).replace(/"/g, '""')}"`);
+    lines.push(cols.join(","));
+  }
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `usage-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ZwimaDbMode?.isSupabaseMode?.()) {
     await window.ZwimaUsageService?.refreshRecords?.();
@@ -80,6 +125,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   filterProvider?.addEventListener("change", renderTable);
   filterModel?.addEventListener("change", renderTable);
+  usageSearch?.addEventListener("input", renderTable);
+  document.getElementById("exportUsageCsv")?.addEventListener("click", exportCsv);
 
   window.ZwimaAppEvents?.onUpdated?.((detail) => {
     if (detail.source !== "playground" && detail.source !== "usage") return;

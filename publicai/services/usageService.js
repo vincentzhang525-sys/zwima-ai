@@ -96,9 +96,11 @@
       let rows = getRecordsFromCache().slice();
       const provider = filters.provider || "";
       const model = filters.model || "";
+      const search = String(filters.search || "").toLowerCase();
 
       if (provider) rows = rows.filter((row) => row.provider === provider);
       if (model) rows = rows.filter((row) => row.model === model);
+      if (search) rows = rows.filter((row) => String(row.prompt || "").toLowerCase().includes(search));
 
       rows.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
       return rows;

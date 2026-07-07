@@ -11,7 +11,10 @@ module.exports = async function handler(req, res) {
     const userId = String(body.userId || "");
     const enabled = Boolean(body.enabled);
     if (!userId) return json(res, 400, { error: "userId is required" });
-    const { error } = await admin.from("profiles").update({ status: enabled ? "active" : "disabled" }).eq("id", userId);
+    const { error } = await admin
+      .from("profiles")
+      .update({ status: enabled ? "active" : "suspended" })
+      .eq("id", userId);
     if (error) throw error;
     return json(res, 200, { success: true });
   } catch (err) {

@@ -367,11 +367,12 @@ async function runBusinessFlow() {
   const userRow = (usersAfter.json?.users || usersAfter.json?.items || []).find(
     (u) => String(u.email || "").toLowerCase() === testEmail
   );
-  const accountCleaned = keysGone && (deactivated || userRow?.status !== "active");
+  const accountCleaned = keysGone && deactivated && userRow?.status === "suspended";
+  const loginBlocked = await api("/api/user/login", "POST", { email: testEmail, password: testPassword });
   bf(
     "20. Delete test account",
-    accountCleaned,
-    keysGone ? "API keys removed, account deactivated" : "cleanup incomplete"
+    accountCleaned && !loginBlocked.ok,
+    accountCleaned ? "API keys removed, account suspended" : "cleanup incomplete"
   );
 
   return businessFlow.every((s) => s.ok);

@@ -223,6 +223,13 @@ p {
   transform: translateY(-1px);
 }
 
+.button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .button-primary {
   color: var(--white);
   background: var(--blue-950);

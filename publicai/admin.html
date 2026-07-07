@@ -92,11 +92,11 @@
         </section>
 
         <section id="providers" class="dash-section admin-panel">
-          <div class="dash-section-header"><h2>Provider Status</h2></div>
+          <div class="dash-section-header"><h2>Provider Manager</h2></div>
           <div class="data-table-wrap">
             <table class="data-table">
               <thead>
-                <tr><th>Provider</th><th>Status</th><th>Latency</th><th>Last Request</th><th>Credits Used</th><th>Error Count</th><th>Daily Requests</th><th>API Key Status</th><th>Actions</th></tr>
+                <tr><th>Provider</th><th>Enabled</th><th>Priority</th><th>Default Model</th><th>Health</th><th>Latency</th><th>Last Request</th><th>Total Requests</th><th>API Key</th><th>Actions</th></tr>
               </thead>
               <tbody id="providersTableBody"></tbody>
             </table>
@@ -227,6 +227,8 @@
   <script src="gateway/adapters/QwenAdapter.js"></script>
   <script src="gateway/adapters/MistralAdapter.js"></script>
   <script src="gateway/adapters/OpenRouterAdapter.js"></script>
+  <script src="gateway/adapters/XAIAdapter.js"></script>
+  <script src="gateway/adapters/AzureOpenAIAdapter.js"></script>
   <script src="gateway/adapters/OpenAICompatibleAdapter.js"></script>
   <script src="gateway/adapters/index.js"></script>
   <script src="gateway/providerManager.js"></script>

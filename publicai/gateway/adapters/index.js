@@ -14,6 +14,8 @@
     qwen: load("QwenAdapter", "ZwimaQwenAdapter"),
     mistral: load("MistralAdapter", "ZwimaMistralAdapter"),
     openrouter: load("OpenRouterAdapter", "ZwimaOpenRouterAdapter"),
+    xai: load("XAIAdapter", "ZwimaXAIAdapter"),
+    azure_openai: load("AzureOpenAIAdapter", "ZwimaAzureOpenAIAdapter"),
     openai_compatible: load("OpenAICompatibleAdapter", "ZwimaOpenAICompatibleAdapter"),
   };
 
@@ -27,6 +29,8 @@
     Qwen: "qwen",
     Mistral: "mistral",
     OpenRouter: "openrouter",
+    xAI: "xai",
+    "Azure OpenAI": "azure_openai",
     "OpenAI Compatible": "openai_compatible",
   };
 

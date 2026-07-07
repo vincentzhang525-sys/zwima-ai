@@ -1,5 +1,6 @@
 const { getAdminClient, hashApiKey, enforceRateLimit, getClientIp, writeAuditLog } = require("../lib/supabase");
-const modelConfig = require("../../config/models.js");
+const modelRegistry = require("../../config/modelRegistry.js");
+const universalRouter = require("../../gateway/universalRouter.js");
 
 function parseBody(req) {
   if (!req.body) return {};
@@ -15,147 +16,6 @@ function parseBody(req) {
 
 function json(res, status, payload) {
   res.status(status).json(payload);
-}
-
-function detectTask(prompt) {
-  const text = String(prompt || "").toLowerCase();
-  if (/(code|debug|fix|refactor|function|typescript|javascript|python|sql)/.test(text)) {
-    return "coding";
-  }
-  if (/(cheap|low cost|fast|quick|brief|short)/.test(text)) {
-    return "fast";
-  }
-  if (/(explain|detailed|deep dive|step by step|long)/.test(text)) {
-    return "long";
-  }
-  return "chat";
-}
-
-function chooseModel(prompt, explicitModel, routingMode = "intelligent") {
-  if (explicitModel) return { modelId: modelConfig.resolveId(explicitModel), reason: "Explicit model selected." };
-  if (routingMode === "manual") return { modelId: "gpt-4o", reason: "Manual mode default model." };
-
-  const task = detectTask(prompt);
-  if (task === "coding") return { modelId: "gpt-4.1", reason: "Coding task routed to GPT-4.1." };
-  if (task === "fast") return { modelId: "gemini-2-flash", reason: "Low-cost / fast task routed to Gemini Flash." };
-  if (task === "long") return { modelId: "gemini-2-pro", reason: "Long explanation routed to Gemini Pro." };
-  return { modelId: "gpt-4o", reason: "General chat routed to GPT-4o." };
-}
-
-function modelPricing(modelId) {
-  const model = modelConfig.getById(modelId);
-  return {
-    inputPrice: Number(model?.inputPrice) || 0,
-    outputPrice: Number(model?.outputPrice) || 0,
-  };
-}
-
-function estimatedCost(inputTokens, outputTokens, modelId) {
-  const pricing = modelPricing(modelId);
-  return Number(
-    (((Number(inputTokens) || 0) * pricing.inputPrice + (Number(outputTokens) || 0) * pricing.outputPrice) / 1_000_000).toFixed(6)
-  );
-}
-
-function buildGatewaySystem() {
-  return "You are a helpful AI assistant on the ZWIMA API Gateway.";
-}
-
-function extractOpenAIText(json) {
-  if (typeof json?.output_text === "string" && json.output_text.trim()) {
-    return json.output_text.trim();
-  }
-  const output = Array.isArray(json?.output) ? json.output : [];
-  const messageItems = output.filter((item) => item.type === "message" && item.role === "assistant");
-  for (let i = messageItems.length - 1; i >= 0; i -= 1) {
-    const parts = Array.isArray(messageItems[i]?.content) ? messageItems[i].content : [];
-    const text = parts
-      .filter((part) => part.type === "output_text" && part.text)
-      .map((part) => part.text)
-      .join("\n")
-      .trim();
-    if (text) return text;
-  }
-  return "";
-}
-
-async function callOpenAI(prompt, modelId, maxTokens) {
-  const apiModel = modelConfig.resolveApiId(modelId);
-  const payload = {
-    model: apiModel,
-    instructions: buildGatewaySystem(),
-    input: String(prompt || ""),
-    max_output_tokens: Number(maxTokens) || 1024,
-    temperature: 0.7,
-    store: false,
-  };
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data?.error?.message || `OpenAI request failed (${response.status})`);
-  }
-  const content = extractOpenAIText(data);
-  if (!content) throw new Error("OpenAI returned empty output.");
-  const usage = {
-    inputTokens: Number(data?.usage?.input_tokens) || 0,
-    outputTokens: Number(data?.usage?.output_tokens) || 0,
-    totalTokens: Number(data?.usage?.total_tokens) || 0,
-  };
-  return { content, usage };
-}
-
-async function callGemini(prompt, modelId, maxTokens) {
-  const apiModel = modelConfig.resolveApiId(modelId);
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${apiModel}:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "")}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: buildGatewaySystem() }] },
-        contents: [{ role: "user", parts: [{ text: String(prompt || "") }] }],
-        generationConfig: { maxOutputTokens: Number(maxTokens) || 1024, temperature: 0.7 },
-      }),
-    }
-  );
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data?.error?.message || `Gemini request failed (${response.status})`);
-  }
-  const content = String(data?.candidates?.[0]?.content?.parts?.[0]?.text || "").trim();
-  if (!content) throw new Error("Gemini returned empty output.");
-  const usage = {
-    inputTokens: Number(data?.usageMetadata?.promptTokenCount) || 0,
-    outputTokens: Number(data?.usageMetadata?.candidatesTokenCount) || 0,
-    totalTokens: Number(data?.usageMetadata?.totalTokenCount) || 0,
-  };
-  return { content, usage };
-}
-
-async function runModel(prompt, modelId, maxTokens) {
-  const provider = modelConfig.getById(modelId)?.provider;
-  if (provider === "google") {
-    try {
-      return { ...(await callGemini(prompt, modelId, maxTokens)), provider };
-    } catch (err) {
-      const fallbackModel = "gpt-4.1";
-      const fallback = await callOpenAI(prompt, fallbackModel, maxTokens);
-      return {
-        ...fallback,
-        provider: "openai",
-        fallbackReason: err.message,
-        fallbackModel,
-      };
-    }
-  }
-  return { ...(await callOpenAI(prompt, modelId, maxTokens)), provider: "openai" };
 }
 
 module.exports = async function handler(req, res) {
@@ -196,19 +56,22 @@ module.exports = async function handler(req, res) {
     if (keyError) throw keyError;
     if (!keyRow) return json(res, 401, { error: "Invalid API key." });
 
-    const picked = chooseModel(prompt, body.model, body.routingMode);
     const started = Date.now();
-    const result = await runModel(prompt, picked.modelId, body.maxTokens);
-    const effectiveModelId = result.fallbackModel || picked.modelId;
+    const result = await universalRouter.routeChat({
+      provider: body.provider,
+      model: body.model,
+      prompt,
+      systemPrompt: body.systemPrompt || universalRouter.defaultSystemPrompt,
+      temperature: body.temperature,
+      maxTokens: body.maxTokens,
+      options: body.options || {},
+      routingMode: body.routingMode,
+    });
     const elapsedMs = Date.now() - started;
 
-    const usage = {
-      inputTokens: Number(result.usage.inputTokens) || 0,
-      outputTokens: Number(result.usage.outputTokens) || 0,
-      totalTokens: Number(result.usage.totalTokens) || 0,
-    };
+    const usage = result.usage;
     const creditsToDeduct = Math.max(1, usage.totalTokens || usage.inputTokens + usage.outputTokens);
-    const cost = estimatedCost(usage.inputTokens, usage.outputTokens, effectiveModelId);
+    const cost = universalRouter.estimatedCost(usage.inputTokens, usage.outputTokens, result.model.id);
 
     const { data: walletRow, error: walletError } = await admin
       .from("credit_wallets")
@@ -231,7 +94,7 @@ module.exports = async function handler(req, res) {
       user_id: keyRow.user_id,
       type: "usage",
       amount: -creditsToDeduct,
-      description: `Gateway ${picked.modelId} (${usage.totalTokens} tokens)`,
+      description: `Gateway ${result.model.id} (${usage.totalTokens} tokens)`,
       txn_date: new Date().toISOString().slice(0, 10),
       status: "completed",
     });
@@ -239,8 +102,8 @@ module.exports = async function handler(req, res) {
 
     const { error: usageError } = await admin.from("usage_records").insert({
       user_id: keyRow.user_id,
-      provider: result.provider === "google" ? "Google Gemini" : "OpenAI",
-      model: modelConfig.getById(effectiveModelId)?.displayName || effectiveModelId,
+      provider: "ZWIMA Gateway",
+      model: result.model.displayName,
       prompt,
       input_tokens: usage.inputTokens,
       output_tokens: usage.outputTokens,
@@ -266,23 +129,23 @@ module.exports = async function handler(req, res) {
       userId: keyRow.user_id,
       eventType: "gateway",
       action: "gateway_chat",
-      target: picked.modelId,
+      target: result.model.id,
       detail: `Gateway request processed. credits=${creditsToDeduct}`,
       ip: getClientIp(req),
     });
 
     return json(res, 200, {
       content: result.content,
-      provider: result.provider === "google" ? "Google Gemini" : "OpenAI",
-      model: modelConfig.getById(effectiveModelId)?.displayName || effectiveModelId,
-      selectedModelId: effectiveModelId,
-      routingReason: picked.reason,
+      model: result.model.displayName,
+      modelId: result.model.id,
+      routingReason: result.routingReason,
       fallbackReason: result.fallbackReason || null,
       estimatedCost: cost,
       usage,
       creditsDeducted: creditsToDeduct,
       remainingCredits: remaining,
-      latencyMs: elapsedMs,
+      latencyMs: result.latencyMs || elapsedMs,
+      finishReason: result.finishReason,
     });
   } catch (err) {
     console.error("[gateway/chat]", err);

@@ -56,14 +56,17 @@ function renderProviders(rows) {
     .map(
       (p) => `<tr data-provider-id="${p.id}">
       <td>${esc(p.name)}</td>
-      <td><span class="status-pill ${pill(p.status)}">${esc(p.status === "not_configured" ? "Not Configured" : p.status)}</span></td>
+      <td><span class="status-pill ${pill(p.enabled ? "active" : "disabled")}">${p.enabled ? "Enabled" : "Disabled"}</span></td>
+      <td>${Number(p.priority || 0)}</td>
+      <td>${esc(p.defaultModel || "—")}</td>
+      <td><span class="status-pill ${pill(p.healthStatus === "online" ? "healthy" : p.healthStatus)}">${esc(p.healthLabel || p.healthStatus || p.status)}</span></td>
       <td>${p.latency || 0} ms</td>
       <td class="muted">${p.lastRequest ? new Date(p.lastRequest).toLocaleString("en-GB") : "—"}</td>
-      <td>${Number(p.creditsUsed || 0).toLocaleString()}</td>
-      <td>${Number(p.errorCount || 0).toLocaleString()}</td>
-      <td>${Number(p.dailyRequests || 0).toLocaleString()}</td>
+      <td>${Number(p.totalRequests || 0).toLocaleString()}</td>
       <td>${esc(p.apiKeyStatus)}</td>
-      <td class="admin-actions"><button class="button button-secondary button-sm" data-action="toggle-provider">${p.status === "not_configured" ? "Not Configured" : "Refresh"}</button></td>
+      <td class="admin-actions">
+        <button class="button button-secondary button-sm" data-action="toggle-provider">${p.enabled ? "Disable" : "Enable"}</button>
+      </td>
     </tr>`
     )
     .join("");
@@ -257,7 +260,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const row = e.target.closest("tr[data-provider-id]");
     const btn = e.target.closest('[data-action="toggle-provider"]');
     if (!row || !btn) return;
-    await admin().updateProvider(row.dataset.providerId, { enabled: true });
+    const enable = btn.textContent.trim().toLowerCase() === "enable";
+    await admin().updateProvider(row.dataset.providerId, { enabled: enable });
     await loadAll();
   });
 

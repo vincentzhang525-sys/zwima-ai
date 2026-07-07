@@ -155,6 +155,7 @@
   }
 
   function shouldUseReal(payload) {
+    if (typeof process !== "undefined" && process.env?.OPENAI_API_KEY) return true;
     return GatewayConfig.resolveRequestMode(payload) === "real";
   }
 

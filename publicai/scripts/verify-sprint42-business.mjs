@@ -98,8 +98,8 @@ async function runBusinessFlow() {
     "1. Register account",
     regOk,
     regOk
-      ? reg.json?.mockVerification
-        ? "mock-verified session"
+      ? reg.json?.appEmail
+        ? "app-email session"
         : reg.json?.pending
           ? "pending confirmation"
           : testEmail
@@ -125,9 +125,9 @@ async function runBusinessFlow() {
   );
   bf(
     "2. Verify email",
-    mockMode || verifySent || !!state.token || reg.json?.mockVerification,
-    reg.json?.mockVerification
-      ? "auto-verified (mock SMTP)"
+    mockMode || verifySent || !!state.token || reg.json?.appEmail,
+    reg.json?.appEmail
+      ? "auto-verified (app email)"
       : mockMode
         ? "mock verification (SMTP unavailable)"
         : verifySent

@@ -5,6 +5,10 @@ const {
   isDevMode,
   sendingDisabled,
   smtpConfigured,
+  isSupabaseEmailDisabled,
+  resolveProviderKind,
+  getEmailModeLabel,
+  SUPPORTED_SMTP_PROVIDERS,
   getEmailLogs,
 } = require("../lib/email");
 
@@ -14,6 +18,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== "GET") return json(res, 405, { error: "Method not allowed" });
 
   const provider = resolveEmailProvider();
+  const kind = resolveProviderKind();
   const templates = [
     "welcome",
     "verifyEmail",
@@ -26,11 +31,15 @@ module.exports = async function handler(req, res) {
   ];
   return json(res, 200, {
     provider: provider.name,
+    providerKind: kind,
+    emailMode: getEmailModeLabel(),
+    supabaseEmailDisabled: isSupabaseEmailDisabled(),
     massSendingEnabled: false,
     devMode: isDevMode(),
     sendingDisabled: sendingDisabled(),
     smtpConfigured: smtpConfigured(),
-    smtpFallback: !smtpConfigured() || provider.name === "mock",
+    smtpFallback: kind === "mock" || kind === "mock-fallback",
+    supportedSmtpProviders: SUPPORTED_SMTP_PROVIDERS,
     smtp: {
       host: process.env.SMTP_HOST || "smtp.ionos.com",
       port: Number(process.env.SMTP_PORT || 587),
@@ -50,6 +59,6 @@ module.exports = async function handler(req, res) {
       });
       return { name, subject: sample.subject };
     }),
-    readyFor: ["IONOS SMTP", "SMTP"],
+    readyFor: ["IONOS SMTP", "Resend", "Postmark"],
   });
 };

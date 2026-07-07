@@ -26,6 +26,8 @@ async function main() {
   const requiredTemplates = ["welcome", "passwordReset", "billingReceipt", "creditPurchase", "apiKeyCreated"];
   if (email.ok && email.json?.massSendingEnabled === false) pass("Email module");
   else fail("Email module");
+  if (email.ok && email.json?.supabaseEmailDisabled === true) pass("Supabase email disabled");
+  else fail("Supabase email disabled");
   if (email.ok && email.json?.smtpFallback !== undefined) pass("SMTP fallback flag", String(email.json.smtpFallback));
   else fail("SMTP fallback flag");
   for (const t of requiredTemplates) {

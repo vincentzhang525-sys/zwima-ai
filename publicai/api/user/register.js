@@ -11,7 +11,7 @@ const {
   withCors,
 } = require("../lib/supabase");
 const { ensureProgress } = require("../onboarding/index.js");
-const { sendTransactional, shouldAutoVerifyEmail } = require("../lib/email");
+const { sendTransactional } = require("../lib/email");
 
 const FREE_CREDITS = 500;
 
@@ -30,7 +30,8 @@ async function grantWelcomeCredits(admin, userId) {
   return true;
 }
 
-async function registerWithMockVerification({ admin, client, email, password, company, country }) {
+/** Register via admin API — never uses Supabase Auth signUp (no Supabase transactional email). */
+async function registerWithAppEmail({ admin, client, email, password, company, country }) {
   const { data: listed } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
   const existing = listed?.users?.find((u) => u.email?.toLowerCase() === email);
   if (existing) return { error: "User already registered" };
@@ -74,7 +75,7 @@ async function registerWithMockVerification({ admin, client, email, password, co
     });
     await sendTransactional("welcome", email, { name: company, company });
   } catch (mailErr) {
-    console.error("[user/register] mock emails", mailErr);
+    console.error("[user/register] app email", mailErr);
   }
 
   const signIn = await client.auth.signInWithPassword({ email, password });
@@ -91,7 +92,7 @@ async function registerWithMockVerification({ admin, client, email, password, co
       refresh_token: signIn.data.session.refresh_token,
       expires_at: signIn.data.session.expires_at,
     },
-    mockVerification: true,
+    appEmail: true,
   };
 }
 
@@ -132,110 +133,17 @@ module.exports = async function handler(req, res) {
     }
 
     const client = getAnonClient();
-
-    if (shouldAutoVerifyEmail()) {
-      const admin = getAdminClient();
-      const mockResult = await registerWithMockVerification({
-        admin,
-        client,
-        email,
-        password,
-        company,
-        country: body.country || "Germany",
-      });
-      if (mockResult.error) return json(res, 400, { error: mockResult.error });
-      return json(res, 200, mockResult);
-    }
-
-    const { data, error } = await client.auth.signUp({
+    const admin = getAdminClient();
+    const result = await registerWithAppEmail({
+      admin,
+      client,
       email,
       password,
-      options: {
-        data: {
-          company,
-          country: body.country || "Germany",
-          role: "customer",
-          status: "active",
-          plan: "Starter",
-        },
-      },
+      company,
+      country: body.country || "Germany",
     });
-
-    if (error) {
-      return json(res, 400, { error: error.message || "Registration failed" });
-    }
-
-    if (!data.session) {
-      const admin = getAdminClient();
-      if (data.user?.id) {
-        await ensureProgress(admin, data.user.id, { registered: true });
-      }
-      try {
-        await sendTransactional("verifyEmail", email, {
-          email,
-          link: "https://zwima-group.info/verify-email.html",
-        });
-      } catch (mailErr) {
-        console.error("[user/register] verify email", mailErr);
-      }
-
-      if (shouldAutoVerifyEmail() && data.user?.id) {
-        await admin.auth.admin.updateUserById(data.user.id, { email_confirm: true });
-        await ensureProgress(admin, data.user.id, { email_verified: true });
-        const granted = await grantWelcomeCredits(admin, data.user.id);
-        await ensureProgress(admin, data.user.id, { credits_received: granted });
-        const signIn = await client.auth.signInWithPassword({ email, password });
-        if (signIn.data?.session) {
-          try {
-            await sendTransactional("welcome", email, { name: company, company });
-          } catch (mailErr) {
-            console.error("[user/register] welcome email", mailErr);
-          }
-          const authed = getAnonClient(signIn.data.session.access_token);
-          const profile = await loadProfile(authed, data.user.id);
-          return json(res, 200, {
-            user: profile,
-            session: {
-              access_token: signIn.data.session.access_token,
-              refresh_token: signIn.data.session.refresh_token,
-              expires_at: signIn.data.session.expires_at,
-            },
-            mockVerification: true,
-          });
-        }
-      }
-
-      return json(res, 200, {
-        pending: true,
-        email,
-        message: "Registration created. Sign in after email confirmation is disabled in Supabase.",
-      });
-    }
-
-    const admin = getAdminClient();
-    const granted = await grantWelcomeCredits(admin, data.user.id);
-    await ensureProgress(admin, data.user.id, {
-      registered: true,
-      email_verified: true,
-      credits_received: granted,
-    });
-    try {
-      await sendTransactional("welcome", email, { name: company, company });
-    } catch (mailErr) {
-      console.error("[user/register] welcome email", mailErr);
-    }
-
-    const authed = getAnonClient(data.session.access_token);
-    const profile = await loadProfile(authed, data.user.id);
-
-    return json(res, 200, {
-      user: profile,
-      session: {
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_at: data.session.expires_at,
-      },
-    });
+    if (result.error) return json(res, 400, { error: result.error });
+    return json(res, 200, result);
   } catch (err) {
     console.error("[user/register]", err);
     return json(res, err.status || 500, { error: err.message || "Registration failed" });

@@ -1,4 +1,5 @@
 const {
+  getAdminClient,
   parseBody,
   json,
   handleOptions,
@@ -48,17 +49,38 @@ module.exports = async function handler(req, res) {
       ip,
     });
 
-    try {
-      await sendTransactional("passwordReset", email, {
+    const admin = getAdminClient();
+    const { data: listed } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const user = listed?.users?.find((u) => u.email?.toLowerCase() === email);
+
+    if (user) {
+      const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+        type: "recovery",
         email,
-        link: `https://zwima-group.info/forgot-password.html?email=${encodeURIComponent(email)}`,
+        options: {
+          redirectTo: "https://zwima-group.info/forgot-password.html",
+        },
       });
-    } catch (mailErr) {
-      console.error("[user/forgot-password] email", mailErr);
+
+      const resetLink =
+        linkData?.properties?.action_link ||
+        `https://zwima-group.info/forgot-password.html?email=${encodeURIComponent(email)}`;
+
+      if (!linkError) {
+        try {
+          await sendTransactional("passwordReset", email, {
+            email,
+            link: resetLink,
+          });
+        } catch (mailErr) {
+          console.error("[user/forgot-password] app email", mailErr);
+        }
+      }
     }
 
     return json(res, 200, {
       message: "If an account exists for this email, reset instructions have been sent.",
+      appEmail: true,
     });
   } catch (err) {
     console.error("[user/forgot-password]", err);

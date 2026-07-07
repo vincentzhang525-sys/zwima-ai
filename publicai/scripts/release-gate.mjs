@@ -109,6 +109,7 @@ async function main() {
   await runVerify("verify-sprint40-launch.mjs", "Regression — Sprint 40 launch");
   await runVerify("verify-sprint40-final.mjs", "Regression — Sprint 40 final");
   await runVerify("verify-sprint41-ops.mjs", "Sprint 41 ops & legal");
+  await runVerify("verify-sprint41-1-email.mjs", "Sprint 41.1 email cleanup");
   await runVerify("verify-sprint42-business.mjs", "Sprint 42 business E2E");
 
   const login = await api("/api/user/login", "POST", { email: "admin@zwima-group.info", password: "admin123", remember: true });

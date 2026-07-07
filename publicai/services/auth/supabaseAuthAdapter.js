@@ -77,7 +77,7 @@
     },
 
     async resetPassword() {
-      throw new Error("Password reset is managed in Supabase Auth.");
+      throw new Error("Password reset is handled via /api/user/forgot-password (app email provider).");
     },
 
     async verifyEmail() {

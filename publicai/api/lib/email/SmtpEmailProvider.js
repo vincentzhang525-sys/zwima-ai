@@ -12,7 +12,12 @@ function smtpConfigured() {
 class SmtpEmailProvider extends EmailProvider {
   constructor() {
     const host = String(process.env.SMTP_HOST || "").toLowerCase();
-    super(host.includes("ionos") ? "ionos" : "smtp");
+    const provider = String(process.env.EMAIL_PROVIDER || "smtp").toLowerCase();
+    let name = "smtp";
+    if (provider === "ionos" || host.includes("ionos")) name = "ionos";
+    else if (provider === "resend" || host.includes("resend")) name = "resend";
+    else if (provider === "postmark" || host.includes("postmark")) name = "postmark";
+    super(name);
   }
 
   isConfigured() {

@@ -3,34 +3,23 @@ const SmtpEmailProvider = require("./SmtpEmailProvider");
 const { smtpConfigured } = SmtpEmailProvider;
 const { renderTemplate } = require("./templates");
 const { appendEmailLog } = require("./emailLogs");
+const {
+  isSupabaseEmailDisabled,
+  isDevMode,
+  sendingDisabled,
+  resolveProviderKind,
+  shouldAutoConfirmEmail,
+  getEmailModeLabel,
+  SUPPORTED_SMTP_PROVIDERS,
+} = require("./policy");
 
 let massSendingEnabled = false;
 
-function isDevMode() {
-  return process.env.NODE_ENV !== "production" || String(process.env.VERCEL_ENV || "") === "development";
-}
-
-function sendingDisabled() {
-  return String(process.env.EMAIL_DISABLE_SEND || "").toLowerCase() === "true";
-}
-
 function resolveEmailProvider() {
-  if (sendingDisabled()) {
-    return new MockEmailProvider();
+  const kind = resolveProviderKind();
+  if (kind === "smtp") {
+    return new SmtpEmailProvider();
   }
-
-  const provider = String(process.env.EMAIL_PROVIDER || "mock").toLowerCase();
-  if (provider === "mock") {
-    return new MockEmailProvider();
-  }
-
-  if (provider === "smtp" || provider === "ionos" || provider === "resend" || provider === "postmark") {
-    if (smtpConfigured()) {
-      return new SmtpEmailProvider();
-    }
-    return new MockEmailProvider();
-  }
-
   return new MockEmailProvider();
 }
 
@@ -38,17 +27,18 @@ async function sendEmail({ template, to, data }) {
   if (!to) throw new Error("Email recipient is required");
   const rendered = renderTemplate(template, data);
   const provider = resolveEmailProvider();
+  const kind = resolveProviderKind();
 
   if (sendingDisabled()) {
     const row = appendEmailLog({
       template,
       to,
       subject: rendered.subject,
-      provider: "disabled",
+      provider: "mock",
       status: "skipped",
       reason: "EMAIL_DISABLE_SEND=true",
     });
-    return { ok: true, provider: "disabled", messageId: row.id, skipped: true };
+    return { ok: true, provider: "mock", messageId: row.id, skipped: true };
   }
 
   const result = await provider.send({ to, subject: rendered.subject, html: rendered.html, text: rendered.text });
@@ -59,7 +49,7 @@ async function sendEmail({ template, to, data }) {
     provider: result.fallback ? "mock" : result.provider || provider.name,
     status: result.ok ? (result.fallback ? "fallback" : "sent") : "failed",
     messageId: result.messageId,
-    detail: result.smtpError || result.fallback ? "smtp_fallback" : undefined,
+    detail: result.smtpError ? `smtp_fallback:${result.smtpError}` : kind === "mock-fallback" ? "smtp_not_configured" : undefined,
   });
   return result;
 }
@@ -78,14 +68,9 @@ async function sendTransactional(template, to, data) {
   return sendEmail({ template, to, data });
 }
 
+/** @deprecated Use shouldAutoConfirmEmail */
 function shouldAutoVerifyEmail() {
-  if (sendingDisabled()) return true;
-  const provider = String(process.env.EMAIL_PROVIDER || "mock").toLowerCase();
-  if (provider === "mock") return true;
-  if ((provider === "smtp" || provider === "ionos" || provider === "resend" || provider === "postmark") && !smtpConfigured()) {
-    return true;
-  }
-  return false;
+  return shouldAutoConfirmEmail();
 }
 
 module.exports = {
@@ -97,5 +82,10 @@ module.exports = {
   sendingDisabled,
   smtpConfigured,
   shouldAutoVerifyEmail,
+  shouldAutoConfirmEmail,
+  isSupabaseEmailDisabled,
+  resolveProviderKind,
+  getEmailModeLabel,
+  SUPPORTED_SMTP_PROVIDERS,
   getEmailLogs: require("./emailLogs").getEmailLogs,
 };

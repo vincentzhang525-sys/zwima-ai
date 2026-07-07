@@ -6,3 +6,12 @@ enabled = true
 [db]
 port = 54322
 major_version = 15
+
+# Supabase Auth email is disabled — all transactional email uses app SMTP/mock providers.
+[auth.email]
+enable_signup = true
+double_confirm_changes = false
+enable_confirmations = false
+
+[auth.email.smtp]
+enabled = false

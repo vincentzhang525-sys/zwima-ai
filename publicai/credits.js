@@ -36,6 +36,30 @@ function renderWallet() {
   if (monthlyEl) monthlyEl.textContent = `${formatCredits(service.getMonthlyUsage())} credits`;
 
   renderTransactions(service.getTransactions());
+  renderRecentDeductions();
+}
+
+function renderRecentDeductions() {
+  const body = document.getElementById("recentDeductionsBody");
+  if (!body) return;
+  const records = (window.ZwimaUsageService?.getRecords?.() || []).slice(0, 10);
+  if (!records.length) {
+    body.innerHTML = '<tr><td colspan="5" class="muted">No deductions yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = records
+    .map(
+      (row) => `
+      <tr>
+        <td class="muted">${row.dateTime ? new Date(row.dateTime).toLocaleString("en-GB") : "—"}</td>
+        <td>${row.provider || "—"}</td>
+        <td>${row.model || "—"}</td>
+        <td>${Number(row.creditsDeducted || row.totalTokens || 0).toLocaleString()}</td>
+        <td>€${Number(row.estimatedCost || 0).toFixed(4)}</td>
+      </tr>
+    `
+    )
+    .join("");
 }
 
 function renderTransactions(rows) {
@@ -104,13 +128,17 @@ async function simulateUsage() {
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ZwimaDbMode?.isSupabaseMode?.()) {
     await window.ZwimaCreditsService?.refreshWallet?.();
+    await window.ZwimaUsageService?.refreshRecords?.();
   }
   renderWallet();
 
   window.ZwimaAppEvents?.onUpdated?.((detail) => {
     if (detail.source !== "playground" && detail.source !== "credits") return;
     const refresh = window.ZwimaDbMode?.isSupabaseMode?.()
-      ? window.ZwimaCreditsService.refreshWallet()
+      ? Promise.all([
+          window.ZwimaCreditsService.refreshWallet(),
+          window.ZwimaUsageService.refreshRecords(),
+        ])
       : Promise.resolve();
     refresh.then(() => renderWallet());
   });

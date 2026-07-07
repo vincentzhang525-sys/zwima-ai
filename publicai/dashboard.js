@@ -59,6 +59,25 @@ function sumUsageCost(records) {
   return (records || []).reduce((sum, row) => sum + (Number(row.estimatedCost) || 0), 0);
 }
 
+function sumMonthlyTokens(records) {
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  return (records || [])
+    .filter((row) => String(row.dateTime || "").slice(0, 7) === currentMonth)
+    .reduce((sum, row) => sum + (Number(row.totalTokens) || 0), 0);
+}
+
+function summarizeProviderUsage(records) {
+  const counts = {};
+  for (const row of records || []) {
+    const name = row.provider || "Unknown";
+    counts[name] = (counts[name] || 0) + (Number(row.totalTokens) || 0);
+  }
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([provider, tokens]) => `${provider}: ${Number(tokens).toLocaleString()} tokens`);
+}
+
 function isSupabaseMode() {
   return window.ZwimaDbMode?.isSupabaseMode?.();
 }
@@ -81,7 +100,7 @@ function renderDashboardFromLive(user) {
     ? `${wallet.balance.toLocaleString()} API credits`
     : "0 API credits";
   const monthlyUsageLabel = wallet
-    ? `${window.ZwimaCreditsService.getMonthlyUsage().toLocaleString()} credits this month`
+    ? `${sumMonthlyTokens(usageRecords).toLocaleString()} model tokens this month`
     : "0 credits this month";
   const estimatedCostLabel = formatEstimatedCost(sumUsageCost(usageRecords));
 
@@ -146,6 +165,13 @@ function renderDashboardFromLive(user) {
 
   const usagePanel = document.querySelector("#usage .placeholder-panel strong");
   if (usagePanel) usagePanel.textContent = monthlyUsageLabel;
+  const usagePanelText = document.querySelector("#usage .placeholder-panel p");
+  if (usagePanelText) {
+    const topProviders = summarizeProviderUsage(usageRecords);
+    usagePanelText.textContent = topProviders.length
+      ? `Recent provider usage: ${topProviders.join(" · ")}.`
+      : "No provider usage yet. Run Playground or Gateway requests to populate this section.";
+  }
 
   const planRow = document.querySelector("#billing .billing-row:first-child strong");
   if (planRow) planRow.textContent = user.plan;
@@ -185,7 +211,7 @@ async function renderDashboardFromMock(user) {
     ? `${wallet.balance.toLocaleString()} API credits`
     : overview.balanceLabel;
   const monthlyUsageLabel = wallet
-    ? `${window.ZwimaCreditsService.getMonthlyUsage().toLocaleString()} credits this month`
+    ? `${sumMonthlyTokens(window.ZwimaUsageService?.getRecords?.() || []).toLocaleString()} model tokens this month`
     : overview.monthlyUsage;
   const apiKeyService = window.ZwimaApiKeyService;
   const localKeys = apiKeyService?.getKeys?.() ?? null;
@@ -254,6 +280,13 @@ async function renderDashboardFromMock(user) {
 
   const usagePanel = document.querySelector("#usage .placeholder-panel strong");
   if (usagePanel) usagePanel.textContent = monthlyUsageLabel;
+  const usagePanelText = document.querySelector("#usage .placeholder-panel p");
+  if (usagePanelText) {
+    const topProviders = summarizeProviderUsage(window.ZwimaUsageService?.getRecords?.() || []);
+    usagePanelText.textContent = topProviders.length
+      ? `Recent provider usage: ${topProviders.join(" · ")}.`
+      : "No provider usage yet. Run Playground or Gateway requests to populate this section.";
+  }
 
   const planRow = document.querySelector("#billing .billing-row:first-child strong");
   if (planRow) planRow.textContent = user.plan;

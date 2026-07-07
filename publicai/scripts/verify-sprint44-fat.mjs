@@ -490,12 +490,12 @@ async function part8Performance() {
 
   const demoLogin = await api("/api/user/login", "POST", { email: "demo@zwima-group.info", password: "demo123" });
   const demoToken = demoLogin.json?.session?.access_token;
-  const pg = await api("/api/openai-chat", "POST", { model: "gpt-4o", prompt: "OK", maxTokens: 8 }, demoToken);
+  const pg = await api("/api/openai-chat", "POST", { model: "gpt-4o", prompt: "OK", maxTokens: 16 }, demoToken);
   perf.playground = pg.ms;
   const pgOk =
     (pg.ok && String(pg.json?.content || "").trim()) ||
     /quota|429|rate|limit/i.test(String(pg.json?.error || ""));
-  pf("Playground response", pgOk || demoLogin.ok, pgOk ? `${pg.ms}ms` : pg.json?.error || `${pg.ms}ms`);
+  pf("Playground response", pgOk, pgOk ? `${pg.ms}ms` : pg.json?.error || `${pg.ms}ms`);
 
   const gh = await api("/api/gateway/health");
   perf.gateway = gh.ms;
@@ -505,7 +505,7 @@ async function part8Performance() {
   pf("Gateway latency", gh.ok && gh.ms < 15000, `${gh.ms}ms health`);
   pf("Provider latency", gh.ok, `avg ${avgLat}ms`);
 
-  const credits = await api("/api/credits", "GET", undefined, await adminToken());
+  const credits = await api("/api/credits", "GET", undefined, demoToken);
   perf.db = credits.ms;
   pf("Database queries", credits.ok && credits.ms < 5000, `${credits.ms}ms`);
 
@@ -549,29 +549,31 @@ async function part9Regression() {
 
 async function part10ReleaseGate() {
   console.log("\n=== PART 10 — FINAL RELEASE GATE ===\n");
-  try {
-    const out = execSync(`node scripts/release-gate.mjs "${baseUrl}"`, {
-      cwd: root,
-      encoding: "utf8",
-      stdio: "pipe",
-    });
-    const match = out.match(/(\d+)\/(\d+) gates passed/);
-    const passed = match ? Number(match[1]) : 0;
-    const total = match ? Number(match[2]) : 0;
-    const ok = out.includes("RELEASE GATE: PASS");
-    rl("Release gate", ok, `${passed}/${total} gates`);
-    const lines = out.split("\n").filter((l) => l.startsWith("PASS") || l.startsWith("FAIL"));
-    for (const line of lines) {
-      const isPass = line.startsWith("PASS");
-      const name = line.replace(/^(PASS|FAIL)\s{2}/, "").split(" — ")[0];
-      rl(name, isPass, line.includes(" — ") ? line.split(" — ").slice(1).join(" — ") : "");
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) {
+      console.log("Waiting 60s before release gate retry (rate limit cooldown)...");
+      await new Promise((r) => setTimeout(r, 60000));
     }
-    return ok;
-  } catch (err) {
-    const out = (err.stdout || "") + (err.stderr || "");
-    rl("Release gate", false, "failed");
-    return false;
+    try {
+      const out = execSync(`node scripts/release-gate.mjs "${baseUrl}"`, {
+        cwd: root,
+        encoding: "utf8",
+        stdio: "pipe",
+      });
+      const match = out.match(/(\d+)\/(\d+) gates passed/);
+      const passed = match ? Number(match[1]) : 0;
+      const total = match ? Number(match[2]) : 0;
+      const ok = out.includes("RELEASE GATE: PASS");
+      if (ok) {
+        rl("Release gate", true, `${passed}/${total} gates`);
+        return true;
+      }
+      if (attempt === 1) rl("Release gate", false, `${passed}/${total} gates`);
+    } catch (err) {
+      if (attempt === 1) rl("Release gate", false, "execution failed");
+    }
   }
+  return false;
 }
 
 function allChecks() {
@@ -662,7 +664,7 @@ async function main() {
   await part6Security();
   await part7Mobile();
   await part8Performance();
-  await new Promise((r) => setTimeout(r, 15000));
+  await new Promise((r) => setTimeout(r, 90000));
   await part10ReleaseGate();
 
   let commit = "unknown";

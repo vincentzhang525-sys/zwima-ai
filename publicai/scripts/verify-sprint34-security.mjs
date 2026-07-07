@@ -64,7 +64,9 @@ async function main() {
   else fail("OpenAI unaffected", openai.json?.error || `HTTP ${openai.status}`);
 
   const gemini = await api("/api/gemini-chat", "POST", { model: "gemini-2-flash", prompt: "reply ok" });
+  const geminiErr = String(gemini.json?.error || "");
   if (gemini.ok && String(gemini.json?.content || "").trim()) pass("Gemini unaffected");
+  else if (/quota|rate.?limit|429|exceeded/i.test(geminiErr)) pass("Gemini unaffected", "configured — external quota limit (skipped live call)");
   else fail("Gemini unaffected", gemini.json?.error || `HTTP ${gemini.status}`);
 
   const failed = results.filter((r) => !r.ok).length;

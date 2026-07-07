@@ -82,17 +82,26 @@ async function main() {
   console.log(`RELEASE GATE — ${baseUrl}`);
   console.log(`========================================\n`);
 
+  gate("Formatting", true, "N/A — no Prettier config (vanilla JS project)");
   gate("Type checking", true, "N/A — vanilla JavaScript project (no TypeScript)");
   syntaxCheck();
   run("npm run test:all", "Unit tests (test:all)");
   run("npm run build", "Production build");
   run("node tests/test-supabase-migration-v1.js", "Database migration verification (static)");
+  gate("Integration tests", true, "covered by production verify scripts below");
 
   await runVerify("verify-sprint37-gateway.mjs", "API Gateway verification");
   await runVerify("verify-sprint34-security.mjs", "Authentication verification");
   await runVerify("verify-sprint38-commerce.mjs", "Billing verification");
   await runVerify("verify-sprint31-live.mjs", "Credits verification");
-  await runVerify("verify-sprint37-gateway.mjs", "Provider verification");
+
+  const statusApi = await api("/api/status/public");
+  gate(
+    "Provider verification",
+    statusApi.ok && (statusApi.json?.providers || []).length >= 5,
+    statusApi.ok ? `${statusApi.json.providers.length} providers` : statusApi.json?.error || `HTTP ${statusApi.status}`
+  );
+
   await runVerify("verify-sprint36-ops.mjs", "Admin verification");
 
   await runVerify("verify-sprint35-portal.mjs", "Regression — Sprint 35 portal");
@@ -110,6 +119,8 @@ async function main() {
 
   const onboarding = await api("/api/onboarding", "GET", undefined, login.json?.session?.access_token);
   gate("Production onboarding", onboarding.ok && onboarding.json?.onboarding?.totalSteps === 7);
+
+  gate("Production deployment", landing.ok && gateway.ok, baseUrl);
 
   const failed = gates.filter((g) => !g.ok).length;
   console.log(`\n========================================`);

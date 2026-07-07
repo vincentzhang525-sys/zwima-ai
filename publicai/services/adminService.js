@@ -50,5 +50,8 @@
     getAuditLog() {
       return query("/api/admin/audit", "GET");
     },
+    getSecurityDashboard() {
+      return query("/api/admin/security", "GET");
+    },
   };
 })();

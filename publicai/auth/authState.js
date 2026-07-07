@@ -13,6 +13,30 @@
     root.location.href = url;
   }
 
+  let idleTimer = null;
+  const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+
+  function markActivity() {
+    if (!isAuthenticated()) return;
+    if (root.ZwimaSessionManager?.isRememberLogin?.()) return;
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      root.ZwimaAuthService?.logout?.().finally(() => redirect("login.html?reason=idle-timeout"));
+    }, IDLE_TIMEOUT_MS);
+  }
+
+  function bindIdleTimeout() {
+    ["click", "keydown", "mousemove", "scroll", "touchstart"].forEach((eventName) => {
+      root.addEventListener(eventName, markActivity, { passive: true });
+    });
+    markActivity();
+  }
+
+  function bindTokenRefresh() {
+    const runner = () => root.ZwimaAuthService?.refreshToken?.().catch?.(() => {});
+    root.ZwimaJwtManager?.scheduleAutoRefresh?.(runner);
+  }
+
   root.ZwimaAuthState = {
     AUTH_PAGES,
 
@@ -66,5 +90,7 @@
   root.document?.addEventListener("DOMContentLoaded", () => {
     root.ZwimaAuthState.redirectIfAuthenticated();
     root.ZwimaAuthState.renderSiteNav();
+    bindIdleTimeout();
+    bindTokenRefresh();
   });
 })(typeof window !== "undefined" ? window : globalThis);

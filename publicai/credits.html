@@ -51,18 +51,31 @@
         <section class="dash-section">
           <div class="overview-grid wallet-stats-grid">
             <article class="overview-card">
-              <span>Current Credit Balance</span>
+              <span>Current Balance</span>
               <strong id="walletBalance">12,450</strong>
             </article>
             <article class="overview-card">
-              <span>Estimated EUR Value</span>
-              <strong id="walletEurValue">€12.45</strong>
+              <span>Today's Spend</span>
+              <strong id="walletTodaySpend">0 credits</strong>
             </article>
             <article class="overview-card">
-              <span>Monthly Usage</span>
+              <span>Monthly Spend</span>
               <strong id="walletMonthlyUsage">0 credits</strong>
             </article>
+            <article class="overview-card">
+              <span>Lifetime Spend</span>
+              <strong id="walletLifetimeSpend">0 credits</strong>
+            </article>
+            <article class="overview-card">
+              <span>Auto Recharge Status</span>
+              <strong id="walletAutoRecharge">Disabled</strong>
+            </article>
           </div>
+        </section>
+
+        <section class="dash-section">
+          <div class="dash-section-header"><h2>Spend Trends</h2></div>
+          <div class="placeholder-panel"><p id="spendTrendChart">Daily and monthly spend charts update automatically from usage and transaction data.</p></div>
         </section>
 
         <section class="dash-section">

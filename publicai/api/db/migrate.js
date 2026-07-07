@@ -1,5 +1,5 @@
 const { getAdminClient, parseBody, json, handleOptions, withCors } = require("../lib/supabase");
-const { applyMigrations, verifyTables } = require("../lib/runMigrations");
+const { applyMigrations, verifyTables, getConnectionDebugInfo } = require("../lib/runMigrations");
 
 async function needsBootstrap(admin) {
   const { data: listed } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -131,6 +131,7 @@ module.exports = async function handler(req, res) {
           error: "Database schema not applied",
           tables: tablesBefore,
           schemaResult,
+          connectionDebug: getConnectionDebugInfo(),
         });
       }
     }

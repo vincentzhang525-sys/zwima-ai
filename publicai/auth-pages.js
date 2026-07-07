@@ -40,6 +40,7 @@
       await window.ZwimaAuthService.login({
         email: document.getElementById("loginEmail")?.value,
         password: document.getElementById("loginPassword")?.value,
+        remember: Boolean(document.getElementById("rememberMe")?.checked),
       });
       redirectAfterAuth();
     } catch (err) {

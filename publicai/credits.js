@@ -29,11 +29,28 @@ function renderWallet() {
   const wallet = service.getWallet();
   const balanceEl = document.getElementById("walletBalance");
   const eurEl = document.getElementById("walletEurValue");
+  const todaySpendEl = document.getElementById("walletTodaySpend");
   const monthlyEl = document.getElementById("walletMonthlyUsage");
+  const lifetimeEl = document.getElementById("walletLifetimeSpend");
 
   if (balanceEl) balanceEl.textContent = formatCredits(wallet.balance);
   if (eurEl) eurEl.textContent = formatEur(service.getEstimatedEurValue(wallet.balance));
+  const txns = service.getTransactions();
+  const today = new Date().toISOString().slice(0, 10);
+  const month = today.slice(0, 7);
+  const usageTxns = txns.filter((row) => row.type === "usage");
+  const todaySpend = usageTxns
+    .filter((row) => String(row.date || "").slice(0, 10) === today)
+    .reduce((sum, row) => sum + Math.abs(Number(row.amount || 0)), 0);
+  const monthSpend = usageTxns
+    .filter((row) => String(row.date || "").slice(0, 7) === month)
+    .reduce((sum, row) => sum + Math.abs(Number(row.amount || 0)), 0);
+  const lifetimeSpend = usageTxns.reduce((sum, row) => sum + Math.abs(Number(row.amount || 0)), 0);
+  if (todaySpendEl) todaySpendEl.textContent = `${formatCredits(todaySpend)} credits`;
   if (monthlyEl) monthlyEl.textContent = `${formatCredits(service.getMonthlyUsage())} credits`;
+  if (lifetimeEl) lifetimeEl.textContent = `${formatCredits(lifetimeSpend)} credits`;
+  const trend = document.getElementById("spendTrendChart");
+  if (trend) trend.textContent = `Today: ${formatCredits(todaySpend)} · Month: ${formatCredits(monthSpend)} · Lifetime: ${formatCredits(lifetimeSpend)} credits`;
 
   renderTransactions(service.getTransactions());
   renderRecentDeductions();

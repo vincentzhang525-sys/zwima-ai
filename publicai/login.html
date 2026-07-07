@@ -31,6 +31,10 @@
         <input id="loginEmail" name="email" type="email" placeholder="you@company.com" autocomplete="email" required>
         <label for="loginPassword">Password</label>
         <input id="loginPassword" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+          <input id="rememberMe" name="rememberMe" type="checkbox">
+          <span>Remember me</span>
+        </label>
         <p class="auth-error" id="loginError" hidden></p>
         <button class="button button-primary auth-submit" type="submit">Sign in</button>
       </form>

@@ -64,16 +64,23 @@
                   <th>Name</th>
                   <th>API Key</th>
                   <th>Status</th>
-                  <th>Created</th>
+                  <th>Created Time</th>
+                  <th>Expires</th>
                   <th>Last Used</th>
+                  <th>Total Requests</th>
                   <th>Total Usage</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="apiKeysTableBody">
-                <tr><td colspan="7" class="muted">No API keys yet.</td></tr>
+                <tr><td colspan="10" class="muted">No API keys yet.</td></tr>
               </tbody>
             </table>
+          </div>
+          <div class="usage-toolbar" style="margin-top:10px;">
+            <button class="button button-secondary button-sm" type="button" id="keysPrevPage">Previous</button>
+            <span id="keysPageLabel" class="muted">Page 1</span>
+            <button class="button button-secondary button-sm" type="button" id="keysNextPage">Next</button>
           </div>
         </section>
       </main>
@@ -86,6 +93,8 @@
       <form class="modal-form" id="createKeyForm">
         <label for="keyName">Key Name</label>
         <input id="keyName" name="keyName" type="text" placeholder="Production Key" required>
+        <label for="keyExpireAt">Expiration Date (optional)</label>
+        <input id="keyExpireAt" name="keyExpireAt" type="date">
         <div class="modal-actions">
           <button class="button button-secondary" type="button" id="cancelCreateKey">Cancel</button>
           <button class="button button-primary" type="submit">Generate</button>

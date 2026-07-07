@@ -6,7 +6,10 @@
         return false;
       }
       const user = window.ZwimaJwtManager?.getUserFromAccessToken() || window.ZwimaUserService?.getSessionSync();
-      if (!window.ZwimaPermissionManager?.hasRole(user, "Admin")) {
+      const isAdmin = window.ZwimaPermissionManager?.hasRole(user, "Admin")
+        || window.ZwimaPermissionManager?.hasRole(user, "Owner")
+        || window.ZwimaPermissionManager?.hasRole(user, "Support");
+      if (!isAdmin) {
         window.location.href = "dashboard.html";
         return false;
       }

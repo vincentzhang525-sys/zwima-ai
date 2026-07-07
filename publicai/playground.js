@@ -71,7 +71,13 @@ function getChatPayload(prompt) {
     prompt,
     model: model?.id || getSelectedModelId(),
     temperature: Number(temperatureRange?.value || 0.7),
+    topP: Number(document.getElementById("topPInput")?.value || 1),
     maxTokens: Number(document.getElementById("maxTokensInput")?.value || 2048),
+    frequencyPenalty: Number(document.getElementById("frequencyPenaltyInput")?.value || 0),
+    presencePenalty: Number(document.getElementById("presencePenaltyInput")?.value || 0),
+    jsonMode: Boolean(document.getElementById("jsonModeToggle")?.checked),
+    instructions: String(document.getElementById("systemPromptInput")?.value || ""),
+    stream: Boolean(document.getElementById("streamingToggle")?.checked),
     messages: messages.map((item) => ({ role: item.role, content: item.content })),
   };
 }
@@ -173,6 +179,7 @@ function updateUsageDisplay() {
 }
 
 function scrollChatToBottom() {
+  if (!document.getElementById("autoScrollToggle")?.checked) return;
   if (!chatMessages) return;
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -321,7 +328,13 @@ function renderHistory() {
 
   const historyPromise = window.ZwimaConversationService?.getHistory?.();
   if (historyPromise?.then) {
-    historyPromise.then(renderRows).catch(() => renderRows([]));
+    historyPromise
+      .then((rows) => {
+        const search = String(document.getElementById("conversationSearchInput")?.value || "").toLowerCase();
+        if (!search) return renderRows(rows);
+        return renderRows((rows || []).filter((row) => String(row.title || "").toLowerCase().includes(search)));
+      })
+      .catch(() => renderRows([]));
     return;
   }
 
@@ -909,15 +922,19 @@ async function runChatRequest(prompt, onDelta, signal) {
   const temperature = Number(temperatureRange?.value || 0.7);
   const maxTokens = Number(document.getElementById("maxTokensInput")?.value || 2048);
 
+  const streamingEnabled = Boolean(document.getElementById("streamingToggle")?.checked);
   if (providerId === "openai") {
+    if (!streamingEnabled) return runOpenAIChat(prompt);
     return runOpenAIChatWithFallback(prompt, onDelta, signal);
   }
 
   if (providerId === "google") {
+    if (!streamingEnabled) return runGeminiChat(prompt);
     return runGeminiChatWithFallback(prompt, onDelta, signal);
   }
 
   if (providerId === "deepseek") {
+    if (!streamingEnabled) return runDeepSeekChat(prompt);
     return runDeepSeekChatWithFallback(prompt, onDelta, signal);
   }
 
@@ -1100,6 +1117,39 @@ function bindEvents() {
   });
 
   document.getElementById("clearConversationBtn")?.addEventListener("click", clearConversation);
+  document.getElementById("conversationSearchInput")?.addEventListener("input", renderHistory);
+  document.getElementById("savePromptBtn")?.addEventListener("click", () => {
+    const prompt = String(document.getElementById("promptInput")?.value || "").trim();
+    if (!prompt) return;
+    window.ZwimaStorage?.set("PLAYGROUND_SAVED_PROMPT", prompt);
+    alert("Prompt saved.");
+  });
+  document.getElementById("renameConversationBtn")?.addEventListener("click", async () => {
+    if (!currentConversationId) return;
+    const title = window.prompt("New conversation title:");
+    if (!title) return;
+    const item = await window.ZwimaConversationService?.findById?.(currentConversationId);
+    if (!item) return;
+    await window.ZwimaConversationService?.saveConversation?.({ ...item, title });
+    renderHistory();
+  });
+  document.getElementById("deleteConversationBtn")?.addEventListener("click", async () => {
+    if (!currentConversationId) return;
+    const ok = window.confirm("Delete this conversation?");
+    if (!ok) return;
+    await window.ZwimaConversationService?.deleteConversation?.(currentConversationId);
+    clearConversation();
+    renderHistory();
+  });
+  document.getElementById("exportConversationBtn")?.addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ id: currentConversationId, messages }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `conversation-${currentConversationId || "new"}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 
   historyList?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-history-id]");
@@ -1109,6 +1159,8 @@ function bindEvents() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const savedPrompt = window.ZwimaStorage?.get("PLAYGROUND_SAVED_PROMPT", "");
+  if (savedPrompt && promptInput) promptInput.value = savedPrompt;
   populateProviders();
   populateModels(getSelectedProviderId());
   applyUrlParams();

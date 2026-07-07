@@ -20,12 +20,19 @@
     getCachedKeys() {
       return keysCache;
     },
-    async createKey(name) {
+    async createKey(name, expiresAt = null) {
       const data = await window.ZwimaSupabaseApi.apiFetch("/api/apikeys", {
         method: "POST",
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, expiresAt }),
       });
       keysCache.unshift(data.key);
+      setTimeout(() => {
+        keysCache = keysCache.map((item) =>
+          item.id === data.key.id
+            ? { ...item, key: `${String(item.key || "").slice(0, 12)}...` }
+            : item
+        );
+      }, 10000);
       syncSessionCount(keysCache);
       return data.key;
     },

@@ -1,7 +1,10 @@
 const tableBody = document.getElementById("usageTableBody");
 const filterProvider = document.getElementById("filterProvider");
 const filterModel = document.getElementById("filterModel");
+const filterStatus = document.getElementById("filterStatus");
 const usageSearch = document.getElementById("usageSearch");
+const dateFrom = document.getElementById("dateFrom");
+const dateTo = document.getElementById("dateTo");
 
 function escapeHtml(text) {
   return window.ZwimaFormat?.escapeHtml?.(text) ?? String(text);
@@ -45,7 +48,10 @@ function renderTable() {
   const rows = window.ZwimaUsageService.getRecords({
     provider: filterProvider?.value || "",
     model: filterModel?.value || "",
+    status: filterStatus?.value || "",
     search: usageSearch?.value || "",
+    dateFrom: dateFrom?.value || "",
+    dateTo: dateTo?.value || "",
   });
 
   if (!rows.length) {
@@ -57,53 +63,68 @@ function renderTable() {
     .map(
       (row) => `
         <tr>
-          <td class="muted">${escapeHtml(formatDateTime(row.dateTime))}</td>
           <td>${escapeHtml(row.provider)}</td>
           <td>${escapeHtml(row.model)}</td>
-          <td class="muted prompt-cell" title="${escapeHtml(row.prompt)}">${escapeHtml(row.prompt)}</td>
           <td>${Number(row.inputTokens).toLocaleString()}</td>
           <td>${Number(row.outputTokens).toLocaleString()}</td>
           <td>${Number(row.totalTokens).toLocaleString()}</td>
           <td>${Number(row.creditsDeducted || row.totalTokens || 0).toLocaleString()}</td>
-          <td>€${Number(row.estimatedCost || 0).toFixed(4)}</td>
           <td>${Number(row.requestTimeMs || 0)} ms</td>
+          <td>${escapeHtml(row.status || "Success")}</td>
+          <td class="muted">${escapeHtml(formatDateTime(row.dateTime))}</td>
+          <td class="muted prompt-cell" title="${escapeHtml(row.prompt)}">${escapeHtml(row.prompt)}</td>
         </tr>
       `
     )
     .join("");
 }
 
+async function refreshUsageFromServer() {
+  if (!window.ZwimaDbMode?.isSupabaseMode?.()) return;
+  await window.ZwimaUsageService?.refreshRecords?.({
+    provider: filterProvider?.value || "",
+    model: filterModel?.value || "",
+    status: filterStatus?.value || "",
+    search: usageSearch?.value || "",
+    dateFrom: dateFrom?.value || "",
+    dateTo: dateTo?.value || "",
+  });
+}
+
 function exportCsv() {
   const rows = window.ZwimaUsageService.getRecords({
     provider: filterProvider?.value || "",
     model: filterModel?.value || "",
+    status: filterStatus?.value || "",
     search: usageSearch?.value || "",
+    dateFrom: dateFrom?.value || "",
+    dateTo: dateTo?.value || "",
   });
   const header = [
-    "date_time",
     "provider",
     "model",
-    "prompt",
     "input_tokens",
     "output_tokens",
     "total_tokens",
-    "credits_deducted",
-    "cost_per_request_eur",
-    "request_time_ms",
+    "credits",
+    "latency_ms",
+    "status",
+    "created_time",
+    "prompt",
   ];
   const lines = [header.join(",")];
   for (const row of rows) {
     const cols = [
-      row.dateTime || "",
       row.provider || "",
       row.model || "",
-      row.prompt || "",
       row.inputTokens || 0,
       row.outputTokens || 0,
       row.totalTokens || 0,
       row.creditsDeducted || 0,
-      Number(row.estimatedCost || 0).toFixed(6),
       row.requestTimeMs || 0,
+      row.status || "Success",
+      row.dateTime || "",
+      row.prompt || "",
     ].map((value) => `"${String(value).replace(/"/g, '""')}"`);
     lines.push(cols.join(","));
   }
@@ -118,14 +139,29 @@ function exportCsv() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.ZwimaDbMode?.isSupabaseMode?.()) {
-    await window.ZwimaUsageService?.refreshRecords?.();
+    await window.ZwimaUsageService?.refreshRecords?.({
+      provider: filterProvider?.value || "",
+      model: filterModel?.value || "",
+      status: filterStatus?.value || "",
+      search: usageSearch?.value || "",
+      dateFrom: dateFrom?.value || "",
+      dateTo: dateTo?.value || "",
+    });
   }
   populateFilters();
   renderTable();
 
-  filterProvider?.addEventListener("change", renderTable);
-  filterModel?.addEventListener("change", renderTable);
-  usageSearch?.addEventListener("input", renderTable);
+  const rerender = async () => {
+    await refreshUsageFromServer();
+    populateFilters();
+    renderTable();
+  };
+  filterProvider?.addEventListener("change", rerender);
+  filterModel?.addEventListener("change", rerender);
+  filterStatus?.addEventListener("change", rerender);
+  dateFrom?.addEventListener("change", rerender);
+  dateTo?.addEventListener("change", rerender);
+  usageSearch?.addEventListener("input", rerender);
   document.getElementById("exportUsageCsv")?.addEventListener("click", exportCsv);
 
   window.ZwimaAppEvents?.onUpdated?.((detail) => {

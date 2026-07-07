@@ -56,19 +56,213 @@ function getProjectRef(supabaseUrl) {
   return String(supabaseUrl || "").match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || "";
 }
 
-function getDatabaseUrlCandidates() {
+const POOLER_REGIONS = [
+  "aws-0-eu-west-3",
+  "aws-1-eu-central-1",
+  "aws-0-eu-central-1",
+  "aws-0-eu-west-1",
+  "aws-0-eu-west-2",
+  "aws-0-eu-west-3",
+  "aws-0-us-east-1",
+  "aws-0-us-west-1",
+  "aws-0-ap-southeast-1",
+  "aws-0-ap-northeast-1",
+];
+
+function extractRawPassword(url) {
+  const raw = String(url).trim().replace(/^["']|["']$/g, "");
+  const withoutQuery = raw.split("?")[0];
+  const match = withoutQuery.match(/^postgres(?:ql)?:\/\/(?:[^:@/]+)(?::([^@]*))?@/i);
+  return match?.[1] ?? "";
+}
+
+function parsePgUrl(url) {
+  try {
+    const raw = String(url).trim().replace(/^["']|["']$/g, "");
+    const query = raw.includes("?") ? raw.slice(raw.indexOf("?")) : "";
+    const normalized = raw.split("?")[0].replace(/^postgres:\/\//, "postgresql://");
+    const parsed = new URL(normalized);
+    const rawPassword = extractRawPassword(raw);
+    const password = rawPassword || decodeURIComponent(parsed.password || "");
+    const username = decodeURIComponent(parsed.username || "");
+    const host = parsed.hostname;
+    const port = parsed.port || "5432";
+    const database = (parsed.pathname || "/postgres").replace(/^\//, "") || "postgres";
+
+    let ref = getProjectRef(process.env.SUPABASE_URL);
+    const dbMatch = host.match(/^db\.([^.]+)\.supabase\.co$/);
+    if (dbMatch) ref = dbMatch[1];
+    const userMatch = username.match(/^postgres\.(.+)$/);
+    if (userMatch) ref = userMatch[1];
+
+    const poolerRegion = host.match(/^(aws-[01]-[a-z]+-[a-z]+-\d+)\.pooler\.supabase\.com$/)?.[1] || "";
+
+    return { password, username, host, port, database, ref, query, poolerRegion };
+  } catch {
+    return null;
+  }
+}
+
+function normalizePoolerQuery(query, port) {
+  if (!query) return "";
+  if (port !== "5432") return query;
+  const params = new URLSearchParams(query.replace(/^\?/, ""));
+  params.delete("pgbouncer");
+  const rest = params.toString();
+  return rest ? `?${rest}` : "";
+}
+
+function buildPoolerUrl(info, region, port, passwordOverride) {
+  const user = info.username?.includes(".") ? info.username : `postgres.${info.ref}`;
+  const host = `${region}.pooler.supabase.com`;
+  const encoded = passwordOverride ?? encodeURIComponent(info.password);
+  const query = normalizePoolerQuery(info.query, String(port));
+  return `postgresql://${user}:${encoded}@${host}:${port}/${info.database}${query}`;
+}
+
+function buildPoolerSessionUrls(ref, password, database = "postgres", query = "") {
+  const info = { username: `postgres.${ref}`, password, ref, database, query };
+  const urls = [];
+  for (const region of POOLER_REGIONS) {
+    urls.push({
+      url: buildPoolerUrl(info, region, "5432"),
+      via: `pooler-session-${region}`,
+    });
+  }
+  return urls;
+}
+
+function passwordVariants(url) {
+  const raw = extractRawPassword(url);
+  const info = parsePgUrl(url);
+  const variants = new Set();
+  if (info?.password) variants.add(info.password);
+  if (raw) {
+    variants.add(raw);
+    try {
+      variants.add(decodeURIComponent(raw));
+    } catch {
+      /* keep raw only */
+    }
+  }
+  return [...variants].filter(Boolean);
+}
+
+function expandDatabaseUrl(url, via) {
   const candidates = [];
-  const push = (value, via) => {
-    if (value) candidates.push({ url: value, via });
+  const seen = new Set();
+  const addFirst = (candidateUrl, candidateVia) => {
+    if (!candidateUrl || seen.has(candidateUrl)) return;
+    seen.add(candidateUrl);
+    candidates.unshift({ url: candidateUrl, via: candidateVia });
+  };
+  const add = (candidateUrl, candidateVia) => {
+    if (!candidateUrl || seen.has(candidateUrl)) return;
+    seen.add(candidateUrl);
+    candidates.push({ url: candidateUrl, via: candidateVia });
   };
 
+  const info = parsePgUrl(url);
+  if (!info) {
+    add(url, via);
+    return candidates;
+  }
+
+  const isDirect = /^db\.[^.]+\.supabase\.co$/.test(info.host);
+  const isPooler = info.host.endsWith(".pooler.supabase.com");
+
+  if (isPooler) {
+    const region = info.poolerRegion || "aws-0-eu-west-3";
+    for (const pass of passwordVariants(url)) {
+      const variantInfo = { ...info, password: pass };
+      const raw = extractRawPassword(url);
+      const encodedOverride = raw && pass === raw ? raw : undefined;
+      addFirst(
+        buildPoolerUrl(variantInfo, region, "5432", encodedOverride),
+        `${via}-session-${region}-v`
+      );
+      if (info.port === "6543") {
+        addFirst(
+          buildPoolerUrl(variantInfo, region, "6543", encodedOverride),
+          `${via}-tx-${region}-v`
+        );
+      }
+    }
+    if (info.port === "6543") {
+      addFirst(buildPoolerUrl(info, region, "5432"), `${via}-session-port`);
+      const sessionRaw = url
+        .replace(":6543/", ":5432/")
+        .replace(":6543", ":5432")
+        .replace(/\?pgbouncer=true&?/i, "?")
+        .replace(/\?&/, "?")
+        .replace(/\?$/, "");
+      addFirst(sessionRaw, `${via}-session-port-raw`);
+    } else {
+      addFirst(url, via);
+    }
+  }
+
+  if (info.password && info.ref) {
+    const regions = info.poolerRegion
+      ? [info.poolerRegion, ...POOLER_REGIONS.filter((r) => r !== info.poolerRegion)]
+      : POOLER_REGIONS;
+    const rawPassword = extractRawPassword(url);
+    for (const region of regions) {
+      add(buildPoolerUrl(info, region, "5432"), `${via}-pooler-session-${region}`);
+      if (rawPassword && rawPassword !== encodeURIComponent(info.password)) {
+        add(
+          buildPoolerUrl(info, region, "5432", rawPassword),
+          `${via}-pooler-session-${region}-raw-pass`
+        );
+      }
+    }
+    if (regions[0]) {
+      addFirst(buildPoolerUrl(info, regions[0], "5432"), `${via}-pooler-session-${regions[0]}-priority`);
+    }
+  }
+
+  if (!isDirect) {
+    add(url, via);
+  } else {
+    add(url, `${via}-direct`);
+  }
+
+  return candidates;
+}
+
+function getDatabaseUrlCandidates() {
+  const candidates = [];
+  const seen = new Set();
+  const push = (value, via) => {
+    if (!value) return;
+    for (const item of expandDatabaseUrl(value, via)) {
+      if (seen.has(item.url)) continue;
+      seen.add(item.url);
+      candidates.push(item);
+    }
+  };
+
+  const password = process.env.SUPABASE_DB_PASSWORD || process.env.POSTGRES_PASSWORD;
+  const ref = getProjectRef(process.env.SUPABASE_URL);
+
+  if (password && ref) {
+    const region = "aws-0-eu-west-3";
+    push(
+      `postgresql://postgres.${ref}:${encodeURIComponent(password)}@${region}.pooler.supabase.com:5432/postgres`,
+      "SUPABASE_DB_PASSWORD-session"
+    );
+    push(
+      `postgresql://postgres.${ref}:${password}@${region}.pooler.supabase.com:5432/postgres`,
+      "SUPABASE_DB_PASSWORD-session-raw"
+    );
+  }
+
+  push(process.env.DIRECT_URL, "DIRECT_URL");
   push(process.env.DATABASE_URL, "DATABASE_URL");
   push(process.env.SUPABASE_DB_URL, "SUPABASE_DB_URL");
   push(process.env.POSTGRES_URL, "POSTGRES_URL");
   push(process.env.POSTGRES_URL_NON_POOLING, "POSTGRES_URL_NON_POOLING");
 
-  const password = process.env.SUPABASE_DB_PASSWORD || process.env.POSTGRES_PASSWORD;
-  const ref = getProjectRef(process.env.SUPABASE_URL);
   const host = process.env.POSTGRES_HOST;
   const user = process.env.POSTGRES_USER || "postgres";
   const database = process.env.POSTGRES_DATABASE || "postgres";
@@ -82,42 +276,13 @@ function getDatabaseUrlCandidates() {
   }
 
   if (password && ref) {
-    const regions = [
-      "aws-1-eu-central-1",
-      "aws-0-eu-central-1",
-      "aws-0-eu-west-1",
-      "aws-0-eu-west-2",
-      "aws-0-eu-west-3",
-      "aws-0-us-east-1",
-      "aws-0-us-west-1",
-      "aws-0-ap-southeast-1",
-      "aws-0-ap-northeast-1",
-    ];
-    for (const region of regions) {
-      push(
-        `postgresql://postgres.${ref}:${encodeURIComponent(password)}@${region}.pooler.supabase.com:6543/postgres`,
-        `pooler-${region}`
-      );
-      push(
-        `postgresql://postgres.${ref}:${encodeURIComponent(password)}@${region}.pooler.supabase.com:5432/postgres`,
-        `pooler-session-${region}`
-      );
+    for (const pooler of buildPoolerSessionUrls(ref, password, database)) {
+      push(pooler.url, pooler.via);
     }
     push(
-      `postgresql://postgres:${encodeURIComponent(password)}@db.${ref}.supabase.co:5432/postgres`,
-      "SUPABASE_DB_PASSWORD"
+      `postgresql://postgres:${encodeURIComponent(password)}@db.${ref}.supabase.co:5432/${database}`,
+      "SUPABASE_DB_PASSWORD-direct"
     );
-  }
-
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (serviceKey && ref) {
-    const regions = ["aws-1-eu-central-1", "aws-0-eu-central-1", "aws-0-us-east-1"];
-    for (const region of regions) {
-      push(
-        `postgresql://postgres.${ref}:${encodeURIComponent(serviceKey)}@${region}.pooler.supabase.com:6543/postgres`,
-        `service-role-${region}`
-      );
-    }
   }
 
   return candidates;
@@ -162,7 +327,10 @@ async function applyWithPg(url, files) {
     return { applied: false, reason: `pg module unavailable: ${err.message}` };
   }
 
-  const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
+  const client = new Client({
+    connectionString: url,
+    ssl: { rejectUnauthorized: false },
+  });
   await client.connect();
   try {
     for (const file of files) {
@@ -213,7 +381,8 @@ async function applyMigrations() {
     applied: false,
     reason: "No working database connection",
     errors,
-    hint: "Add SUPABASE_DB_PASSWORD, DATABASE_URL, or SUPABASE_ACCESS_TOKEN to Vercel",
+    hint:
+      "Use session pooler for migrations: postgresql://postgres.[ref]:[password]@aws-0-eu-west-3.pooler.supabase.com:5432/postgres (direct db.* host is IPv6-only and fails on Vercel). Reset DB password to alphanumeric if pooler auth fails.",
   };
 }
 
@@ -238,4 +407,27 @@ module.exports = {
   applyMigrations,
   verifyTables,
   tableExists,
+  parsePgUrl,
+  getConnectionDebugInfo() {
+    const info = parsePgUrl(process.env.DATABASE_URL || "");
+    if (!info) return { parsed: false };
+    const ref = info.ref || getProjectRef(process.env.SUPABASE_URL);
+    return {
+      parsed: true,
+      host: info.host,
+      port: info.port,
+      username: info.username,
+      ref,
+      poolerRegion: info.poolerRegion || "aws-0-eu-west-3",
+      passwordLength: info.password?.length || 0,
+      isPooler: info.host.endsWith(".pooler.supabase.com"),
+      isDirect: /^db\.[^.]+\.supabase\.co$/.test(info.host),
+      issue: /^db\.[^.]+\.supabase\.co$/.test(info.host)
+        ? "Direct db.* host is IPv6-only and unreachable from Vercel. Use session pooler on port 5432."
+        : null,
+      recommendedMigrationUrl: ref
+        ? `postgresql://postgres.${ref}:[PASSWORD]@aws-0-eu-west-3.pooler.supabase.com:5432/postgres`
+        : null,
+    };
+  },
 };

@@ -86,5 +86,19 @@
       const history = await this.getHistory();
       return history.find((row) => String(row.id) === String(id)) || null;
     },
+    async deleteConversation(id) {
+      if (!id) return false;
+      if (!this.isSupabase()) {
+        const history = window.ZwimaStorage.get("PLAYGROUND_HISTORY", []).filter((row) => String(row.id) !== String(id));
+        window.ZwimaStorage.set("PLAYGROUND_HISTORY", history);
+        return true;
+      }
+      await window.ZwimaSupabaseApi.apiFetch("/api/conversations", {
+        method: "DELETE",
+        body: JSON.stringify({ id }),
+      });
+      conversationsCache = conversationsCache.filter((row) => String(row.id) !== String(id));
+      return true;
+    },
   };
 })();

@@ -1,4 +1,5 @@
 const modelConfig = require("../config/models.js");
+const { enforceRateLimit, getClientIp } = require("./lib/supabase");
 
 function resolveModel(modelRef) {
   return modelConfig.resolveId(modelRef);
@@ -210,6 +211,16 @@ module.exports = async function handler(req, res) {
   const body = parseBody(req);
 
   try {
+    const limiter = await enforceRateLimit({
+      req,
+      route: "playground:gemini",
+      limit: 120,
+      windowSeconds: 60,
+      key: `gemini:${getClientIp(req)}`,
+    });
+    if (!limiter.allowed) {
+      return res.status(429).json({ error: "Rate limit exceeded. Please retry shortly." });
+    }
     if (body.stream) {
       return handleStream(req, res, body);
     }

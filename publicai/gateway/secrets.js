@@ -16,11 +16,10 @@
   }
 
   function fromConfig() {
-    const c = cfg();
-    const keys = c.PROVIDER_API_KEYS || {};
+    // Never expose raw secret keys to browser runtime config.
     return {
-      openai: keys.openai || c.OPENAI_API_KEY || null,
-      default: keys.default || c.OPENAI_API_KEY || null,
+      openai: null,
+      default: null,
     };
   }
 

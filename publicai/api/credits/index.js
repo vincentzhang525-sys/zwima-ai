@@ -1,4 +1,4 @@
-const { getAuthedClient, parseBody, json, handleOptions, withCors } = require("../lib/supabase");
+const { getAuthedClient, parseBody, json, handleOptions, withCors, writeAuditLog, getClientIp } = require("../lib/supabase");
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
@@ -90,6 +90,17 @@ module.exports = async function handler(req, res) {
         status: "completed",
       });
       if (txnError) throw txnError;
+
+      await writeAuditLog({
+        userId: user.id,
+        eventType: "credits",
+        action: "credits_changed",
+        target: type,
+        detail: `${description} (${delta})`,
+        ip: getClientIp(req),
+        notify: true,
+        notificationCategory: "credit",
+      });
 
       return json(res, 200, {
         wallet: { balance, currency: "EUR" },

@@ -3,11 +3,15 @@ const {
   getAdminClient,
   parseBody,
   loadProfile,
-  mapProfile,
+  enforceRateLimit,
+  writeAuditLog,
+  writeSecurityEvent,
+  getClientIp,
   json,
   handleOptions,
   withCors,
 } = require("../lib/supabase");
+const crypto = require("crypto");
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
@@ -18,6 +22,23 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const ip = getClientIp(req);
+    const limiter = await enforceRateLimit({
+      req,
+      route: "user:login",
+      limit: 10,
+      windowSeconds: 60,
+      key: `login:${ip}`,
+    });
+    if (!limiter.allowed) {
+      await writeSecurityEvent({
+        eventType: "blocked_ip",
+        ip,
+        detail: "Rate limit exceeded on login",
+      });
+      return json(res, 429, { error: "Too many login attempts. Please try again later." });
+    }
+
     const body = parseBody(req);
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
@@ -29,6 +50,11 @@ module.exports = async function handler(req, res) {
     const client = getAnonClient();
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) {
+      await writeSecurityEvent({
+        eventType: "failed_login",
+        ip,
+        detail: `${email}: ${error.message || "invalid credentials"}`,
+      });
       return json(res, 401, { error: error.message || "Invalid email or password" });
     }
 
@@ -38,8 +64,36 @@ module.exports = async function handler(req, res) {
       return json(res, 500, { error: "Profile not found" });
     }
     if (profile.status === "suspended") {
+      await writeSecurityEvent({
+        eventType: "failed_login",
+        userId: data.user.id,
+        ip,
+        detail: "Suspended user login attempt",
+      });
       return json(res, 403, { error: "This account has been suspended. Please contact support." });
     }
+
+    await writeAuditLog({
+      userId: data.user.id,
+      eventType: "auth",
+      action: "user_login",
+      target: "session",
+      detail: "User signed in",
+      ip,
+      notify: true,
+      notificationCategory: "security",
+    });
+
+    const admin = getAdminClient();
+    await admin.from("user_sessions").insert({
+      user_id: data.user.id,
+      session_token_hash: crypto.createHash("sha256").update(String(data.session.refresh_token || "")).digest("hex"),
+      remember_me: Boolean(body.remember),
+      last_seen_at: new Date().toISOString(),
+      expires_at: new Date((Number(data.session.expires_at) || Math.floor(Date.now() / 1000) + 3600) * 1000).toISOString(),
+      ip,
+      user_agent: String(req.headers["user-agent"] || ""),
+    });
 
     return json(res, 200, {
       user: profile,

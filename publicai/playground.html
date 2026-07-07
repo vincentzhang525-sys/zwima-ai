@@ -62,13 +62,26 @@
 
               <label for="temperatureRange">Temperature <span id="temperatureValue">0.7</span></label>
               <input id="temperatureRange" name="temperature" type="range" min="0" max="2" step="0.1" value="0.7">
+              <label for="topPInput">Top P</label>
+              <input id="topPInput" name="topP" type="number" min="0" max="1" step="0.1" value="1">
 
               <label for="maxTokensInput">Max Tokens</label>
               <input id="maxTokensInput" name="maxTokens" type="number" min="256" max="8192" step="256" value="2048">
+              <label for="frequencyPenaltyInput">Frequency Penalty</label>
+              <input id="frequencyPenaltyInput" name="frequencyPenalty" type="number" min="-2" max="2" step="0.1" value="0">
+              <label for="presencePenaltyInput">Presence Penalty</label>
+              <input id="presencePenaltyInput" name="presencePenalty" type="number" min="-2" max="2" step="0.1" value="0">
+              <label for="systemPromptInput">System Prompt</label>
+              <textarea id="systemPromptInput" rows="3" placeholder="Optional system instruction"></textarea>
+              <label style="display:flex;gap:8px;align-items:center;"><input id="streamingToggle" type="checkbox" checked><span>Streaming</span></label>
+              <label style="display:flex;gap:8px;align-items:center;"><input id="jsonModeToggle" type="checkbox"><span>JSON mode</span></label>
+              <label style="display:flex;gap:8px;align-items:center;"><input id="autoScrollToggle" type="checkbox" checked><span>Auto scroll</span></label>
+              <button class="button button-secondary button-sm" type="button" id="savePromptBtn">Save Prompt</button>
             </form>
 
             <div class="history-block">
               <h3>Conversation History</h3>
+              <input id="conversationSearchInput" type="search" placeholder="Search conversations...">
               <ul class="history-list" id="historyList"></ul>
             </div>
           </aside>
@@ -85,6 +98,9 @@
               <div class="composer-actions">
                 <button class="button button-primary" type="button" id="sendBtn">Send</button>
                 <button class="button button-secondary" type="button" id="stopBtn" hidden>Stop Generation</button>
+                <button class="button button-secondary" type="button" id="renameConversationBtn">Rename</button>
+                <button class="button button-secondary" type="button" id="deleteConversationBtn">Delete</button>
+                <button class="button button-secondary" type="button" id="exportConversationBtn">Export</button>
               </div>
             </div>
           </section>

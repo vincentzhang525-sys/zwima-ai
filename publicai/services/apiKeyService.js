@@ -95,8 +95,8 @@
       return getKeysFromCache().filter((item) => item.status === "Active").length;
     },
 
-    createKey(name) {
-      if (isSupabase()) return window.ZwimaSupabaseApiKeys.createKey(name);
+    createKey(name, expiresAt = null) {
+      if (isSupabase()) return window.ZwimaSupabaseApiKeys.createKey(name, expiresAt);
       const trimmed = String(name || "").trim();
       if (!trimmed) throw new Error("Key name is required.");
       const store = loadStore();
@@ -107,6 +107,8 @@
         createdAt: today(),
         lastUsed: "Never",
         totalUsage: 0,
+        totalRequests: 0,
+        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
         status: "Active",
       };
       store.keys.push(record);

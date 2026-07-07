@@ -105,6 +105,111 @@ function hashApiKey(secret) {
   return crypto.createHash("sha256").update(secret).digest("hex");
 }
 
+function getClientIp(req) {
+  const xfwd = req.headers["x-forwarded-for"] || req.headers["X-Forwarded-For"] || "";
+  const first = String(Array.isArray(xfwd) ? xfwd[0] : xfwd)
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)[0];
+  return first || req.socket?.remoteAddress || "unknown";
+}
+
+async function enforceRateLimit({
+  req,
+  route,
+  limit,
+  windowSeconds,
+  key,
+}) {
+  const admin = getAdminClient();
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - windowSeconds * 1000).toISOString();
+  const lookupKey = String(key || getClientIp(req));
+
+  const { data: rows, error } = await admin
+    .from("rate_limits")
+    .select("*")
+    .eq("key", lookupKey)
+    .eq("route", route)
+    .gte("window_start", windowStart)
+    .order("window_start", { ascending: false })
+    .limit(1);
+  if (error) throw error;
+
+  const row = rows?.[0];
+  if (!row) {
+    const { error: insertError } = await admin.from("rate_limits").insert({
+      key: lookupKey,
+      route,
+      count: 1,
+      window_start: now.toISOString(),
+    });
+    if (insertError) throw insertError;
+    return { allowed: true, remaining: limit - 1 };
+  }
+
+  const current = Number(row.count) || 0;
+  if (current >= limit) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  const { error: updateError } = await admin.from("rate_limits").update({ count: current + 1 }).eq("id", row.id);
+  if (updateError) throw updateError;
+  return { allowed: true, remaining: Math.max(0, limit - (current + 1)) };
+}
+
+async function writeAuditLog({
+  userId = null,
+  eventType,
+  action,
+  target = "",
+  detail = "",
+  ip = "",
+  notify = false,
+  notificationCategory = "system",
+}) {
+  try {
+    const admin = getAdminClient();
+    await admin.from("audit_logs").insert({
+      user_id: userId,
+      event_type: eventType,
+      action,
+      target,
+      detail,
+      ip,
+    });
+    if (notify && userId) {
+      await admin.from("notifications").insert({
+        user_id: userId,
+        category: notificationCategory,
+        title: action,
+        message: detail || target || action,
+      });
+    }
+  } catch (err) {
+    console.warn("[audit_log] failed", err.message);
+  }
+}
+
+async function writeSecurityEvent({
+  eventType,
+  userId = null,
+  ip = "",
+  detail = "",
+}) {
+  try {
+    const admin = getAdminClient();
+    await admin.from("security_events").insert({
+      event_type: eventType,
+      user_id: userId,
+      ip,
+      detail,
+    });
+  } catch (err) {
+    console.warn("[security_event] failed", err.message);
+  }
+}
+
 function json(res, status, payload) {
   res.status(status).json(payload);
 }
@@ -133,6 +238,10 @@ module.exports = {
   mapProfile,
   loadProfile,
   hashApiKey,
+  getClientIp,
+  enforceRateLimit,
+  writeAuditLog,
+  writeSecurityEvent,
   json,
   handleOptions,
   withCors,

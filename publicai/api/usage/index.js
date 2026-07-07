@@ -8,15 +8,36 @@ module.exports = async function handler(req, res) {
     const { client, user } = await getAuthedClient(req);
 
     if (req.method === "GET") {
-      const { data, error } = await client
+      let query = client
         .from("usage_records")
         .select("*")
         .eq("user_id", user.id)
-        .order("date_time", { ascending: false })
-        .limit(500);
+        .order("date_time", { ascending: false });
+      const provider = String(req.query?.provider || "").trim();
+      const model = String(req.query?.model || "").trim();
+      const status = String(req.query?.status || "").trim();
+      const dateFrom = String(req.query?.dateFrom || "").trim();
+      const dateTo = String(req.query?.dateTo || "").trim();
+      const search = String(req.query?.search || "").trim();
+      const page = Math.max(1, Number(req.query?.page) || 1);
+      const pageSize = Math.min(100, Math.max(1, Number(req.query?.pageSize) || 25));
+
+      if (provider) query = query.eq("provider", provider);
+      if (model) query = query.eq("model", model);
+      if (status) query = query.eq("status", status);
+      if (dateFrom) query = query.gte("date_time", `${dateFrom}T00:00:00.000Z`);
+      if (dateTo) query = query.lte("date_time", `${dateTo}T23:59:59.999Z`);
+      if (search) query = query.ilike("prompt", `%${search}%`);
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error } = await query;
       if (error) throw error;
 
       return json(res, 200, {
+        page,
+        pageSize,
         records: (data || []).map((row) => ({
           id: row.id,
           dateTime: row.date_time,

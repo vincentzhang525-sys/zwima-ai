@@ -2,6 +2,8 @@ const tableBody = document.getElementById("apiKeysTableBody");
 const createModal = document.getElementById("createKeyModal");
 const createForm = document.getElementById("createKeyForm");
 const visibleKeys = new Set();
+let page = 1;
+const PAGE_SIZE = 10;
 
 function escapeHtml(text) {
   return window.ZwimaFormat?.escapeHtml?.(text) ?? String(text);
@@ -22,13 +24,16 @@ function renderKeys() {
   const keys = window.ZwimaApiKeyService
     .getKeys()
     .filter((item) => !search || String(item.name || "").toLowerCase().includes(search));
+  const totalPages = Math.max(1, Math.ceil(keys.length / PAGE_SIZE));
+  if (page > totalPages) page = totalPages;
+  const paged = keys.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  if (!keys.length) {
-    tableBody.innerHTML = '<tr><td colspan="7" class="muted">No API keys yet.</td></tr>';
+  if (!paged.length) {
+    tableBody.innerHTML = '<tr><td colspan="10" class="muted">No API keys yet.</td></tr>';
     return;
   }
 
-  tableBody.innerHTML = keys
+  tableBody.innerHTML = paged
     .map((item) => {
       const isActive = item.status === "Active";
       const isVisible = visibleKeys.has(item.id);
@@ -43,8 +48,10 @@ function renderKeys() {
             </button>
           </td>
           <td><span class="status-pill ${statusClass(item.status)}">${escapeHtml(item.status)}</span></td>
-          <td class="muted">${escapeHtml(item.createdAt)}</td>
+          <td class="muted">${escapeHtml(item.createdTime ? new Date(item.createdTime).toLocaleString("en-GB") : item.createdAt)}</td>
+          <td class="muted">${escapeHtml(item.expiresAt ? new Date(item.expiresAt).toLocaleDateString("en-GB") : "Never")}</td>
           <td class="muted">${escapeHtml(item.lastUsed)}</td>
+          <td class="muted">${Number(item.totalRequests || 0).toLocaleString()}</td>
           <td class="muted">${Number(item.totalUsage || 0).toLocaleString()} credits</td>
           <td class="actions-cell">
             <div class="key-actions">
@@ -62,6 +69,8 @@ function renderKeys() {
       `;
     })
     .join("");
+  const pageLabel = document.getElementById("keysPageLabel");
+  if (pageLabel) pageLabel.textContent = `Page ${page} / ${totalPages}`;
 }
 
 function openCreateModal() {
@@ -111,6 +120,7 @@ async function handleAction(action, id, button) {
       const newName = window.prompt("Enter new key name:", current?.name || "");
       if (!newName || newName.trim() === current?.name) return;
       await service.renameKey(id, newName.trim());
+      return renderKeys();
     }
 
     if (action === "disable") await service.disableKey(id);
@@ -145,8 +155,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   createForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const name = document.getElementById("keyName")?.value || "";
+    const expiresAt = document.getElementById("keyExpireAt")?.value || null;
     try {
-      await window.ZwimaApiKeyService.createKey(name);
+      await window.ZwimaApiKeyService.createKey(name, expiresAt);
       closeCreateModal();
       renderKeys();
     } catch (err) {
@@ -163,5 +174,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (new URLSearchParams(window.location.search).get("create") === "1") {
     openCreateModal();
   }
-  document.getElementById("apiKeySearch")?.addEventListener("input", renderKeys);
+  document.getElementById("apiKeySearch")?.addEventListener("input", () => {
+    page = 1;
+    renderKeys();
+  });
+  document.getElementById("keysPrevPage")?.addEventListener("click", () => {
+    if (page <= 1) return;
+    page -= 1;
+    renderKeys();
+  });
+  document.getElementById("keysNextPage")?.addEventListener("click", () => {
+    page += 1;
+    renderKeys();
+  });
 });

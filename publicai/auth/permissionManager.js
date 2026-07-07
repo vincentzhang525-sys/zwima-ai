@@ -3,16 +3,20 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.ZwimaPermissionManager = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
-  const ROLES = ["admin", "customer", "Admin", "Owner", "Developer", "Viewer"];
+  const ROLES = ["owner", "admin", "support", "customer", "Owner", "Admin", "Support"];
   const PERMISSIONS = ["apikeys", "billing", "credits", "models", "gateway", "settings", "logs", "documentation"];
 
   const ROLE_PERMISSIONS = {
     admin: PERMISSIONS,
     customer: ["apikeys", "credits", "models", "gateway", "settings", "documentation"],
     Admin: PERMISSIONS,
+    owner: PERMISSIONS,
+    admin: PERMISSIONS,
+    support: ["apikeys", "credits", "usage", "documentation", "logs"],
+    customer: ["apikeys", "credits", "models", "gateway", "settings", "documentation"],
     Owner: PERMISSIONS,
-    Developer: ["apikeys", "models", "gateway", "logs", "documentation"],
-    Viewer: ["models", "documentation", "logs"],
+    Admin: PERMISSIONS,
+    Support: ["apikeys", "credits", "usage", "documentation", "logs"],
   };
 
   return {
@@ -20,7 +24,7 @@
     PERMISSIONS,
     ROLE_PERMISSIONS,
     getPermissionsForRole(role) {
-      return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.Viewer;
+      return ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.customer;
     },
     hasRole(user, role) {
       return String(user?.role || "").toLowerCase() === String(role).toLowerCase();
@@ -32,7 +36,7 @@
     canAccess(user, permission) {
       if (!user) return false;
       const role = String(user.role || "").toLowerCase();
-      if (role === "admin") return true;
+      if (role === "admin" || role === "owner") return true;
       return this.hasPermission(user, permission);
     },
   };

@@ -1,8 +1,12 @@
 (function () {
   let recordsCache = [];
 
-  async function refreshFromDb() {
-    const data = await window.ZwimaSupabaseApi.apiFetch("/api/usage");
+  async function refreshFromDb(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v != null && String(v).trim() !== "") params.set(k, String(v));
+    });
+    const data = await window.ZwimaSupabaseApi.apiFetch(`/api/usage${params.toString() ? `?${params}` : ""}`);
     recordsCache = data.records || [];
     return recordsCache;
   }

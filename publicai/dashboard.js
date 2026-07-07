@@ -90,34 +90,52 @@ async function refreshLiveData() {
   ]);
 }
 
-function renderDashboardFromLive(user) {
+async function renderDashboardFromLive(user) {
+  const cacheKey = "dashboard_overview_cache_v1";
+  let overview = null;
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(cacheKey) || "null");
+    if (cached && Date.now() - Number(cached.ts || 0) < 30000) overview = cached.data;
+  } catch {}
+  if (!overview) {
+    overview = await window.ZwimaSupabaseApi.apiFetch("/api/dashboard/overview");
+    sessionStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: overview }));
+  }
   const wallet = window.ZwimaCreditsService?.getWallet?.();
   const usageRecords = window.ZwimaUsageService?.getRecords?.() || [];
   const dashboardKeys = window.ZwimaApiKeyService?.getKeys?.() || [];
   const activeKeyCount = window.ZwimaApiKeyService?.getActiveCount?.() ?? 0;
 
-  const balanceLabel = wallet
-    ? `${wallet.balance.toLocaleString()} API credits`
-    : "0 API credits";
-  const monthlyUsageLabel = wallet
-    ? `${sumMonthlyTokens(usageRecords).toLocaleString()} model tokens this month`
-    : "0 credits this month";
-  const estimatedCostLabel = formatEstimatedCost(sumUsageCost(usageRecords));
+  const planLabel = String(overview.currentPlan || user.plan || "starter").toUpperCase();
+  const balanceLabel = `${Number(overview.remainingCredits ?? wallet?.balance ?? 0).toLocaleString()} credits`;
+  const todayUsageLabel = `${Number(overview.todayUsage || 0).toLocaleString()} tokens`;
+  const monthlyUsageLabel = `${Number(overview.monthlyUsage || 0).toLocaleString()} tokens`;
+  const latestInvoiceLabel = overview.latestInvoice
+    ? `€${Number(overview.latestInvoice.amount || 0).toFixed(2)} (${overview.latestInvoice.status})`
+    : "—";
 
   const overviewValues = document.querySelectorAll("#overview .overview-card strong");
-  if (overviewValues.length >= 5) {
-    overviewValues[0].textContent = balanceLabel;
-    overviewValues[1].textContent = monthlyUsageLabel;
-    overviewValues[2].textContent = `${activeKeyCount} business keys`;
-    overviewValues[3].textContent = estimatedCostLabel;
-    overviewValues[4].textContent = user.status || "active";
+  if (overviewValues.length >= 9) {
+    overviewValues[0].textContent = planLabel;
+    overviewValues[1].textContent = balanceLabel;
+    overviewValues[2].textContent = todayUsageLabel;
+    overviewValues[3].textContent = monthlyUsageLabel;
+    overviewValues[4].textContent = Number(overview.totalApiRequests || 0).toLocaleString();
+    overviewValues[5].textContent = Number(overview.currentActiveApiKeys || activeKeyCount).toLocaleString();
+    overviewValues[6].textContent = latestInvoiceLabel;
+    overviewValues[7].textContent = `${Number(overview.recentActivity?.length || 0)} events`;
+    overviewValues[8].textContent = user.status || "active";
   }
   const statusBadge = document.getElementById("overviewAccountStatus");
   if (statusBadge) statusBadge.textContent = user.status || "active";
 
   const activityList = document.querySelector("#recentActivityList") || document.querySelector("#overview .activity-list");
   if (activityList) {
-    const usageActivity = window.ZwimaUsageService?.getRecentActivity?.(4) || [];
+    const usageActivity = (overview.recentActivity || []).slice(0, 4).map((item) => ({
+      type: `${item.provider} · ${item.model}`,
+      detail: item.prompt || "Request",
+      time: formatDateTime(item.dateTime),
+    }));
     if (!usageActivity.length) {
       activityList.innerHTML = `
         <article class="activity-item">
@@ -166,7 +184,7 @@ function renderDashboardFromLive(user) {
   if (creditsPanel) creditsPanel.textContent = balanceLabel;
 
   const usagePanel = document.querySelector("#usage .placeholder-panel strong");
-  if (usagePanel) usagePanel.textContent = monthlyUsageLabel;
+  if (usagePanel) usagePanel.textContent = todayUsageLabel;
   const usagePanelText = document.querySelector("#usage .placeholder-panel p");
   if (usagePanelText) {
     const topProviders = summarizeProviderUsage(usageRecords);
@@ -324,7 +342,7 @@ async function loadDashboardData() {
   if (isSupabaseMode()) {
     try {
       await refreshLiveData();
-      renderDashboardFromLive(user);
+      await renderDashboardFromLive(user);
     } catch (err) {
       console.warn("[Dashboard] Supabase refresh failed:", err);
     }

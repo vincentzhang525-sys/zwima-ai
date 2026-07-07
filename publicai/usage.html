@@ -61,6 +61,13 @@
             <select id="filterModel" aria-label="Filter by model">
               <option value="">All Models</option>
             </select>
+            <select id="filterStatus" aria-label="Filter by status">
+              <option value="">All Statuses</option>
+              <option value="Success">Success</option>
+              <option value="Error">Error</option>
+            </select>
+            <input id="dateFrom" type="date" aria-label="Date from">
+            <input id="dateTo" type="date" aria-label="Date to">
             <button class="button button-secondary button-sm" type="button" id="exportUsageCsv">Export CSV</button>
           </div>
 
@@ -68,16 +75,16 @@
             <table class="data-table usage-table">
               <thead>
                 <tr>
-                  <th>Date / Time</th>
                   <th>Provider</th>
                   <th>Model</th>
-                  <th>Prompt</th>
                   <th>Input</th>
                   <th>Output</th>
                   <th>Total</th>
-                  <th>Credits Deducted</th>
-                  <th>Cost / Request</th>
-                  <th>Request Time</th>
+                  <th>Credits</th>
+                  <th>Latency</th>
+                  <th>Status</th>
+                  <th>Created Time</th>
+                  <th>Prompt</th>
                 </tr>
               </thead>
               <tbody id="usageTableBody">

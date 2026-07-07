@@ -2,6 +2,9 @@ const {
   getAnonClient,
   parseBody,
   loadProfile,
+  enforceRateLimit,
+  writeSecurityEvent,
+  getClientIp,
   json,
   handleOptions,
   withCors,
@@ -16,6 +19,23 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    const ip = getClientIp(req);
+    const limiter = await enforceRateLimit({
+      req,
+      route: "user:register",
+      limit: 5,
+      windowSeconds: 60,
+      key: `register:${ip}`,
+    });
+    if (!limiter.allowed) {
+      await writeSecurityEvent({
+        eventType: "blocked_ip",
+        ip,
+        detail: "Rate limit exceeded on register",
+      });
+      return json(res, 429, { error: "Too many registration attempts. Please try again later." });
+    }
+
     const body = parseBody(req);
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");

@@ -1,4 +1,4 @@
-const { getAdminClient, hashApiKey } = require("../lib/supabase");
+const { getAdminClient, hashApiKey, enforceRateLimit, getClientIp, writeAuditLog } = require("../lib/supabase");
 const modelConfig = require("../../config/models.js");
 
 function parseBody(req) {
@@ -176,6 +176,15 @@ module.exports = async function handler(req, res) {
   if (!prompt) return json(res, 400, { error: "prompt is required." });
 
   try {
+    const limiter = await enforceRateLimit({
+      req,
+      route: "gateway:chat",
+      limit: 180,
+      windowSeconds: 60,
+      key: `gateway:${getClientIp(req)}`,
+    });
+    if (!limiter.allowed) return json(res, 429, { error: "Rate limit exceeded. Please retry shortly." });
+
     const admin = getAdminClient();
     const keyHash = hashApiKey(apiKey);
     const { data: keyRow, error: keyError } = await admin
@@ -249,8 +258,18 @@ module.exports = async function handler(req, res) {
       .update({
         last_used: new Date().toISOString(),
         total_usage: (Number(keyRow.total_usage) || 0) + creditsToDeduct,
+        total_requests: (Number(keyRow.total_requests) || 0) + 1,
       })
       .eq("id", keyRow.id);
+
+    await writeAuditLog({
+      userId: keyRow.user_id,
+      eventType: "gateway",
+      action: "gateway_chat",
+      target: picked.modelId,
+      detail: `Gateway request processed. credits=${creditsToDeduct}`,
+      ip: getClientIp(req),
+    });
 
     return json(res, 200, {
       content: result.content,

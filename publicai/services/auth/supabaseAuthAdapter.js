@@ -1,5 +1,5 @@
 (function (root) {
-  function applySession(result) {
+  function applySession(result, meta = {}) {
     const user = result.user;
     const session = result.session;
     if (!user || !session) throw new Error("Invalid auth response");
@@ -10,6 +10,13 @@
     if (session.expires_at) {
       root.ZwimaStorage?.setRaw?.("TOKEN_EXPIRES_AT", String(session.expires_at * 1000));
     }
+    root.ZwimaSessionManager?.rememberLogin?.(Boolean(meta.remember));
+    root.ZwimaSessionManager?.registerSession?.(
+      root.ZwimaSessionManager?.buildSession?.(user, {
+        device: "Web Browser",
+        location: "Production",
+      }) || { id: `sess-${Date.now()}`, userId: user.id, lastActive: new Date().toISOString() }
+    );
     localStorage.setItem("zwima_mock_auth", "1");
     localStorage.setItem("zwima_mock_session", JSON.stringify(user));
     return user;
@@ -45,7 +52,7 @@
         body: JSON.stringify(payload),
       });
       if (result.pending) return result;
-      return { user: applySession(result) };
+      return { user: applySession(result, { remember: Boolean(credentials?.remember) }) };
     },
 
     async login(credentials) {
@@ -61,8 +68,12 @@
       return { success: true };
     },
 
-    async forgotPassword(email) {
-      return { message: "Password reset is managed in Supabase Auth (mock flow disabled in database mode)." };
+    async forgotPassword(payload) {
+      const email = typeof payload === "string" ? payload : payload?.email;
+      return root.ZwimaSupabaseApi.apiFetch("/api/user/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
     },
 
     async resetPassword() {

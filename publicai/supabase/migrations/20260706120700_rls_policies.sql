@@ -73,3 +73,4 @@ create policy playground_conversations_update_own on public.playground_conversat
 drop policy if exists playground_conversations_delete_own on public.playground_conversations;
 create policy playground_conversations_delete_own on public.playground_conversations
   for delete using (auth.uid() = user_id or public.is_admin());
+

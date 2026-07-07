@@ -5,6 +5,9 @@ const {
   json,
   handleOptions,
   withCors,
+  enforceRateLimit,
+  writeAuditLog,
+  getClientIp,
 } = require("../lib/supabase");
 
 const KEY_PREFIX = "zw_live_";
@@ -24,8 +27,11 @@ function mapKey(row, secret) {
     name: row.name,
     key: secret || `${row.key_prefix}...`,
     createdAt: row.created_at?.slice?.(0, 10) || row.created_at,
+    createdTime: row.created_at,
+    expiresAt: row.expires_at || null,
     lastUsed: row.last_used ? new Date(row.last_used).toLocaleString("en-GB") : "Never",
     totalUsage: Number(row.total_usage) || 0,
+    totalRequests: Number(row.total_requests) || 0,
     status: row.status,
   };
 }
@@ -35,6 +41,16 @@ module.exports = async function handler(req, res) {
   withCors(res);
 
   try {
+    const ip = getClientIp(req);
+    const limiter = await enforceRateLimit({
+      req,
+      route: "apikeys",
+      limit: 60,
+      windowSeconds: 60,
+      key: `apikeys:${ip}`,
+    });
+    if (!limiter.allowed) return json(res, 429, { error: "Too many requests. Please try again later." });
+
     const { client, user } = await getAuthedClient(req);
 
     if (req.method === "GET") {
@@ -53,6 +69,7 @@ module.exports = async function handler(req, res) {
       const body = parseBody(req);
       const name = String(body.name || "").trim();
       if (!name) return json(res, 400, { error: "Key name is required." });
+      const expiresAt = body.expiresAt ? new Date(body.expiresAt).toISOString() : null;
 
       const secret = generateSecret();
       const { data, error } = await client
@@ -63,10 +80,21 @@ module.exports = async function handler(req, res) {
           key_prefix: secret.slice(0, 12),
           key_hash: hashApiKey(secret),
           status: "Active",
+          expires_at: expiresAt,
         })
         .select("*")
         .single();
       if (error) throw error;
+      await writeAuditLog({
+        userId: user.id,
+        eventType: "api_key",
+        action: "api_key_created",
+        target: data.id,
+        detail: `API key ${name} created (one-time display)`,
+        ip,
+        notify: true,
+        notificationCategory: "system",
+      });
 
       return json(res, 200, { key: mapKey(data, secret) });
     }
@@ -79,6 +107,7 @@ module.exports = async function handler(req, res) {
       const updates = {};
       if (body.name != null) updates.name = String(body.name).trim();
       if (body.status != null) updates.status = body.status;
+      if (body.expiresAt != null) updates.expires_at = body.expiresAt ? new Date(body.expiresAt).toISOString() : null;
 
       const { data, error } = await client
         .from("api_keys")

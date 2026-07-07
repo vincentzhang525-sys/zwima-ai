@@ -96,10 +96,16 @@
       let rows = getRecordsFromCache().slice();
       const provider = filters.provider || "";
       const model = filters.model || "";
+      const status = filters.status || "";
       const search = String(filters.search || "").toLowerCase();
+      const dateFrom = filters.dateFrom || "";
+      const dateTo = filters.dateTo || "";
 
       if (provider) rows = rows.filter((row) => row.provider === provider);
       if (model) rows = rows.filter((row) => row.model === model);
+      if (status) rows = rows.filter((row) => row.status === status);
+      if (dateFrom) rows = rows.filter((row) => String(row.dateTime || "").slice(0, 10) >= dateFrom);
+      if (dateTo) rows = rows.filter((row) => String(row.dateTime || "").slice(0, 10) <= dateTo);
       if (search) rows = rows.filter((row) => String(row.prompt || "").toLowerCase().includes(search));
 
       rows.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));

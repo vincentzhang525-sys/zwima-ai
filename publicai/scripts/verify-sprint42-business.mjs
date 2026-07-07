@@ -94,7 +94,17 @@ async function runBusinessFlow() {
     country: "Germany",
   });
   const regOk = reg.ok && (reg.json?.session?.access_token || reg.json?.pending);
-  bf("1. Register account", regOk, reg.json?.pending ? "pending confirmation" : testEmail);
+  bf(
+    "1. Register account",
+    regOk,
+    regOk
+      ? reg.json?.mockVerification
+        ? "mock-verified session"
+        : reg.json?.pending
+          ? "pending confirmation"
+          : testEmail
+      : reg.json?.error || `HTTP ${reg.status}`
+  );
   if (!regOk) return false;
 
   if (reg.json?.session?.access_token) {
@@ -115,8 +125,14 @@ async function runBusinessFlow() {
   );
   bf(
     "2. Verify email",
-    mockMode || verifySent || !!state.token,
-    mockMode ? "mock verification (SMTP unavailable)" : verifySent ? "verify/welcome email logged" : "session on register"
+    mockMode || verifySent || !!state.token || reg.json?.mockVerification,
+    reg.json?.mockVerification
+      ? "auto-verified (mock SMTP)"
+      : mockMode
+        ? "mock verification (SMTP unavailable)"
+        : verifySent
+          ? "verify/welcome email logged"
+          : "session on register"
   );
 
   // 3. Login

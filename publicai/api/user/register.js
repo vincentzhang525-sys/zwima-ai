@@ -30,6 +30,71 @@ async function grantWelcomeCredits(admin, userId) {
   return true;
 }
 
+async function registerWithMockVerification({ admin, client, email, password, company, country }) {
+  const { data: listed } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  const existing = listed?.users?.find((u) => u.email?.toLowerCase() === email);
+  if (existing) return { error: "User already registered" };
+
+  const { data: created, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      company,
+      country,
+      role: "customer",
+      status: "active",
+      plan: "Starter",
+    },
+  });
+  if (error) return { error: error.message || "Registration failed" };
+
+  const userId = created.user.id;
+  await admin.from("profiles").upsert({
+    id: userId,
+    email,
+    company,
+    country,
+    role: "customer",
+    status: "active",
+    plan: "Starter",
+  });
+
+  const granted = await grantWelcomeCredits(admin, userId);
+  await ensureProgress(admin, userId, {
+    registered: true,
+    email_verified: true,
+    credits_received: granted,
+  });
+
+  try {
+    await sendTransactional("verifyEmail", email, {
+      email,
+      link: "https://zwima-group.info/verify-email.html",
+    });
+    await sendTransactional("welcome", email, { name: company, company });
+  } catch (mailErr) {
+    console.error("[user/register] mock emails", mailErr);
+  }
+
+  const signIn = await client.auth.signInWithPassword({ email, password });
+  if (!signIn.data?.session) {
+    return { error: signIn.error?.message || "Login after registration failed" };
+  }
+
+  const authed = getAnonClient(signIn.data.session.access_token);
+  const profile = await loadProfile(authed, userId);
+  return {
+    user: profile,
+    session: {
+      access_token: signIn.data.session.access_token,
+      refresh_token: signIn.data.session.refresh_token,
+      expires_at: signIn.data.session.expires_at,
+    },
+    mockVerification: true,
+  };
+}
+
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
   withCors(res);
@@ -67,6 +132,21 @@ module.exports = async function handler(req, res) {
     }
 
     const client = getAnonClient();
+
+    if (shouldAutoVerifyEmail()) {
+      const admin = getAdminClient();
+      const mockResult = await registerWithMockVerification({
+        admin,
+        client,
+        email,
+        password,
+        company,
+        country: body.country || "Germany",
+      });
+      if (mockResult.error) return json(res, 400, { error: mockResult.error });
+      return json(res, 200, mockResult);
+    }
+
     const { data, error } = await client.auth.signUp({
       email,
       password,

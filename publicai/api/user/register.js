@@ -11,7 +11,7 @@ const {
   withCors,
 } = require("../lib/supabase");
 const { ensureProgress } = require("../onboarding/index.js");
-const { sendTransactional } = require("../lib/email");
+const { sendTransactional, shouldAutoVerifyEmail } = require("../lib/email");
 
 const FREE_CREDITS = 500;
 
@@ -98,6 +98,33 @@ module.exports = async function handler(req, res) {
       } catch (mailErr) {
         console.error("[user/register] verify email", mailErr);
       }
+
+      if (shouldAutoVerifyEmail() && data.user?.id) {
+        await admin.auth.admin.updateUserById(data.user.id, { email_confirm: true });
+        await ensureProgress(admin, data.user.id, { email_verified: true });
+        const granted = await grantWelcomeCredits(admin, data.user.id);
+        await ensureProgress(admin, data.user.id, { credits_received: granted });
+        const signIn = await client.auth.signInWithPassword({ email, password });
+        if (signIn.data?.session) {
+          try {
+            await sendTransactional("welcome", email, { name: company, company });
+          } catch (mailErr) {
+            console.error("[user/register] welcome email", mailErr);
+          }
+          const authed = getAnonClient(signIn.data.session.access_token);
+          const profile = await loadProfile(authed, data.user.id);
+          return json(res, 200, {
+            user: profile,
+            session: {
+              access_token: signIn.data.session.access_token,
+              refresh_token: signIn.data.session.refresh_token,
+              expires_at: signIn.data.session.expires_at,
+            },
+            mockVerification: true,
+          });
+        }
+      }
+
       return json(res, 200, {
         pending: true,
         email,

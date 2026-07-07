@@ -78,6 +78,16 @@ async function sendTransactional(template, to, data) {
   return sendEmail({ template, to, data });
 }
 
+function shouldAutoVerifyEmail() {
+  if (sendingDisabled()) return true;
+  const provider = String(process.env.EMAIL_PROVIDER || "mock").toLowerCase();
+  if (provider === "mock") return true;
+  if ((provider === "smtp" || provider === "ionos" || provider === "resend" || provider === "postmark") && !smtpConfigured()) {
+    return true;
+  }
+  return false;
+}
+
 module.exports = {
   resolveEmailProvider,
   sendEmail,
@@ -86,5 +96,6 @@ module.exports = {
   isDevMode,
   sendingDisabled,
   smtpConfigured,
+  shouldAutoVerifyEmail,
   getEmailLogs: require("./emailLogs").getEmailLogs,
 };

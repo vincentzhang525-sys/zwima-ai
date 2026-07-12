@@ -29,14 +29,16 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Set root directory to `zwima-v1`, add env vars from `.env.example`, and connect a PostgreSQL database (Neon/Supabase/Vercel Postgres).
 
-## Phase 3 — Provider Integration
+## Phase 4 — Enterprise Token Billing Engine
 
-- Real adapters: OpenAI, Gemini, DeepSeek, Qwen, Claude
-- Unified router — no hardcoded provider routing in business layer
-- Credits engine with margin multiplier
-- `GET /api/v1/models`, `GET /api/v1/health`, `POST /api/v1/chat`
-- Admin providers dashboard at `/dashboard/providers`
+- Unified Billing Engine (`src/lib/billing/`)
+- DB-backed pricing table, margin rules, credit packages
+- Stripe Checkout + Webhook (recharge, subscription, refund)
+- Invoice generation (HTML/PDF download)
+- Coupons, referrals, wallet (frozen balance, lifetime stats)
+- Admin: revenue dashboard, pricing/margin management
+- Enterprise APIs: `/api/v1/recharge`, `/api/v1/billing`, `/api/v1/pricing`, `/api/v1/transactions`, `/api/v1/invoices`
 
 ## Next phase
 
-Enterprise Token Billing Engine (Phase 4)
+Enterprise AI Platform Dashboard (Phase 5)

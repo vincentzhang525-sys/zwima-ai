@@ -85,8 +85,8 @@ export default async function BalancePage() {
           {transactions.map((t) => (
             <div key={t.id} className="flex justify-between border-b border-slate-100 py-2 dark:border-slate-800">
               <span>{t.description || t.type}</span>
-              <span className={t.type === "DEBIT" ? "text-red-600" : "text-green-600"}>
-                {t.type === "DEBIT" ? "-" : "+"}
+              <span className={t.type === "USAGE" || t.type === "REFUND" || t.type === "EXPIRATION" ? "text-red-600" : "text-green-600"}>
+                {t.type === "USAGE" || t.type === "REFUND" || t.type === "EXPIRATION" ? "-" : "+"}
                 {formatCredits(t.amount)}
               </span>
             </div>

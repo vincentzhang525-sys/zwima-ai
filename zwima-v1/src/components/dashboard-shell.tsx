@@ -12,6 +12,8 @@ import {
   Server,
   Settings,
   Wallet,
+  BarChart3,
+  Tags,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -21,11 +23,15 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/wallet", label: "Wallet", icon: Wallet },
   { href: "/dashboard/api-keys", label: "API Keys", icon: Key },
   { href: "/dashboard/balance", label: "Balance", icon: Wallet },
   { href: "/dashboard/usage", label: "Usage", icon: Gauge },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+  { href: "/dashboard/invoices", label: "Invoices", icon: CreditCard },
   { href: "/dashboard/providers", label: "Providers", icon: Server },
+  { href: "/dashboard/admin/revenue", label: "Revenue", icon: BarChart3 },
+  { href: "/dashboard/admin/pricing", label: "Pricing", icon: Tags },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 

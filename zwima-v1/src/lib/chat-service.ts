@@ -1,5 +1,5 @@
 import { hashApiKey } from "./credits";
-import { chargeForUsage, estimateRequestCost } from "./credits-engine";
+import { chargeForUsage, estimateRequestCredits } from "./billing/credits-engine";
 import { prisma } from "./prisma";
 import { routeByModel, recordProviderSuccess, recordProviderError } from "./providers/router";
 import type { ChatMessage, ChatResult } from "./providers/types";
@@ -25,15 +25,24 @@ export async function executeChatRequest(params: {
 
   if (!key) throw new ChatError("Unauthorized", 401);
 
-  const balance = key.user.creditBalance?.credits ?? 0;
+  const wallet = key.user.creditBalance;
+  const available = (wallet?.credits ?? 0) - (wallet?.frozenCredits ?? 0);
+
   const routed = await routeByModel(params.model);
   if (!routed) throw new ChatError("Model not found", 404);
 
   const providerRow = await prisma.provider.findUnique({ where: { slug: routed.adapter.slug } });
   if (!providerRow?.enabled) throw new ChatError("Provider unavailable", 503);
 
-  const estimate = estimateRequestCost(params.messages, routed.model, params.maxTokens ?? 1024);
-  if (balance < estimate.totalCredits) {
+  const estimate = await estimateRequestCredits(
+    params.messages,
+    routed.adapter.slug,
+    routed.model,
+    params.maxTokens ?? 1024,
+    { userId: key.userId, userTier: key.user.tier, providerSlug: routed.adapter.slug, modelId: routed.model }
+  );
+
+  if (available < estimate.customerCredits) {
     throw new ChatError("Insufficient credits", 402);
   }
 
@@ -61,6 +70,7 @@ export async function executeChatRequest(params: {
     inputTokens: result.inputTokens,
     outputTokens: result.outputTokens,
     latencyMs: result.latencyMs,
+    userTier: key.user.tier,
   });
 
   return { ...result, costCredits, usageLogId };

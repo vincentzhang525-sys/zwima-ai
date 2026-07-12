@@ -1,4 +1,11 @@
-const { smtpConfigured } = require("../email/SmtpEmailProvider");
+function smtpConfiguredInline() {
+  return Boolean(
+    process.env.SMTP_HOST &&
+      process.env.SMTP_FROM &&
+      process.env.SMTP_USER &&
+      process.env.SMTP_PASS
+  );
+}
 
 function envFlag(name, defaultValue = false) {
   const raw = process.env[name];
@@ -53,7 +60,7 @@ function emailProviderKind() {
   if (String(process.env.EMAIL_DISABLE_SEND || "").toLowerCase() === "true") return "disabled";
   if (isProductionRuntime()) {
     const smtpWanted = ["smtp", "ionos", "resend", "postmark"].includes(provider);
-    if (smtpWanted && smtpConfigured()) return "smtp";
+    if (smtpWanted && smtpConfiguredInline()) return "smtp";
     if (isCommercialBetaMode()) return "mock-beta";
     return "fail-closed";
   }
@@ -91,7 +98,7 @@ function getRuntimeProfile() {
     commercialBetaMode: isCommercialBetaMode(),
     stripeMode: getStripeMode(),
     emailProviderKind: emailProviderKind(),
-    smtpConfigured: smtpConfigured(),
+    smtpConfigured: smtpConfiguredInline(),
     stripeKeysPresent: stripeKeysPresent(),
     stripeWebhookConfigured: stripeWebhookConfigured(),
     paymentFailClosed: paymentMustFailClosed(),

@@ -1,5 +1,10 @@
 const { smtpConfigured } = require("./SmtpEmailProvider");
-const { isCommercialBetaMode, isProductionRuntime, isPreviewRuntime, isLocalRuntime, emailProviderKind } = require("../commercial/environment");
+const {
+  isCommercialBetaMode,
+  isProductionRuntime,
+  isPreviewRuntime,
+  isLocalRuntime,
+} = require("../commercial/environment");
 
 /** Supabase Auth transactional email is never used — all mail goes through app providers. */
 function isSupabaseEmailDisabled() {
@@ -22,7 +27,14 @@ function resolveProviderKind() {
   if (String(process.env.EMAIL_PROVIDER || "").toLowerCase() === "mock") return "mock";
   if (sendingDisabled()) return "disabled";
   if (isLocalRuntime() || isPreviewRuntime()) return "mock";
-  return emailProviderKind();
+  if (isProductionRuntime()) {
+    const provider = String(process.env.EMAIL_PROVIDER || "smtp").toLowerCase();
+    const smtpWanted = ["smtp", "ionos", "resend", "postmark"].includes(provider);
+    if (smtpWanted && smtpConfigured()) return "smtp";
+    if (isCommercialBetaMode()) return "mock-beta";
+    return "fail-closed";
+  }
+  return "mock";
 }
 
 function shouldAutoConfirmEmail() {

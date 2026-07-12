@@ -1,6 +1,5 @@
 const EmailProvider = require("./EmailProvider");
 const { sanitizeLogMessage } = require("./redact");
-const { resolveProviderKind, emailConfigurationError } = require("./policy");
 
 function smtpConfigured() {
   return Boolean(
@@ -38,6 +37,7 @@ class SmtpEmailProvider extends EmailProvider {
   }
 
   async send({ to, subject, html, text }) {
+    const { resolveProviderKind, emailConfigurationError } = require("./policy");
     const kind = resolveProviderKind();
     const configError = emailConfigurationError();
 

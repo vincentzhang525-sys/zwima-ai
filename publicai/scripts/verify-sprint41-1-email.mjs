@@ -55,7 +55,7 @@ async function main() {
   else fail("Mass sending disabled");
 
   const kind = status.json?.providerKind;
-  if (status.ok && (kind === "smtp" || kind === "mock" || kind === "mock-fallback")) {
+  if (status.ok && (kind === "smtp" || kind === "mock" || kind === "mock-fallback" || kind === "mock-beta")) {
     pass("Email provider policy", `${status.json.emailMode} (${kind})`);
   } else {
     fail("Email provider policy", kind || "unknown");

@@ -1,7 +1,7 @@
 const { getAuthedClient, getAdminClient, parseBody, json, handleOptions, withCors, writeAuditLog, getClientIp } = require("../lib/supabase");
-const { resolvePaymentProvider } = require("../lib/payments");
+const { resolvePaymentProvider, assertPaymentOperational } = require("../lib/payments");
 const commerce = require("../lib/commerce");
-const { sendTransactional } = require("../lib/email");
+const fulfillment = require("../lib/payments/fulfillment");
 const { ensureProgress } = require("../onboarding/index.js");
 
 const PLAN_ORDER = commerce.PLAN_ORDER;
@@ -29,53 +29,45 @@ async function loadPackages(client) {
   return data || [];
 }
 
-async function fulfillOrder(client, { userId, order, checkout, credits, description }) {
-  const { data: wallet } = await client.from("credit_wallets").select("*").eq("user_id", userId).maybeSingle();
-  const current = Number(wallet?.balance) || 0;
-  const next = current + credits;
+async function completeCheckout(client, { user, order, checkout, credits, description }) {
+  if (checkout.status === "pending") {
+    await client
+      .from("orders")
+      .update({ status: "pending", provider_ref: checkout.sessionId || checkout.checkoutId || null })
+      .eq("id", order.id);
+    await client.from("commerce_transactions").insert({
+      user_id: user.id,
+      order_id: order.id,
+      provider: checkout.provider,
+      provider_ref: checkout.sessionId || checkout.checkoutId,
+      amount: order.total,
+      currency: order.currency,
+      status: "pending",
+    });
+    return {
+      pending: true,
+      checkoutUrl: checkout.checkoutUrl,
+      orderNumber: order.order_number,
+      sessionId: checkout.sessionId || checkout.checkoutId,
+    };
+  }
 
-  await client.from("credit_wallets").upsert({ user_id: userId, balance: next, currency: "EUR" });
-  await client.from("credit_transactions").insert({
-    user_id: userId,
-    type: "topup",
-    amount: credits,
+  const admin = getAdminClient();
+  const result = await fulfillment.fulfillPaidOrder(admin, {
+    order,
+    user,
+    checkout,
+    credits,
     description,
-    txn_date: new Date().toISOString().slice(0, 10),
-    status: "completed",
+    idempotencyKey: `order:${order.id}:checkout`,
+    sendEmails: true,
   });
-
-  await client.from("commerce_transactions").insert({
-    user_id: userId,
-    order_id: order.id,
-    provider: checkout.provider,
-    provider_ref: checkout.checkoutId,
-    amount: order.total,
-    currency: order.currency,
-    status: checkout.status === "pending" ? "pending" : "completed",
-  });
-
-  await client.from("payments").insert({
-    user_id: userId,
-    amount: order.total,
-    currency: order.currency,
-    status: checkout.status === "pending" ? "pending" : "completed",
-    provider: checkout.provider,
-    invoice_url: checkout.invoiceUrl,
-  });
-
-  const invoice = commerce.buildInvoiceRecord({
-    userId,
-    orderId: order.id,
-    currency: order.currency,
-    subtotal: order.subtotal,
-    tax: order.tax,
-    total: order.total,
-  });
-  const { data: inv } = await client.from("invoices").insert(invoice).select().single();
-
-  await client.from("orders").update({ status: checkout.status === "pending" ? "pending" : "completed" }).eq("id", order.id);
-
-  return { remainingCredits: next, invoice: inv };
+  return {
+    pending: false,
+    remainingCredits: result.remainingCredits,
+    invoice: result.invoice,
+    creditsAdded: credits,
+  };
 }
 
 module.exports = async function handler(req, res) {
@@ -293,6 +285,7 @@ module.exports = async function handler(req, res) {
       }
 
       if (action === "purchase_package") {
+        assertPaymentOperational(provider);
         const packageId = body.packageId;
         const { data: pkg } = await client.from("credit_packages").select("*").eq("id", packageId).eq("status", "active").maybeSingle();
         if (!pkg) return json(res, 404, { error: "Credit package not found." });
@@ -323,6 +316,7 @@ module.exports = async function handler(req, res) {
             status: "pending",
             provider,
             coupon_id: couponId,
+            metadata: { credits: Number(pkg.credits) },
           })
           .select()
           .single();
@@ -332,10 +326,12 @@ module.exports = async function handler(req, res) {
           plan: pkg.slug,
           amountEur: total,
           orderId: order.id,
+          email: user.email,
+          credits: Number(pkg.credits),
         });
 
-        const result = await fulfillOrder(client, {
-          userId: user.id,
+        const result = await completeCheckout(client, {
+          user,
           order,
           checkout,
           credits: Number(pkg.credits),
@@ -349,19 +345,12 @@ module.exports = async function handler(req, res) {
           await admin.from("coupons").update({ usage_count: (Number(coupon?.usage_count) || 0) + 1 }).eq("id", couponId);
         }
 
-        try {
-          await sendTransactional("creditPurchase", user.email, {
-            credits: Number(pkg.credits),
-            amount: total,
-          });
-        } catch (mailErr) {
-          console.error("[billing] credit purchase email", mailErr);
-        }
-
         return json(res, 200, {
           ok: true,
           orderNumber,
-          creditsAdded: Number(pkg.credits),
+          pending: Boolean(result.pending),
+          checkoutUrl: result.checkoutUrl || null,
+          creditsAdded: result.pending ? 0 : Number(pkg.credits),
           remainingCredits: result.remainingCredits,
           invoiceNumber: result.invoice?.invoice_number,
         });
@@ -392,6 +381,7 @@ module.exports = async function handler(req, res) {
       }
 
       // upgrade / downgrade subscription
+      assertPaymentOperational(provider);
       const plan = currentPlan(body.plan);
       const billingCycle = String(body.billingCycle || "monthly").toLowerCase();
       const { data: planRow } = await client.from("subscription_plans").select("*").eq("id", plan).maybeSingle();
@@ -421,6 +411,7 @@ module.exports = async function handler(req, res) {
         couponId = coupon?.id;
       }
       const { subtotal: s, tax, total } = commerce.calcTotal(subtotal);
+      const credits = Number(planRow.monthly_credits);
 
       const orderNumber = commerce.generateOrderNumber();
       const { data: order } = await client
@@ -437,6 +428,7 @@ module.exports = async function handler(req, res) {
           status: "pending",
           provider,
           coupon_id: couponId,
+          metadata: { credits },
         })
         .select()
         .single();
@@ -446,38 +438,17 @@ module.exports = async function handler(req, res) {
         plan,
         amountEur: total,
         orderId: order.id,
+        email: user.email,
+        credits,
       });
 
-      const credits = Number(planRow.monthly_credits);
-      const result = await fulfillOrder(client, {
-        userId: user.id,
+      const result = await completeCheckout(client, {
+        user,
         order,
         checkout,
         credits,
         description: `Subscription ${plan.toUpperCase()} (${billingCycle}, ${checkout.provider})`,
       });
-
-      await client.from("subscriptions").insert({
-        user_id: user.id,
-        plan,
-        status: "active",
-        credits,
-        renew_at: new Date(Date.now() + (billingCycle === "annual" ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString(),
-        stripe_customer_id: checkout.customerId,
-        stripe_subscription_id: checkout.subscriptionId,
-      });
-
-      const { data: methodsCheck } = await client.from("payment_methods").select("id").eq("user_id", user.id).limit(1);
-      if (!(methodsCheck || []).length) {
-        await client.from("payment_methods").insert({
-          user_id: user.id,
-          provider: checkout.provider,
-          method_type: checkout.provider === "sepa" ? "sepa" : "card",
-          label: `${checkout.provider} (managed)`,
-          is_default: true,
-          status: "active",
-        });
-      }
 
       if (couponId) {
         await client.from("coupon_redemptions").insert({ coupon_id: couponId, user_id: user.id, order_id: order.id });
@@ -494,30 +465,24 @@ module.exports = async function handler(req, res) {
         notificationCategory: "billing",
       });
 
-      try {
-        await sendTransactional("billingReceipt", user.email, {
-          plan,
-          amount: total,
-          orderNumber,
-        });
-      } catch (mailErr) {
-        console.error("[billing] billing notice email", mailErr);
-      }
-
-      try {
-        const admin = getAdminClient();
-        await ensureProgress(admin, user.id, { plan_upgraded: true });
-      } catch (onbErr) {
-        console.error("[billing] onboarding", onbErr);
+      if (!result.pending) {
+        try {
+          const admin = getAdminClient();
+          await ensureProgress(admin, user.id, { plan_upgraded: true });
+        } catch (onbErr) {
+          console.error("[billing] onboarding", onbErr);
+        }
       }
 
       return json(res, 200, {
         ok: true,
         plan,
         provider: checkout.provider,
-        creditsAdded: credits,
+        pending: Boolean(result.pending),
+        checkoutUrl: result.checkoutUrl || null,
+        creditsAdded: result.pending ? 0 : credits,
         remainingCredits: result.remainingCredits,
-        renewAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        renewAt: result.pending ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         invoiceNumber: result.invoice?.invoice_number,
         orderNumber,
       });

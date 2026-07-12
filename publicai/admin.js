@@ -277,6 +277,76 @@ function renderSuccess(data) {
   }
 }
 
+function renderCommercialHealth(payload) {
+  if (!payload) return;
+  setText("commHealthEmailMode", payload.email?.modeLabel || "—");
+  setText("commHealthSmtp", payload.email?.connection?.ok ? "OK" : payload.email?.connection?.error || "Not configured");
+  setText("commHealthStripeMode", payload.stripe?.mode || "—");
+  setText("commHealthLedger", String(payload.reconciliation?.mismatches ?? "—"));
+  setText("commHealthPending", String(payload.payments?.pendingOrders ?? "—"));
+  const blockers = payload.blockers || [];
+  setText("commHealthBlockers", String(blockers.length));
+  const list = document.getElementById("commHealthBlockerList");
+  if (list) {
+    list.innerHTML = blockers.length
+      ? blockers.map((b) => `<p><span class="status-pill ${b.severity === "critical" ? "failed" : "planned"}">${esc(b.severity)}</span> ${esc(b.message)}</p>`).join("")
+      : '<p class="muted">No commercial launch blockers detected.</p>';
+  }
+  const legal = document.getElementById("commHealthLegalMissing");
+  if (legal) {
+    legal.innerHTML = (payload.legal?.missingFields || [])
+      .map((f) => `<li>${esc(f.label)} — founder input required</li>`)
+      .join("") || '<li class="muted">No tracked missing legal fields.</li>';
+  }
+}
+
+function renderCommercial(data) {
+  if (!data) return;
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = v;
+  };
+  set("commProviderCount", data.providers?.count ?? "—");
+  set("commModelCount", data.models?.count ?? "—");
+  set("commPricingCount", (data.pricingRules || []).length);
+  set("commAuditCount", data.metrics?.requestCount ?? 0);
+  set("commRevenue", data.metrics ? `€${data.metrics.totalRevenue}` : "—");
+  set("commCost", data.metrics ? `€${data.metrics.totalProviderCost}` : "—");
+  set("commProfit", data.metrics ? `€${data.metrics.totalProfit}` : "—");
+  set("commMargin", data.metrics ? `${data.metrics.avgMarginPct}%` : "—");
+
+  const pb = document.getElementById("commProvidersBody");
+  if (pb) {
+    pb.innerHTML = (data.providers?.items || [])
+      .map(
+        (p) => `<tr><td>${esc(p.name)}</td><td>${esc(p.providerType || "llm")}</td><td>${esc(p.status)}</td>
+        <td>${esc(p.region)}</td><td>${esc(p.healthStatus)}</td><td>${p.avgLatencyMs || 0}ms</td><td>${p.profitMarginPct || 0}%</td></tr>`
+      )
+      .join("") || '<tr><td colspan="7" class="muted">No providers (DB migration pending).</td></tr>';
+  }
+
+  const mb = document.getElementById("commModelsBody");
+  if (mb) {
+    mb.innerHTML = (data.models?.items || [])
+      .slice(0, 20)
+      .map(
+        (m) => `<tr><td>${esc(m.name)}</td><td>${esc(m.providerId)}</td><td>$${m.inputPricePer1m}</td><td>$${m.outputPricePer1m}</td>
+        <td>${m.euAvailable ? "Yes" : "No"}</td><td>${m.gdprCompatible ? "Yes" : "No"}</td><td>${esc(m.availability)}</td></tr>`
+      )
+      .join("") || '<tr><td colspan="7" class="muted">No models.</td></tr>';
+  }
+
+  const ab = document.getElementById("commAuditsBody");
+  if (ab) {
+    ab.innerHTML = (data.recentAudits || [])
+      .map(
+        (a) => `<tr><td class="muted">${esc((a.traceId || "").slice(0, 12))}…</td><td>${esc(a.providerId)}</td><td>${esc(a.modelId)}</td>
+        <td>${a.totalTokens}</td><td>€${a.providerCost}</td><td>€${a.customerCharge}</td><td>€${a.grossMargin}</td><td>${a.latencyMs}ms</td></tr>`
+      )
+      .join("") || '<tr><td colspan="8" class="muted">No API audits yet.</td></tr>';
+  }
+}
+
 async function loadAll() {
   const userParams = {
     page: state.usersPage,
@@ -286,7 +356,7 @@ async function loadAll() {
     status: document.getElementById("userStatusFilter")?.value || "",
     sort: document.getElementById("userSort")?.value || "created_at_desc",
   };
-  const [exec, users, providers, revenue, health, security, logs, audit, billing, commerce, enterprise, apikeys, success] = await Promise.all([
+  const [exec, users, providers, revenue, health, security, logs, audit, billing, commerce, enterprise, apikeys, success, commercial, commercialHealth] = await Promise.all([
     admin().getExecutive(),
     admin().getUsers(userParams.q ? userParams.q : "").then(async () => {
       const qp = new URLSearchParams(userParams);
@@ -307,6 +377,8 @@ async function loadAll() {
     admin().getEnterprise(),
     admin().getApiKeys(),
     admin().getSuccess(),
+    admin().getCommercial("overview").catch(() => null),
+    admin().getCommercialHealth().catch(() => null),
   ]);
   renderExecutive(exec);
   renderUsers(users);
@@ -321,6 +393,8 @@ async function loadAll() {
   renderEnterprise(enterprise);
   renderApiKeys(apikeys);
   renderSuccess(success);
+  renderCommercialHealth(commercialHealth);
+  renderCommercial(commercial);
 }
 
 function exportLogsCsv() {

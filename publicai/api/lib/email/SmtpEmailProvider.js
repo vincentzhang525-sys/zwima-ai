@@ -1,4 +1,6 @@
 const EmailProvider = require("./EmailProvider");
+const { sanitizeLogMessage } = require("./redact");
+const { resolveProviderKind, emailConfigurationError } = require("./policy");
 
 function smtpConfigured() {
   return Boolean(
@@ -36,9 +38,23 @@ class SmtpEmailProvider extends EmailProvider {
   }
 
   async send({ to, subject, html, text }) {
+    const kind = resolveProviderKind();
+    const configError = emailConfigurationError();
+
+    if (kind === "fail-closed") {
+      const err = new Error(configError || "Email delivery blocked — SMTP not configured for production.");
+      err.code = "EMAIL_FAIL_CLOSED";
+      throw err;
+    }
+
     if (!this.isConfigured()) {
-      const MockEmailProvider = require("./MockEmailProvider");
-      return new MockEmailProvider().send({ to, subject, html, text });
+      if (kind === "mock" || kind === "mock-beta") {
+        const MockEmailProvider = require("./MockEmailProvider");
+        return new MockEmailProvider().send({ to, subject, html, text });
+      }
+      const err = new Error(configError || "SMTP not configured.");
+      err.code = "EMAIL_NOT_CONFIGURED";
+      throw err;
     }
 
     try {
@@ -64,13 +80,20 @@ class SmtpEmailProvider extends EmailProvider {
         provider: this.name,
         messageId: info.messageId || `smtp_${Date.now()}`,
         accepted: info.accepted,
+        rejected: info.rejected,
+        response: info.response,
       };
     } catch (err) {
-      console.error("[email:smtp] send failed, falling back to mock:", err.message);
+      console.error("[email:smtp] send failed:", sanitizeLogMessage(err.message));
+      if (kind === "smtp") {
+        const sendErr = new Error(`SMTP delivery failed: ${sanitizeLogMessage(err.message)}`);
+        sendErr.code = "SMTP_DELIVERY_FAILED";
+        throw sendErr;
+      }
       const MockEmailProvider = require("./MockEmailProvider");
       const mock = new MockEmailProvider();
       const result = await mock.send({ to, subject, html, text });
-      return { ...result, fallback: true, smtpError: err.message };
+      return { ...result, fallback: true, smtpError: sanitizeLogMessage(err.message) };
     }
   }
 }

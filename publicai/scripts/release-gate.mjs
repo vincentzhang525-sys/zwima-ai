@@ -151,6 +151,8 @@ async function main() {
 
   gate("Production deployment", landing.ok && gateway.ok, baseUrl);
 
+  await runVerify("verify-phase3a-commercial.mjs", "Phase 3A commercial activation");
+
   const failed = gates.filter((g) => !g.ok).length;
   console.log(`\n========================================`);
   console.log(`${gates.length - failed}/${gates.length} gates passed`);

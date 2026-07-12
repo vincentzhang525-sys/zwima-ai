@@ -1,4 +1,5 @@
 const { smtpConfigured } = require("./SmtpEmailProvider");
+const { isCommercialBetaMode, isProductionRuntime, isPreviewRuntime, isLocalRuntime, emailProviderKind } = require("../commercial/environment");
 
 /** Supabase Auth transactional email is never used — all mail goes through app providers. */
 function isSupabaseEmailDisabled() {
@@ -6,52 +7,48 @@ function isSupabaseEmailDisabled() {
 }
 
 function isDevMode() {
-  return process.env.NODE_ENV !== "production" || String(process.env.VERCEL_ENV || "") === "development";
+  return isLocalRuntime() || isPreviewRuntime();
 }
 
 function isPreviewMode() {
-  const env = String(process.env.VERCEL_ENV || "");
-  return env === "preview" || env === "development";
+  return isPreviewRuntime();
 }
 
 function sendingDisabled() {
   return String(process.env.EMAIL_DISABLE_SEND || "").toLowerCase() === "true";
 }
 
-/** Production runtime on Vercel (not preview/dev). */
-function isProductionRuntime() {
-  return process.env.NODE_ENV === "production" && String(process.env.VERCEL_ENV || "") === "production";
-}
-
-/**
- * Development / preview: mock only.
- * Production: SMTP when configured; otherwise mock fallback.
- */
 function resolveProviderKind() {
-  if (sendingDisabled() || isDevMode() || isPreviewMode()) {
-    return "mock";
-  }
-  if (isProductionRuntime()) {
-    const provider = String(process.env.EMAIL_PROVIDER || "smtp").toLowerCase();
-    const smtpProvider =
-      provider === "smtp" || provider === "ionos" || provider === "resend" || provider === "postmark";
-    if (smtpProvider && smtpConfigured()) {
-      return "smtp";
-    }
-    return "mock-fallback";
-  }
-  return "mock";
+  if (String(process.env.EMAIL_PROVIDER || "").toLowerCase() === "mock") return "mock";
+  if (sendingDisabled()) return "disabled";
+  if (isLocalRuntime() || isPreviewRuntime()) return "mock";
+  return emailProviderKind();
 }
 
 function shouldAutoConfirmEmail() {
-  return resolveProviderKind() !== "smtp";
+  const kind = resolveProviderKind();
+  return kind !== "smtp";
 }
 
 function getEmailModeLabel() {
   const kind = resolveProviderKind();
   if (kind === "smtp") return "production-smtp";
-  if (kind === "mock-fallback") return "production-mock-fallback";
-  return "development-mock";
+  if (kind === "fail-closed") return "production-fail-closed";
+  if (kind === "mock-beta") return "production-beta-mock";
+  if (kind === "disabled") return "disabled";
+  if (kind === "mock") return isProductionRuntime() ? "mock" : "development-mock";
+  return kind;
+}
+
+function emailConfigurationError() {
+  const kind = resolveProviderKind();
+  if (kind === "fail-closed") {
+    return "Production email misconfigured: set EMAIL_PROVIDER=smtp and all SMTP_* variables, or enable COMMERCIAL_BETA_MODE for controlled beta.";
+  }
+  if (kind === "smtp" && !smtpConfigured()) {
+    return "SMTP provider selected but SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM are required.";
+  }
+  return null;
 }
 
 const SUPPORTED_SMTP_PROVIDERS = ["ionos", "smtp", "resend", "postmark"];
@@ -65,5 +62,7 @@ module.exports = {
   resolveProviderKind,
   shouldAutoConfirmEmail,
   getEmailModeLabel,
+  emailConfigurationError,
+  isCommercialBetaMode,
   SUPPORTED_SMTP_PROVIDERS,
 };

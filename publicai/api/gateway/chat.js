@@ -1,5 +1,6 @@
 const { getAdminClient, hashApiKey, enforceRateLimit, getClientIp, writeAuditLog } = require("../lib/supabase");
 const { ensureProgress } = require("../onboarding/index.js");
+const ledger = require("../lib/credits/ledger");
 const modelRegistry = require("../../config/modelRegistry.js");
 const universalRouter = require("../../gateway/universalRouter.js");
 
@@ -73,33 +74,50 @@ module.exports = async function handler(req, res) {
     const usage = result.usage;
     const creditsToDeduct = Math.max(1, usage.totalTokens || usage.inputTokens + usage.outputTokens);
     const cost = universalRouter.estimatedCost(usage.inputTokens, usage.outputTokens, result.model.id);
+    const idempotencyKey = body.idempotencyKey
+      ? `gateway:${String(body.idempotencyKey).slice(0, 120)}`
+      : `gateway:${keyRow.id}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
 
-    const { data: walletRow, error: walletError } = await admin
-      .from("credit_wallets")
-      .select("*")
-      .eq("user_id", keyRow.user_id)
-      .maybeSingle();
-    if (walletError) throw walletError;
-    const currentBalance = Number(walletRow?.balance) || 0;
-    if (currentBalance < creditsToDeduct) {
-      return json(res, 402, { error: "Insufficient credits." });
+    let deductResult;
+    try {
+      deductResult = await ledger.deductAtomic(admin, {
+        userId: keyRow.user_id,
+        amount: creditsToDeduct,
+        description: `Gateway ${result.model.id} (${usage.totalTokens} tokens)`,
+        referenceType: "gateway",
+        referenceId: result.model.id,
+        idempotencyKey,
+      });
+    } catch (deductErr) {
+      if (deductErr.status === 402) return json(res, 402, { error: deductErr.message });
+      const rpcMissing = String(deductErr.message || "").includes("deduct_credits_atomic");
+      if (!rpcMissing) throw deductErr;
+
+      const { data: walletRow, error: walletError } = await admin
+        .from("credit_wallets")
+        .select("*")
+        .eq("user_id", keyRow.user_id)
+        .maybeSingle();
+      if (walletError) throw walletError;
+      const currentBalance = Number(walletRow?.balance) || 0;
+      if (currentBalance < creditsToDeduct) return json(res, 402, { error: "Insufficient credits." });
+      const remainingLegacy = currentBalance - creditsToDeduct;
+      await admin.from("credit_wallets").upsert({ user_id: keyRow.user_id, balance: remainingLegacy, currency: "EUR" });
+      const { data: legacyTxn } = await admin
+        .from("credit_transactions")
+        .insert({
+          user_id: keyRow.user_id,
+          type: "usage",
+          amount: -creditsToDeduct,
+          description: `Gateway ${result.model.id} (${usage.totalTokens} tokens)`,
+          txn_date: new Date().toISOString().slice(0, 10),
+          status: "completed",
+        })
+        .select("id")
+        .single();
+      deductResult = { balance: remainingLegacy, txnId: legacyTxn?.id, alreadyApplied: false };
     }
-    const remaining = currentBalance - creditsToDeduct;
-
-    const { error: walletUpdateError } = await admin
-      .from("credit_wallets")
-      .upsert({ user_id: keyRow.user_id, balance: remaining, currency: "EUR" });
-    if (walletUpdateError) throw walletUpdateError;
-
-    const { error: txError } = await admin.from("credit_transactions").insert({
-      user_id: keyRow.user_id,
-      type: "usage",
-      amount: -creditsToDeduct,
-      description: `Gateway ${result.model.id} (${usage.totalTokens} tokens)`,
-      txn_date: new Date().toISOString().slice(0, 10),
-      status: "completed",
-    });
-    if (txError) throw txError;
+    const remaining = deductResult.balance;
 
     const { error: usageError } = await admin.from("usage_records").insert({
       user_id: keyRow.user_id,
@@ -114,6 +132,7 @@ module.exports = async function handler(req, res) {
       request_time_ms: elapsedMs,
       remaining_credits: remaining,
       status: "Success",
+      credit_transaction_id: deductResult.txnId || null,
     });
     if (usageError) throw usageError;
 

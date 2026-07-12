@@ -9,6 +9,7 @@ const {
 } = require("../lib/supabase");
 const { requireAdmin } = require("../admin/_common");
 const support = require("../lib/support");
+const { sendTransactional } = require("../lib/email");
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
@@ -103,6 +104,22 @@ module.exports = async function handler(req, res) {
               ? "Ticket closed"
               : "Ticket updated";
         await support.notifyUser(admin, data.user_id, "support", notifyTitle, `${data.ticket_number} — ${data.title}`);
+
+        if (before?.status !== data.status && data.record_type === "ticket") {
+          const { data: profile } = await admin.from("profiles").select("email").eq("id", data.user_id).maybeSingle();
+          if (profile?.email) {
+            try {
+              await sendTransactional("supportTicketUpdate", profile.email, {
+                ticketNumber: data.ticket_number,
+                title: data.title,
+                status: data.status,
+                message: body.adminNotes || "",
+              });
+            } catch (mailErr) {
+              console.error("[admin/success] ticket email", mailErr.message);
+            }
+          }
+        }
 
         await writeAuditLog({
           userId: user.id,

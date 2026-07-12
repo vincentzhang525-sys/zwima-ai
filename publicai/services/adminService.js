@@ -90,5 +90,18 @@
     resolveIncident(incidentId) {
       return query("/api/admin/success", "POST", { action: "resolve_incident", incidentId });
     },
+    getCommercialHealth() {
+      return query("/api/admin/commercial-health", "GET");
+    },
+    getCommercial(section) {
+      const q = section ? `?section=${encodeURIComponent(section)}` : "";
+      return query(`/api/admin/commercial${q}`, "GET");
+    },
+    simulateCommercialPricing(body) {
+      return query("/api/admin/commercial", "POST", { action: "simulate_pricing", ...body });
+    },
+    simulateCommercialRouting(body) {
+      return query("/api/admin/commercial", "POST", { action: "simulate_routing", ...body });
+    },
   };
 })();

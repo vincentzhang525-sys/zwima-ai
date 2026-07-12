@@ -8,9 +8,13 @@ const {
   isSupabaseEmailDisabled,
   resolveProviderKind,
   getEmailModeLabel,
+  emailConfigurationError,
   SUPPORTED_SMTP_PROVIDERS,
   getEmailLogs,
+  verifySmtpConnection,
 } = require("../lib/email");
+const { redactSmtpConfig } = require("../lib/email/redact");
+const { getRuntimeProfile } = require("../lib/commercial/environment");
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
@@ -19,6 +23,11 @@ module.exports = async function handler(req, res) {
 
   const provider = resolveEmailProvider();
   const kind = resolveProviderKind();
+  const runtime = getRuntimeProfile();
+  const SmtpEmailProvider = require("../lib/email/SmtpEmailProvider");
+  const smtpProvider = new SmtpEmailProvider();
+  const connection = await verifySmtpConnection();
+
   const templates = [
     "welcome",
     "verifyEmail",
@@ -27,6 +36,7 @@ module.exports = async function handler(req, res) {
     "billingReceipt",
     "creditPurchase",
     "apiKeyCreated",
+    "supportTicketUpdate",
     "contactMessage",
   ];
   return json(res, 200, {
@@ -38,14 +48,13 @@ module.exports = async function handler(req, res) {
     devMode: isDevMode(),
     sendingDisabled: sendingDisabled(),
     smtpConfigured: smtpConfigured(),
-    smtpFallback: kind === "mock" || kind === "mock-fallback",
+    smtpFallback: kind === "mock" || kind === "mock-beta",
+    failClosed: kind === "fail-closed",
+    configurationError: emailConfigurationError(),
+    commercialBetaMode: runtime.commercialBetaMode,
+    smtpConnection: { ok: connection.ok, error: connection.error || null },
     supportedSmtpProviders: SUPPORTED_SMTP_PROVIDERS,
-    smtp: {
-      host: process.env.SMTP_HOST || "smtp.ionos.com",
-      port: Number(process.env.SMTP_PORT || 587),
-      from: process.env.SMTP_FROM || null,
-      userConfigured: Boolean(process.env.SMTP_USER),
-    },
+    smtp: redactSmtpConfig(smtpProvider.getConfig()),
     recentLogs: await getEmailLogs(10),
     templates: templates.map((name) => {
       const sample = renderTemplate(name, {
@@ -56,9 +65,12 @@ module.exports = async function handler(req, res) {
         amount: 29,
         credits: 1000,
         orderNumber: "ZW-0001",
+        ticketNumber: "ZW-2026-000001",
+        title: "Sample ticket",
+        status: "open",
       });
       return { name, subject: sample.subject };
     }),
-    readyFor: ["IONOS SMTP", "Resend", "Postmark"],
+    readyFor: ["IONOS SMTP"],
   });
 };

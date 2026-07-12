@@ -39,6 +39,15 @@ const templates = {
     const text = `From: ${name}\nCompany: ${company}\nEmail: ${email}\nUse case: ${usecase || "—"}\n\n${message}`;
     return { subject, text, html: `<pre>${text}</pre>` };
   },
+  supportTicketUpdate({ ticketNumber, title, status, message }) {
+    const subject = `Support ticket update — ${ticketNumber}`;
+    const text = `Your support ticket ${ticketNumber} (${title}) was updated to status: ${status}.${message ? `\n\n${message}` : ""}`;
+    return {
+      subject,
+      text,
+      html: `<p>${text.replace(/\n/g, "<br>")}</p><p><a href="https://zwima-group.info/support.html">View tickets</a></p>`,
+    };
+  },
 };
 
 function renderTemplate(name, data) {

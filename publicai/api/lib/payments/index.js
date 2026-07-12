@@ -3,6 +3,8 @@ const PayPalPaymentProvider = require("./PayPalPaymentProvider");
 const SEPAPaymentProvider = require("./SEPAPaymentProvider");
 const ManualInvoicePaymentProvider = require("./ManualInvoicePaymentProvider");
 const GenericMockPaymentProvider = require("./GenericMockPaymentProvider");
+const { getStripeConfig } = require("./stripeConfig");
+const { paymentMustFailClosed, allowsMockPaymentFallback } = require("../commercial/environment");
 
 const PROVIDERS = {
   stripe: StripePaymentProvider,
@@ -21,16 +23,35 @@ function resolvePaymentProvider(providerId = "stripe") {
 }
 
 function listProviders() {
+  const stripe = getStripeConfig();
   return [
-    { id: "stripe", name: "Stripe", configured: Boolean(process.env.STRIPE_SECRET_KEY) },
+    {
+      id: "stripe",
+      name: "Stripe",
+      configured: stripe.keysPresent && !stripe.failClosed,
+      mode: stripe.mode,
+      webhookConfigured: stripe.webhookConfigured,
+      mockFallback: allowsMockPaymentFallback(),
+    },
     { id: "paypal", name: "PayPal", configured: Boolean(process.env.PAYPAL_CLIENT_ID) },
     { id: "sepa", name: "SEPA", configured: Boolean(process.env.SEPA_CREDITOR_ID || process.env.STRIPE_SECRET_KEY) },
     { id: "manual_invoice", name: "Manual Invoice", configured: true },
   ];
 }
 
+function assertPaymentOperational(providerId = "stripe") {
+  const { allowsMockPaymentFallback, paymentMustFailClosed } = require("../commercial/environment");
+  if (providerId === "stripe" && paymentMustFailClosed() && !allowsMockPaymentFallback()) {
+    const err = new Error("Stripe payment configuration incomplete for current STRIPE_MODE.");
+    err.code = "PAYMENT_FAIL_CLOSED";
+    throw err;
+  }
+}
+
 module.exports = {
   resolvePaymentProvider,
   listProviders,
+  assertPaymentOperational,
   PROVIDERS,
+  getStripeConfig: require("./stripeConfig").getStripeConfig,
 };

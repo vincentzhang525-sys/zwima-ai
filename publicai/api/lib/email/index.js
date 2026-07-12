@@ -3,6 +3,7 @@ const SmtpEmailProvider = require("./SmtpEmailProvider");
 const { smtpConfigured } = SmtpEmailProvider;
 const { renderTemplate } = require("./templates");
 const { appendEmailLog } = require("./emailLogs");
+const { sanitizeLogMessage } = require("./redact");
 const {
   isSupabaseEmailDisabled,
   isDevMode,
@@ -10,16 +11,14 @@ const {
   resolveProviderKind,
   shouldAutoConfirmEmail,
   getEmailModeLabel,
+  emailConfigurationError,
   SUPPORTED_SMTP_PROVIDERS,
 } = require("./policy");
 
-let massSendingEnabled = false;
-
 function resolveEmailProvider() {
   const kind = resolveProviderKind();
-  if (kind === "smtp") {
-    return new SmtpEmailProvider();
-  }
+  if (kind === "smtp") return new SmtpEmailProvider();
+  if (kind === "disabled") return new MockEmailProvider();
   return new MockEmailProvider();
 }
 
@@ -41,23 +40,55 @@ async function sendEmail({ template, to, data }) {
     return { ok: true, provider: "mock", messageId: row.id, skipped: true };
   }
 
-  const result = await provider.send({ to, subject: rendered.subject, html: rendered.html, text: rendered.text });
+  const configError = emailConfigurationError();
+  if (configError && kind === "fail-closed") {
+    await appendEmailLog({
+      template,
+      to,
+      subject: rendered.subject,
+      provider: "fail-closed",
+      status: "failed",
+      reason: configError,
+    });
+    const err = new Error(configError);
+    err.code = "EMAIL_FAIL_CLOSED";
+    throw err;
+  }
+
+  let result;
+  try {
+    result = await provider.send({ to, subject: rendered.subject, html: rendered.html, text: rendered.text });
+  } catch (err) {
+    await appendEmailLog({
+      template,
+      to,
+      subject: rendered.subject,
+      provider: provider.name,
+      status: "failed",
+      reason: sanitizeLogMessage(err.message),
+      bounce: true,
+    });
+    throw err;
+  }
+
+  const status = result.ok ? (result.fallback ? "fallback" : "sent") : "failed";
   await appendEmailLog({
     template,
     to,
     subject: rendered.subject,
     provider: result.fallback ? "mock" : result.provider || provider.name,
-    status: result.ok ? (result.fallback ? "fallback" : "sent") : "failed",
+    status,
     messageId: result.messageId,
-    detail: result.smtpError ? `smtp_fallback:${result.smtpError}` : kind === "mock-fallback" ? "smtp_not_configured" : undefined,
+    reason:
+      result.smtpError ||
+      (kind === "mock-beta" ? "commercial_beta_mock" : undefined) ||
+      (result.rejected?.length ? `rejected:${result.rejected.join(",")}` : undefined),
+    bounce: status === "failed",
   });
   return result;
 }
 
 async function sendTransactional(template, to, data) {
-  if (massSendingEnabled === false && Array.isArray(to)) {
-    throw new Error("Mass email sending is disabled.");
-  }
   if (Array.isArray(to)) {
     const results = [];
     for (const recipient of to.slice(0, 1)) {
@@ -68,7 +99,6 @@ async function sendTransactional(template, to, data) {
   return sendEmail({ template, to, data });
 }
 
-/** @deprecated Use shouldAutoConfirmEmail */
 function shouldAutoVerifyEmail() {
   return shouldAutoConfirmEmail();
 }
@@ -86,6 +116,8 @@ module.exports = {
   isSupabaseEmailDisabled,
   resolveProviderKind,
   getEmailModeLabel,
+  emailConfigurationError,
   SUPPORTED_SMTP_PROVIDERS,
   getEmailLogs: require("./emailLogs").getEmailLogs,
+  verifySmtpConnection: require("./verify").verifySmtpConnection,
 };

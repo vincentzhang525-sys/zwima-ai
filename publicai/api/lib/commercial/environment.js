@@ -27,14 +27,14 @@ function isLocalRuntime() {
 }
 
 function isCommercialBetaMode() {
-  return envFlag("COMMERCIAL_BETA_MODE", true);
+  return envFlag("COMMERCIAL_BETA_MODE", false);
 }
 
 function getStripeMode() {
-  const mode = String(process.env.STRIPE_MODE || "mock").toLowerCase();
+  const mode = String(process.env.STRIPE_MODE || "test").toLowerCase();
   if (mode === "live" || mode === "production") return "live";
-  if (mode === "test") return "test";
-  return "mock";
+  if (mode === "mock") return isLocalRuntime() ? "mock" : "test";
+  return "test";
 }
 
 function stripeKeysPresent() {
@@ -80,7 +80,7 @@ function paymentMustFailClosed() {
 }
 
 function allowsMockPaymentFallback() {
-  return getStripeMode() === "mock" || (isCommercialBetaMode() && isProductionRuntime() && !stripeKeysPresent());
+  return isLocalRuntime() && getStripeMode() === "mock";
 }
 
 function allowsMockEmailFallback() {

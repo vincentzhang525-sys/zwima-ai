@@ -180,14 +180,19 @@ async function main() {
   if (company.getCompanyConfig().legalName === "Zwima Technologie GmbH") pass("Company config legal name");
   else fail("Company config legal name");
 
-  await withEnvAsync({ STRIPE_MODE: "mock" }, async () => {
+  await withEnvAsync({ STRIPE_MODE: "mock", VERCEL: "1", VERCEL_ENV: "production", NODE_ENV: "production" }, async () => {
+    clearModule("api/lib/commercial/environment.js");
     clearModule("api/lib/payments/stripeConfig.js");
     clearModule("api/lib/payments/StripePaymentProvider.js");
     const StripePaymentProvider = require(path.join(root, "api/lib/payments/StripePaymentProvider.js"));
     const provider = new StripePaymentProvider();
-    const checkout = await provider.createCheckout({ userId: "user-1", plan: "starter", amountEur: 29, credits: 1000 });
-    if (checkout.status === "completed" && checkout.mode === "mock") pass("Mock checkout instant complete");
-    else fail("Mock checkout instant complete", checkout.status);
+    try {
+      await provider.createCheckout({ userId: "user-1", plan: "starter", amountEur: 29, credits: 1000 });
+      fail("Production mock checkout blocked");
+    } catch (err) {
+      if (err.code === "STRIPE_MISCONFIGURED") pass("Production mock checkout blocked");
+      else fail("Production mock checkout blocked", err.message);
+    }
   });
 
   const failed = results.filter((r) => !r.ok).length;

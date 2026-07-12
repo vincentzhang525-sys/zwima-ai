@@ -193,8 +193,14 @@ async function renderDashboardFromLive(user) {
       : "No provider usage yet. Run Playground or Gateway requests to populate this section.";
   }
 
-  const planRow = document.querySelector("#billing .billing-row:first-child strong");
-  if (planRow) planRow.textContent = user.plan;
+  const planRow = document.getElementById("dashBillingPlan") || document.querySelector("#billing .billing-row:first-child strong");
+  if (planRow) planRow.textContent = user.plan || "free";
+  const dashBillingMethod = document.getElementById("dashBillingMethod");
+  const dashBillingCredits = document.getElementById("dashBillingCredits");
+  const dashBillingEmail = document.getElementById("dashBillingEmail");
+  if (dashBillingCredits) dashBillingCredits.textContent = balanceLabel;
+  if (dashBillingEmail) dashBillingEmail.textContent = user.email || "—";
+  if (dashBillingMethod) dashBillingMethod.textContent = "Stripe";
 
   const acctCompany = document.getElementById("acctCompany");
   const acctEmail = document.getElementById("acctEmail");
@@ -310,8 +316,14 @@ async function renderDashboardFromMock(user) {
       : "No provider usage yet. Run Playground or Gateway requests to populate this section.";
   }
 
-  const planRow = document.querySelector("#billing .billing-row:first-child strong");
-  if (planRow) planRow.textContent = user.plan;
+  const planRow = document.getElementById("dashBillingPlan") || document.querySelector("#billing .billing-row:first-child strong");
+  if (planRow) planRow.textContent = user.plan || "free";
+  const dashBillingMethod = document.getElementById("dashBillingMethod");
+  const dashBillingCredits = document.getElementById("dashBillingCredits");
+  const dashBillingEmail = document.getElementById("dashBillingEmail");
+  if (dashBillingCredits) dashBillingCredits.textContent = balanceLabel;
+  if (dashBillingEmail) dashBillingEmail.textContent = user.email || "—";
+  if (dashBillingMethod) dashBillingMethod.textContent = "Stripe";
 
   const acctCompany = document.getElementById("acctCompany");
   const acctEmail = document.getElementById("acctEmail");
@@ -332,7 +344,7 @@ async function renderDashboardFromMock(user) {
   if (acctCredits) {
     acctCredits.textContent = wallet
       ? String(wallet.balance)
-      : String(sessionUser.credits ?? sessionUser.creditsBalance ?? 12450);
+      : String(sessionUser.credits ?? sessionUser.creditsBalance ?? "0");
   }
 }
 

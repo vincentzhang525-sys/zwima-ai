@@ -9,6 +9,19 @@ function showMessage(id, text) {
   el.hidden = !text;
 }
 
+function handleCheckoutResult(result, successLabel) {
+  if (result?.checkoutUrl) {
+    window.location.href = result.checkoutUrl;
+    return true;
+  }
+  if (result?.pending) {
+    showMessage("billingError", "Checkout session could not be created. Verify Stripe configuration.");
+    return true;
+  }
+  showMessage("billingSuccess", successLabel);
+  return false;
+}
+
 function renderBilling(data) {
   const billing = data?.billing || {};
   const set = (id, value) => {
@@ -138,10 +151,7 @@ async function upgradePlan(plan) {
       method: "POST",
       body: JSON.stringify({ action: "upgrade", plan, provider: "stripe", couponCode: couponCode || undefined }),
     });
-    showMessage(
-      "billingSuccess",
-      `Plan ${String(result.plan).toUpperCase()} activated. +${Number(result.creditsAdded).toLocaleString()} credits provisioned.`
-    );
+    if (handleCheckoutResult(result, `Plan ${String(result.plan).toUpperCase()} checkout started.`)) return;
     await Promise.all([
       window.ZwimaCreditsService?.refreshWallet?.(),
       window.ZwimaUsageService?.refreshRecords?.(),
@@ -162,7 +172,7 @@ async function purchasePackage(packageId) {
       method: "POST",
       body: JSON.stringify({ action: "purchase_package", packageId, provider: "stripe", couponCode: couponCode || undefined }),
     });
-    showMessage("billingSuccess", `+${Number(result.creditsAdded).toLocaleString()} credits added. Order ${result.orderNumber}.`);
+    if (handleCheckoutResult(result, "Redirecting to secure checkout…")) return;
     await Promise.all([window.ZwimaCreditsService?.refreshWallet?.(), refreshBilling()]);
   } catch (err) {
     showMessage("billingError", err.message || "Purchase failed.");
@@ -214,6 +224,10 @@ async function applyReferral() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("payment") === "success") {
+    showMessage("billingSuccess", "Payment received. Credits will appear after webhook confirmation (usually within a minute).");
+  }
   await refreshBilling();
   document.querySelectorAll("[data-plan]").forEach((button) => {
     button.addEventListener("click", () => upgradePlan(button.dataset.plan));

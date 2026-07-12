@@ -17,7 +17,7 @@
         <a href="pricing.html">Pricing</a>
         <a href="contact.html">Contact</a>
         <a href="login.html">Login</a>
-        <a class="nav-cta" href="contact.html">Request Access</a>
+        <a class="nav-cta" href="signup.html">Create account</a>
       </div>
     </nav>
   </header>
@@ -26,18 +26,19 @@
     <div class="auth-card">
       <a class="logo auth-logo" href="index.html"><span class="logo-mark">Z</span><span>ZWIMA AI</span></a>
       <h1>Verify your email</h1>
-      <p class="auth-note" style="margin-top:0;">We sent a verification code to <strong id="pendingEmail">your email</strong>.</p>
+      <p class="auth-note" style="margin-top:0;">Enter the 6-digit code sent to <strong id="pendingEmail">your email</strong>.</p>
       <form class="auth-form" id="verifyForm">
+        <input type="hidden" id="verifyEmail" name="email">
         <label for="verifyCode">Verification Code</label>
-        <input id="verifyCode" name="code" type="text" maxlength="6" placeholder="000000" inputmode="numeric" required>
+        <input id="verifyCode" name="code" type="text" maxlength="6" placeholder="6-digit code" inputmode="numeric" required>
         <p class="auth-error" id="verifyError" hidden></p>
         <p class="auth-success" id="verifySuccess" hidden></p>
         <button class="button button-primary auth-submit" type="submit">Verify Email</button>
       </form>
       <div class="auth-links">
         <a href="login.html">Back to sign in</a>
+        <button type="button" class="button button-secondary" id="resendVerifyBtn" style="margin-top:8px;">Resend code</button>
       </div>
-      <p class="auth-note">Mock verification: use code <strong>000000</strong>.</p>
     </div>
   </main>
 
@@ -49,11 +50,28 @@
   <script src="utils/constants.js"></script>
   <script src="utils/storage.js"></script>
   <script src="auth/jwtManager.js"></script>
-  <script src="services/userStore.js"></script>
-  <script src="services/auth/localStorageAuthAdapter.js"></script>
   <script src="services/authService.js"></script>
   <script src="auth/authState.js"></script>
   <script src="auth-pages.js"></script>
   <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(window.location.search);
+      const email = params.get("email") || sessionStorage.getItem("zwima_pending_email") || "";
+      const pendingEmail = document.getElementById("pendingEmail");
+      const verifyEmail = document.getElementById("verifyEmail");
+      if (email && pendingEmail) pendingEmail.textContent = email;
+      if (email && verifyEmail) verifyEmail.value = email;
+      document.getElementById("resendVerifyBtn")?.addEventListener("click", async () => {
+        if (!email) return;
+        try {
+          await window.ZwimaSupabaseAuthAdapter.resendVerification(email);
+          alert("Verification code sent.");
+        } catch (e) {
+          alert(e.message || "Could not resend code.");
+        }
+      });
+    });
+  </script>
 </body>
 </html>

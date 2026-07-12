@@ -51,8 +51,9 @@
         method: "POST",
         body: JSON.stringify(payload),
       });
-      if (result.pending) return result;
-      return { user: applySession(result, { remember: Boolean(credentials?.remember) }) };
+      if (result.pending || result.requiresVerification) return result;
+      if (result.session) return { user: applySession(result) };
+      return result;
     },
 
     async login(credentials) {
@@ -76,12 +77,39 @@
       });
     },
 
-    async resetPassword() {
-      throw new Error("Password reset is handled via /api/user/forgot-password (app email provider).");
+    async resetPassword(payload) {
+      if (payload?.code) {
+        return root.ZwimaSupabaseAuthAdapter.resetPasswordWithCode(payload);
+      }
+      throw new Error("Password reset requires verification code via /api/user/reset-password.");
     },
 
-    async verifyEmail() {
-      return { verified: true };
+    async verifyEmail(code, email) {
+      const payload = {
+        action: "verify",
+        code: String(code || "").trim(),
+        email: String(email || root.ZwimaStorage?.get?.("SESSION")?.email || "").trim(),
+      };
+      const result = await root.ZwimaSupabaseApi.apiFetch("/api/user/verify-email", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      if (result.session) applySession(result);
+      return result;
+    },
+
+    async resendVerification(email) {
+      return root.ZwimaSupabaseApi.apiFetch("/api/user/verify-email", {
+        method: "POST",
+        body: JSON.stringify({ action: "resend", email }),
+      });
+    },
+
+    async resetPasswordWithCode({ email, code, password }) {
+      return root.ZwimaSupabaseApi.apiFetch("/api/user/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ email, code, password }),
+      });
     },
 
     async updateProfile(data) {

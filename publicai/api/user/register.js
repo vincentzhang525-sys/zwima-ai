@@ -2,7 +2,6 @@ const {
   getAnonClient,
   getAdminClient,
   parseBody,
-  loadProfile,
   enforceRateLimit,
   writeSecurityEvent,
   getClientIp,
@@ -12,26 +11,10 @@ const {
 } = require("../lib/supabase");
 const { ensureProgress } = require("../onboarding/index.js");
 const { sendTransactional } = require("../lib/email");
+const { storeCode } = require("../lib/auth/codes");
 
-const FREE_CREDITS = 500;
-
-async function grantWelcomeCredits(admin, userId) {
-  const { data: wallet } = await admin.from("credit_wallets").select("*").eq("user_id", userId).maybeSingle();
-  if (wallet) return false;
-  await admin.from("credit_wallets").insert({ user_id: userId, balance: FREE_CREDITS, currency: "EUR" });
-  await admin.from("credit_transactions").insert({
-    user_id: userId,
-    type: "bonus",
-    amount: FREE_CREDITS,
-    description: "Welcome free credits",
-    txn_date: new Date().toISOString().slice(0, 10),
-    status: "completed",
-  });
-  return true;
-}
-
-/** Register via admin API — never uses Supabase Auth signUp (no Supabase transactional email). */
-async function registerWithAppEmail({ admin, client, email, password, company, country }) {
+/** Register via admin API — app email only (no Supabase transactional email). */
+async function registerWithAppEmail({ admin, email, password, company, country }) {
   const { data: listed } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
   const existing = listed?.users?.find((u) => u.email?.toLowerCase() === email);
   if (existing) return { error: "User already registered" };
@@ -39,13 +22,13 @@ async function registerWithAppEmail({ admin, client, email, password, company, c
   const { data: created, error } = await admin.auth.admin.createUser({
     email,
     password,
-    email_confirm: true,
+    email_confirm: false,
     user_metadata: {
       company,
       country,
       role: "customer",
       status: "active",
-      plan: "Starter",
+      plan: "free",
     },
   });
   if (error) return { error: error.message || "Registration failed" };
@@ -58,41 +41,30 @@ async function registerWithAppEmail({ admin, client, email, password, company, c
     country,
     role: "customer",
     status: "active",
-    plan: "Starter",
+    plan: "free",
   });
 
-  const granted = await grantWelcomeCredits(admin, userId);
+  await admin.from("credit_wallets").insert({ user_id: userId, balance: 0, currency: "EUR" }).then(() => null).catch(() => null);
+
   await ensureProgress(admin, userId, {
     registered: true,
-    email_verified: true,
-    credits_received: granted,
+    email_verified: false,
+    credits_received: false,
   });
 
+  const { code } = await storeCode(admin, { userId, email, purpose: "email_verify" });
   try {
-    await sendTransactional("verifyEmail", email, {
-      email,
-      link: "https://zwima-group.info/verify-email.html",
-    });
-    await sendTransactional("welcome", email, { name: company, company });
+    await sendTransactional("verifyEmail", email, { email, code });
   } catch (mailErr) {
-    console.error("[user/register] app email", mailErr);
+    console.error("[user/register] verify email", mailErr);
+    return { error: mailErr.message || "Failed to send verification email. Check SMTP configuration." };
   }
 
-  const signIn = await client.auth.signInWithPassword({ email, password });
-  if (!signIn.data?.session) {
-    return { error: signIn.error?.message || "Login after registration failed" };
-  }
-
-  const authed = getAnonClient(signIn.data.session.access_token);
-  const profile = await loadProfile(authed, userId);
   return {
-    user: profile,
-    session: {
-      access_token: signIn.data.session.access_token,
-      refresh_token: signIn.data.session.refresh_token,
-      expires_at: signIn.data.session.expires_at,
-    },
-    appEmail: true,
+    pending: true,
+    email,
+    message: "Account created. Check your email for the verification code.",
+    requiresVerification: true,
   };
 }
 
@@ -132,11 +104,9 @@ module.exports = async function handler(req, res) {
       return json(res, 400, { error: "Please provide a valid email and password (min 6 characters)." });
     }
 
-    const client = getAnonClient();
     const admin = getAdminClient();
     const result = await registerWithAppEmail({
       admin,
-      client,
       email,
       password,
       company,

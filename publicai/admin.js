@@ -279,13 +279,26 @@ function renderSuccess(data) {
 
 function renderCommercialHealth(payload) {
   if (!payload) return;
+  setText("commHealthPlatform", payload.platformHealth || "—");
   setText("commHealthEmailMode", payload.email?.modeLabel || "—");
   setText("commHealthSmtp", payload.email?.connection?.ok ? "OK" : payload.email?.connection?.error || "Not configured");
   setText("commHealthStripeMode", payload.stripe?.mode || "—");
+  setText("commHealthWebhooks", String(payload.stripe?.webhookEvents7d ?? "—"));
+  setText("commHealthGateway", payload.gateway?.status || "—");
+  setText("commHealthRevenue", payload.payments?.revenue30d != null ? `€${payload.payments.revenue30d}` : "—");
+  setText("commHealthUsers", payload.users ? `${payload.users.total} (+${payload.users.registrations24h}/24h)` : "—");
+  setText("commHealthUsage", String(payload.usage?.requests24h ?? "—"));
+  setText("commHealthErrors", String(payload.errors?.gatewayErrors24h ?? "—"));
   setText("commHealthLedger", String(payload.reconciliation?.mismatches ?? "—"));
   setText("commHealthPending", String(payload.payments?.pendingOrders ?? "—"));
   const blockers = payload.blockers || [];
   setText("commHealthBlockers", String(blockers.length));
+  const providersEl = document.getElementById("commHealthProviders");
+  if (providersEl) {
+    providersEl.innerHTML = (payload.providers || [])
+      .map((p) => `<span class="status-pill ${p.enabled && p.configured ? "active" : "planned"}" style="margin-right:6px;">${esc(p.name)}: ${p.enabled && p.configured ? "live" : p.configured ? "ready" : "no key"}</span>`)
+      .join("") || '<span class="muted">No providers configured.</span>';
+  }
   const list = document.getElementById("commHealthBlockerList");
   if (list) {
     list.innerHTML = blockers.length

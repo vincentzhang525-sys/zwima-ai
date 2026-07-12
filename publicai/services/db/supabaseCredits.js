@@ -1,6 +1,5 @@
 (function () {
   let walletCache = null;
-  let recordsCache = [];
 
   function isSupabase() {
     return window.ZwimaDbMode?.isSupabaseMode?.();
@@ -46,18 +45,10 @@
       return wallet;
     },
     async topUp(amountEur) {
-      await window.ZwimaSupabaseApi.apiFetch("/api/credits", {
-        method: "POST",
-        body: JSON.stringify({ action: "topup", amountEur }),
-      });
-      return refreshFromDb();
+      throw new Error("Credit purchases must go through Billing. Redirecting…");
     },
     async addAdjustment(amount, description) {
-      await window.ZwimaSupabaseApi.apiFetch("/api/credits", {
-        method: "POST",
-        body: JSON.stringify({ action: "adjustment", amount, description }),
-      });
-      return refreshFromDb();
+      throw new Error("Balance adjustments are admin-only.");
     },
     isSupabase,
   };

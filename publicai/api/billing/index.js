@@ -1,8 +1,6 @@
 const { getAuthedClient, getAdminClient, parseBody, json, handleOptions, withCors, writeAuditLog, getClientIp } = require("../lib/supabase");
 const { resolvePaymentProvider, assertPaymentOperational } = require("../lib/payments");
 const commerce = require("../lib/commerce");
-const fulfillment = require("../lib/payments/fulfillment");
-const { ensureProgress } = require("../onboarding/index.js");
 
 const PLAN_ORDER = commerce.PLAN_ORDER;
 
@@ -29,44 +27,25 @@ async function loadPackages(client) {
   return data || [];
 }
 
-async function completeCheckout(client, { user, order, checkout, credits, description }) {
-  if (checkout.status === "pending") {
-    await client
-      .from("orders")
-      .update({ status: "pending", provider_ref: checkout.sessionId || checkout.checkoutId || null })
-      .eq("id", order.id);
-    await client.from("commerce_transactions").insert({
-      user_id: user.id,
-      order_id: order.id,
-      provider: checkout.provider,
-      provider_ref: checkout.sessionId || checkout.checkoutId,
-      amount: order.total,
-      currency: order.currency,
-      status: "pending",
-    });
-    return {
-      pending: true,
-      checkoutUrl: checkout.checkoutUrl,
-      orderNumber: order.order_number,
-      sessionId: checkout.sessionId || checkout.checkoutId,
-    };
-  }
-
-  const admin = getAdminClient();
-  const result = await fulfillment.fulfillPaidOrder(admin, {
-    order,
-    user,
-    checkout,
-    credits,
-    description,
-    idempotencyKey: `order:${order.id}:checkout`,
-    sendEmails: true,
+async function completeCheckout(client, { user, order, checkout }) {
+  await client
+    .from("orders")
+    .update({ status: "pending", provider_ref: checkout.sessionId || checkout.checkoutId || null })
+    .eq("id", order.id);
+  await client.from("commerce_transactions").insert({
+    user_id: user.id,
+    order_id: order.id,
+    provider: checkout.provider,
+    provider_ref: checkout.sessionId || checkout.checkoutId,
+    amount: order.total,
+    currency: order.currency,
+    status: "pending",
   });
   return {
-    pending: false,
-    remainingCredits: result.remainingCredits,
-    invoice: result.invoice,
-    creditsAdded: credits,
+    pending: true,
+    checkoutUrl: checkout.checkoutUrl,
+    orderNumber: order.order_number,
+    sessionId: checkout.sessionId || checkout.checkoutId,
   };
 }
 
@@ -98,10 +77,8 @@ module.exports = async function handler(req, res) {
             tax: Number(inv.tax),
             total: Number(inv.total),
             status: inv.status,
-            downloadUrl: inv.download_url,
+            downloadUrl: inv.download_url || `/api/billing/invoice?id=${inv.invoice_number}`,
             createdAt: inv.created_at,
-            placeholder: true,
-            message: "PDF download will be available in a future release.",
           },
         });
       }
@@ -330,13 +307,7 @@ module.exports = async function handler(req, res) {
           credits: Number(pkg.credits),
         });
 
-        const result = await completeCheckout(client, {
-          user,
-          order,
-          checkout,
-          credits: Number(pkg.credits),
-          description: `Credit package ${pkg.name} (${checkout.provider})`,
-        });
+        const result = await completeCheckout(client, { user, order, checkout });
 
         if (couponId) {
           const { data: coupon } = await client.from("coupons").select("usage_count").eq("id", couponId).maybeSingle();
@@ -350,9 +321,8 @@ module.exports = async function handler(req, res) {
           orderNumber,
           pending: Boolean(result.pending),
           checkoutUrl: result.checkoutUrl || null,
-          creditsAdded: result.pending ? 0 : Number(pkg.credits),
-          remainingCredits: result.remainingCredits,
-          invoiceNumber: result.invoice?.invoice_number,
+          creditsAdded: 0,
+          packageCredits: Number(pkg.credits),
         });
       }
 
@@ -362,22 +332,14 @@ module.exports = async function handler(req, res) {
         if (!referrer || referrer.user_id === user.id) {
           return json(res, 400, { error: "Invalid referral code." });
         }
-        const reward = 500;
         await client.from("referrals").insert({
           referrer_user_id: referrer.user_id,
           referred_user_id: user.id,
           referral_code: code,
-          reward_credits: reward,
-          status: "completed",
+          reward_credits: 0,
+          status: "pending",
         });
-        const { data: refWallet } = await client.from("credit_wallets").select("*").eq("user_id", referrer.user_id).maybeSingle();
-        const refBalance = Number(refWallet?.balance) || 0;
-        await client.from("credit_wallets").upsert({ user_id: referrer.user_id, balance: refBalance + reward, currency: "EUR" });
-        await client.from("referral_codes").update({
-          total_invites: (referrer.total_invites || 0) + 1,
-          credits_earned: (referrer.credits_earned || 0) + reward,
-        }).eq("user_id", referrer.user_id);
-        return json(res, 200, { ok: true, rewardCredits: reward });
+        return json(res, 200, { ok: true, message: "Referral recorded. Rewards apply after first paid purchase." });
       }
 
       // upgrade / downgrade subscription
@@ -442,13 +404,7 @@ module.exports = async function handler(req, res) {
         credits,
       });
 
-      const result = await completeCheckout(client, {
-        user,
-        order,
-        checkout,
-        credits,
-        description: `Subscription ${plan.toUpperCase()} (${billingCycle}, ${checkout.provider})`,
-      });
+      const result = await completeCheckout(client, { user, order, checkout });
 
       if (couponId) {
         await client.from("coupon_redemptions").insert({ coupon_id: couponId, user_id: user.id, order_id: order.id });
@@ -465,25 +421,14 @@ module.exports = async function handler(req, res) {
         notificationCategory: "billing",
       });
 
-      if (!result.pending) {
-        try {
-          const admin = getAdminClient();
-          await ensureProgress(admin, user.id, { plan_upgraded: true });
-        } catch (onbErr) {
-          console.error("[billing] onboarding", onbErr);
-        }
-      }
-
       return json(res, 200, {
         ok: true,
         plan,
         provider: checkout.provider,
-        pending: Boolean(result.pending),
+        pending: true,
         checkoutUrl: result.checkoutUrl || null,
-        creditsAdded: result.pending ? 0 : credits,
-        remainingCredits: result.remainingCredits,
-        renewAt: result.pending ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        invoiceNumber: result.invoice?.invoice_number,
+        creditsAdded: 0,
+        planCredits: credits,
         orderNumber,
       });
     }

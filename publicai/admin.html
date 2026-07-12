@@ -299,15 +299,24 @@
         </section>
 
         <section id="commercial-health" class="dash-section admin-panel">
-          <div class="dash-section-header"><h2>Commercial Activation Health</h2><p class="muted">Phase 3A — email, Stripe, ledger, legal readiness (no secrets shown).</p></div>
+          <div class="dash-section-header"><h2>Commercial Activation Health</h2><p class="muted">Production commercial status — no secrets shown.</p></div>
           <div class="overview-grid" style="margin-bottom:16px;">
+            <article class="overview-card"><span>Platform</span><strong id="commHealthPlatform">—</strong></article>
             <article class="overview-card"><span>Email Mode</span><strong id="commHealthEmailMode">—</strong></article>
             <article class="overview-card"><span>SMTP Connection</span><strong id="commHealthSmtp">—</strong></article>
             <article class="overview-card"><span>Stripe Mode</span><strong id="commHealthStripeMode">—</strong></article>
+            <article class="overview-card"><span>Webhooks (7d)</span><strong id="commHealthWebhooks">—</strong></article>
+            <article class="overview-card"><span>Gateway</span><strong id="commHealthGateway">—</strong></article>
+            <article class="overview-card"><span>Revenue (30d)</span><strong id="commHealthRevenue">—</strong></article>
+            <article class="overview-card"><span>Users</span><strong id="commHealthUsers">—</strong></article>
+            <article class="overview-card"><span>Usage (24h)</span><strong id="commHealthUsage">—</strong></article>
+            <article class="overview-card"><span>Errors (24h)</span><strong id="commHealthErrors">—</strong></article>
             <article class="overview-card"><span>Ledger Mismatches</span><strong id="commHealthLedger">—</strong></article>
             <article class="overview-card"><span>Pending Orders</span><strong id="commHealthPending">—</strong></article>
             <article class="overview-card"><span>Launch Blockers</span><strong id="commHealthBlockers">—</strong></article>
           </div>
+          <h3 style="margin:0 0 10px;font-size:1rem;">Providers</h3>
+          <div id="commHealthProviders" class="muted" style="margin-bottom:12px;"></div>
           <div id="commHealthBlockerList" class="muted" style="margin-bottom:12px;"></div>
           <h3 style="margin:0 0 10px;font-size:1rem;">Missing legal fields</h3>
           <ul id="commHealthLegalMissing" class="check-list"></ul>

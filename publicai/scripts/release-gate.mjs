@@ -152,6 +152,7 @@ async function main() {
   gate("Production deployment", landing.ok && gateway.ok, baseUrl);
 
   await runVerify("verify-phase3a-commercial.mjs", "Phase 3A commercial activation");
+  await runVerify("verify-sprint502-commercial.mjs", "Sprint 50.2 commercial launch");
 
   const failed = gates.filter((g) => !g.ok).length;
   console.log(`\n========================================`);

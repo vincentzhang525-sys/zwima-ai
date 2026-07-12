@@ -30,7 +30,7 @@
         <a href="documentation.html" class="sidebar-link">Documentation</a>
       </nav>
       <div class="sidebar-footer">
-        <a href="index.html" class="sidebar-back">??Back to website</a>
+        <a href="index.html" class="sidebar-back">← Back to website</a>
       </div>
     </aside>
 
@@ -44,7 +44,7 @@
         </button>
         <div class="topbar-heading">
           <h1>Unified AI Gateway</h1>
-          <p>One API ? Multiple Providers ? Smart Routing</p>
+          <p>One API · Multiple Providers · Smart Routing</p>
         </div>
         <div class="topbar-user" id="topbarUserPanel"></div>
       </header>
@@ -53,7 +53,7 @@
         <section class="dash-section gateway-panel">
           <h2>Gateway Endpoint</h2>
           <div class="endpoint-row">
-            <code id="gatewayEndpoint">https://api.zwima.ai/v1/chat/completions</code>
+            <code id="gatewayEndpoint">https://zwima-group.info/api/gateway/chat</code>
             <button class="button button-secondary button-sm" type="button" id="copyEndpointBtn">Copy</button>
           </div>
         </section>
@@ -67,17 +67,16 @@
               <div><dt>Content-Type</dt><dd><code>application/json</code></dd></div>
             </dl>
             <pre class="code-block"><code>{
-  "model": "openai/gpt-5",
-  "messages": [
-    { "role": "user", "content": "Hello, ZWIMA AI." }
-  ],
-  "temperature": 0.7,
-  "max_tokens": 2048
+  "model": "gpt-4o",
+  "prompt": "Hello, ZWIMA AI.",
+  "apiKey": "your_api_key",
+  "maxTokens": 1024
 }</code></pre>
             <ul class="request-fields">
-              <li><strong>Model</strong> ??Provider-prefixed model identifier</li>
-              <li><strong>Messages</strong> ??Chat message array</li>
-              <li><strong>Temperature</strong> ??Sampling temperature (0??)</li>
+              <li><strong>Model</strong> — Provider model identifier</li>
+              <li><strong>Prompt</strong> — User message text</li>
+              <li><strong>API Key</strong> — Your ZWIMA API key</li>
+              <li><strong>Max tokens</strong> — Response limit</li>
               <li><strong>Max Tokens</strong> ??Maximum output tokens</li>
             </ul>
           </section>
@@ -87,19 +86,19 @@
             <div class="gateway-stats-grid">
               <article class="overview-card">
                 <span>Today's Requests</span>
-                <strong id="statRequests">1,248</strong>
+                <strong id="statRequests">—</strong>
               </article>
               <article class="overview-card">
                 <span>Average Latency</span>
-                <strong id="statLatency">248 ms</strong>
+                <strong id="statLatency">—</strong>
               </article>
               <article class="overview-card">
                 <span>Success Rate</span>
-                <strong id="statSuccess">99.6%</strong>
+                <strong id="statSuccess">—</strong>
               </article>
               <article class="overview-card">
                 <span>Token Usage</span>
-                <strong id="statTokens">3.2M</strong>
+                <strong id="statTokens">—</strong>
               </article>
             </div>
           </section>

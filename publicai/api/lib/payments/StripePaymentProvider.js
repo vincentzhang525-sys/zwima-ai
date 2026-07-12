@@ -1,7 +1,7 @@
 const PaymentProvider = require("./PaymentProvider");
 const { stripeRequest } = require("./stripeClient");
 const { assertStripeOperational, isRealStripeMode, getStripeMode } = require("./stripeConfig");
-const { paymentMustFailClosed } = require("../commercial/environment");
+const { isProductionRuntime, isLocalRuntime } = require("../commercial/environment");
 
 class StripePaymentProvider extends PaymentProvider {
   constructor() {
@@ -16,22 +16,24 @@ class StripePaymentProvider extends PaymentProvider {
     assertStripeOperational();
 
     if (!isRealStripeMode()) {
-      const ts = Date.now();
-      return {
-        provider: this.name,
-        status: "completed",
-        mode: "mock",
-        amountEur,
-        checkoutId: `stripe_checkout_${ts}`,
-        sessionId: `cs_mock_${ts}`,
-        customerId: `cus_${String(userId).slice(0, 8)}_${ts}`,
-        subscriptionId: plan ? `sub_${plan}_${ts}` : null,
-        invoiceUrl: null,
-        credits,
-      };
+      if (isProductionRuntime()) {
+        const err = new Error("Stripe is not configured for production. Set STRIPE_MODE=test|live and all Stripe keys.");
+        err.code = "STRIPE_MISCONFIGURED";
+        err.status = 503;
+        throw err;
+      }
+      if (isLocalRuntime()) {
+        const err = new Error("Mock Stripe checkout is disabled. Configure STRIPE_MODE=test with test keys for local development.");
+        err.code = "STRIPE_MOCK_DISABLED";
+        err.status = 503;
+        throw err;
+      }
+      const err = new Error("Stripe checkout unavailable in this environment.");
+      err.status = 503;
+      throw err;
     }
 
-    const host = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://zwima-group.info";
+    const host = process.env.PLATFORM_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://zwima-group.info");
     const session = await stripeRequest("/checkout/sessions", "POST", {
       mode: "payment",
       success_url: successUrl || `${host}/billing.html?payment=success&order=${orderId || ""}`,
@@ -87,7 +89,9 @@ class StripePaymentProvider extends PaymentProvider {
 
   async createRefund({ paymentIntentId, amountEur }) {
     if (!isRealStripeMode()) {
-      return { ok: true, mode: "mock", paymentIntentId, status: "refunded" };
+      const err = new Error("Refunds require configured Stripe mode.");
+      err.status = 503;
+      throw err;
     }
     const payload = { payment_intent: paymentIntentId };
     if (amountEur) payload.amount = Math.round(Number(amountEur) * 100);
@@ -96,13 +100,11 @@ class StripePaymentProvider extends PaymentProvider {
 
   async cancelSubscription({ subscriptionId }) {
     if (!isRealStripeMode()) {
-      return { ok: true, subscriptionId, canceledAt: new Date().toISOString(), mode: "mock" };
+      const err = new Error("Subscription cancel requires configured Stripe mode.");
+      err.status = 503;
+      throw err;
     }
     return stripeRequest(`/subscriptions/${subscriptionId}`, "DELETE");
-  }
-
-  isConfigured() {
-    return !paymentMustFailClosed();
   }
 }
 

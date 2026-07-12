@@ -141,11 +141,11 @@
             </article>
             <article class="overview-card">
               <span>Plan</span>
-              <strong id="acctPlan">Early Access</strong>
+              <strong id="acctPlan">—</strong>
             </article>
             <article class="overview-card">
               <span>Credits</span>
-              <strong id="acctCredits">12450</strong>
+              <strong id="acctCredits">—</strong>
             </article>
           </div>
 
@@ -179,7 +179,7 @@
             <a class="quick-start-card" href="credits.html">
               <span class="quick-start-step">Step 3</span>
               <strong>Add credits</strong>
-              <p>Top up your unified API credit balance through your account contact.</p>
+              <p>Purchase credits via Stripe checkout. <a href="billing.html">Go to billing</a>.</p>
             </a>
             <a class="quick-start-card" href="playground.html">
               <span class="quick-start-step">Step 4</span>
@@ -205,35 +205,8 @@
                   <th>Last Used</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>Production Key</td>
-                  <td class="muted">zwima_live_8f29...</td>
-                  <td><span class="status-pill active">Active</span></td>
-                  <td class="muted">2026-06-14</td>
-                  <td class="muted">Today</td>
-                </tr>
-                <tr>
-                  <td>Testing Key</td>
-                  <td class="muted">zwima_live_3c91...</td>
-                  <td><span class="status-pill active">Active</span></td>
-                  <td class="muted">2026-06-13</td>
-                  <td class="muted">Yesterday</td>
-                </tr>
-                <tr>
-                  <td>Development Key</td>
-                  <td class="muted">zwima_live_a4d8...</td>
-                  <td><span class="status-pill active">Active</span></td>
-                  <td class="muted">2026-06-10</td>
-                  <td class="muted">2 days ago</td>
-                </tr>
-                <tr>
-                  <td>Legacy Key</td>
-                  <td class="muted">zwima_live_7b42...</td>
-                  <td><span class="status-pill disabled">Disabled</span></td>
-                  <td class="muted">2026-06-01</td>
-                  <td class="muted">7 days ago</td>
-                </tr>
+              <tbody id="dashboardApiKeysBody">
+                <tr><td colspan="5" class="muted">Loading API keys…</td></tr>
               </tbody>
             </table>
           </div>
@@ -260,27 +233,27 @@
 
         <section id="billing" class="dash-section">
           <div class="dash-section-header">
-            <h2>Billing Preview</h2>
+            <h2>Billing</h2>
           </div>
           <div class="billing-panel">
             <div class="billing-row">
               <span>Current plan</span>
-              <strong>Early Access</strong>
+              <strong id="dashBillingPlan">—</strong>
             </div>
             <div class="billing-row">
               <span>Payment method</span>
-              <strong>Manual invoice</strong>
+              <strong id="dashBillingMethod">—</strong>
             </div>
             <div class="billing-row">
-              <span>Next invoice</span>
-              <strong>Not generated</strong>
+              <span>Credit balance</span>
+              <strong id="dashBillingCredits">—</strong>
             </div>
             <div class="billing-row">
               <span>Billing email</span>
-              <strong>hello@zwima-group.info</strong>
+              <strong id="dashBillingEmail">—</strong>
             </div>
             <div class="billing-actions">
-            <a class="button button-secondary" href="credits.html">Manage Credits</a>
+            <a class="button button-secondary" href="billing.html">Manage Billing</a>
             </div>
           </div>
         </section>
@@ -300,8 +273,7 @@
             <article class="model-card">
               <h3>Anthropic Claude</h3>
               <div class="model-meta">
-                <span class="status-pill active">Active</span>
-                <span>Enterprise writing</span>
+                <span class="status-pill ready">When configured</span>
               </div>
             </article>
             <article class="model-card">

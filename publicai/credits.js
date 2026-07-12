@@ -121,15 +121,8 @@ function closeTopUpModal() {
 }
 
 async function confirmTopUp() {
-  if (!pendingTopUpEur) return;
-  try {
-    showError("");
-    await window.ZwimaCreditsService.topUp(pendingTopUpEur);
-    closeTopUpModal();
-    renderWallet();
-  } catch (err) {
-    showError(err.message || "Top-up failed.");
-  }
+  closeTopUpModal();
+  window.location.href = "billing.html";
 }
 
 async function simulateUsage() {
@@ -168,7 +161,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("cancelTopUp")?.addEventListener("click", closeTopUpModal);
   document.getElementById("confirmTopUp")?.addEventListener("click", confirmTopUp);
-  document.getElementById("simulateUsageBtn")?.addEventListener("click", simulateUsage);
 
   modal?.addEventListener("click", (event) => {
     if (event.target === modal) closeTopUpModal();

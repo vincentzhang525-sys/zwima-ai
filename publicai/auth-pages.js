@@ -69,7 +69,9 @@
         showSuccess(successEl, "Account created successfully. Redirecting to dashboard...");
         setTimeout(() => redirectAfterAuth(), 700);
       } else {
-        window.location.href = "verify-email.html";
+        const email = document.getElementById("signupEmail")?.value;
+        sessionStorage.setItem("zwima_pending_email", email || "");
+        window.location.href = `verify-email.html?email=${encodeURIComponent(email || "")}`;
       }
     } catch (err) {
       showError(errorEl, err.message || "Sign up failed. Please verify your input and try again.");
@@ -105,7 +107,12 @@
     showSuccess(successEl, "");
     setSubmitting("verifyForm", true, "Verifying...");
     try {
-      await window.ZwimaAuthService.verifyEmail(document.getElementById("verifyCode")?.value);
+      const email =
+        document.getElementById("verifyEmail")?.value ||
+        new URLSearchParams(window.location.search).get("email") ||
+        sessionStorage.getItem("zwima_pending_email") ||
+        "";
+      await window.ZwimaAuthService.verifyEmail(document.getElementById("verifyCode")?.value, email);
       showSuccess(successEl, "Email verified successfully. Redirecting to dashboard...");
       setTimeout(() => {
         redirectAfterAuth();

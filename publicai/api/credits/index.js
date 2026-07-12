@@ -1,4 +1,5 @@
-const { getAuthedClient, parseBody, json, handleOptions, withCors, writeAuditLog, getClientIp } = require("../lib/supabase");
+const { getAuthedClient, getAdminClient, parseBody, json, handleOptions, withCors, writeAuditLog, getClientIp } = require("../lib/supabase");
+const { requireAdmin } = require("../admin/_common");
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
@@ -42,6 +43,16 @@ module.exports = async function handler(req, res) {
       const body = parseBody(req);
       const action = body.action || "spend";
 
+      if (action === "topup" || action === "adjustment") {
+        return json(res, 403, {
+          error: "Credit top-ups must be purchased via billing. Use /api/billing with Stripe checkout.",
+        });
+      }
+
+      if (action !== "spend") {
+        return json(res, 400, { error: `Unknown action: ${action}` });
+      }
+
       const { data: wallet, error: walletError } = await client
         .from("credit_wallets")
         .select("*")
@@ -49,43 +60,24 @@ module.exports = async function handler(req, res) {
         .maybeSingle();
       if (walletError) throw walletError;
 
-      let balance = Number(wallet?.balance) || 0;
-      let delta = 0;
-      let type = "usage";
-      let description = body.description || "API usage";
-
-      if (action === "spend") {
-        delta = -Math.abs(Number(body.amount) || 0);
-        type = "usage";
-        if (!delta) return json(res, 400, { error: "Invalid usage amount." });
-        if (balance < Math.abs(delta)) {
-          return json(res, 402, { error: "Insufficient credits. Please top up your wallet." });
-        }
-      } else if (action === "topup") {
-        const eur = Number(body.amountEur);
-        if (!eur || eur <= 0) return json(res, 400, { error: "Please enter a valid top-up amount." });
-        delta = Math.round(eur * 1000);
-        type = "topup";
-        description = body.description || `Top-up €${eur} (${delta.toLocaleString()} credits)`;
-      } else if (action === "adjustment") {
-        delta = Number(body.amount) || 0;
-        type = "adjustment";
-      } else {
-        return json(res, 400, { error: `Unknown action: ${action}` });
+      const balance = Number(wallet?.balance) || 0;
+      const delta = -Math.abs(Number(body.amount) || 0);
+      if (!delta) return json(res, 400, { error: "Invalid usage amount." });
+      if (balance < Math.abs(delta)) {
+        return json(res, 402, { error: "Insufficient credits. Please purchase credits via billing." });
       }
 
-      balance += delta;
-
+      const newBalance = balance + delta;
       const { error: updateError } = await client
         .from("credit_wallets")
-        .upsert({ user_id: user.id, balance, currency: "EUR" });
+        .upsert({ user_id: user.id, balance: newBalance, currency: "EUR" });
       if (updateError) throw updateError;
 
       const { error: txnError } = await client.from("credit_transactions").insert({
         user_id: user.id,
-        type,
+        type: "usage",
         amount: delta,
-        description,
+        description: body.description || "API usage",
         txn_date: new Date().toISOString().slice(0, 10),
         status: "completed",
       });
@@ -95,15 +87,13 @@ module.exports = async function handler(req, res) {
         userId: user.id,
         eventType: "credits",
         action: "credits_changed",
-        target: type,
-        detail: `${description} (${delta})`,
+        target: "usage",
+        detail: `${body.description || "API usage"} (${delta})`,
         ip: getClientIp(req),
-        notify: true,
-        notificationCategory: "credit",
       });
 
       return json(res, 200, {
-        wallet: { balance, currency: "EUR" },
+        wallet: { balance: newBalance, currency: "EUR" },
       });
     }
 

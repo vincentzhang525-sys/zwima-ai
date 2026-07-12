@@ -10,6 +10,7 @@ const {
   getClientIp,
 } = require("../lib/supabase");
 const { sendTransactional } = require("../lib/email");
+const { storeCode } = require("../lib/auth/codes");
 
 module.exports = async function handler(req, res) {
   if (handleOptions(req, res)) return;
@@ -54,33 +55,21 @@ module.exports = async function handler(req, res) {
     const user = listed?.users?.find((u) => u.email?.toLowerCase() === email);
 
     if (user) {
-      const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-        type: "recovery",
-        email,
-        options: {
-          redirectTo: "https://zwima-group.info/forgot-password.html",
-        },
-      });
-
-      const resetLink =
-        linkData?.properties?.action_link ||
-        `https://zwima-group.info/forgot-password.html?email=${encodeURIComponent(email)}`;
-
-      if (!linkError) {
-        try {
-          await sendTransactional("passwordReset", email, {
-            email,
-            link: resetLink,
-          });
-        } catch (mailErr) {
-          console.error("[user/forgot-password] app email", mailErr);
-        }
+      const { code } = await storeCode(admin, { userId: user.id, email, purpose: "password_reset" });
+      try {
+        await sendTransactional("passwordReset", email, {
+          email,
+          code,
+          link: `https://zwima-group.info/forgot-password.html?email=${encodeURIComponent(email)}`,
+        });
+      } catch (mailErr) {
+        console.error("[user/forgot-password] app email", mailErr);
+        return json(res, 503, { error: "Unable to send reset email. Please contact support." });
       }
     }
 
     return json(res, 200, {
-      message: "If an account exists for this email, reset instructions have been sent.",
-      appEmail: true,
+      message: "If an account exists for this email, a reset code has been sent.",
     });
   } catch (err) {
     console.error("[user/forgot-password]", err);

@@ -72,8 +72,8 @@
       return adapterCall("forgotPassword", payload);
     },
 
-    verifyEmail(code) {
-      return adapterCall("verifyEmail", code);
+    verifyEmail(code, email) {
+      return adapterCall("verifyEmail", code, email);
     },
 
     getPendingRegistration() {

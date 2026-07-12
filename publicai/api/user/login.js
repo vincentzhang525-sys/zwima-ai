@@ -58,6 +58,14 @@ module.exports = async function handler(req, res) {
       return json(res, 401, { error: error.message || "Invalid email or password" });
     }
 
+    if (!data.user.email_confirmed_at) {
+      return json(res, 403, {
+        error: "Email not verified. Check your inbox for the verification code.",
+        requiresVerification: true,
+        email,
+      });
+    }
+
     const authed = getAnonClient(data.session.access_token);
     const profile = await loadProfile(authed, data.user.id);
     if (!profile) {

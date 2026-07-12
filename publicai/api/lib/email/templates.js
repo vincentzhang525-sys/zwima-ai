@@ -1,18 +1,28 @@
 const templates = {
   welcome({ name, company }) {
     const subject = "Welcome to ZWIMA AI";
-    const text = `Welcome${name ? ` ${name}` : ""}! Your ZWIMA AI account for ${company || "your business"} is ready. Start with 500 free credits and create your first API key.`;
+    const text = `Welcome${name ? ` ${name}` : ""}! Your ZWIMA AI account for ${company || "your business"} is ready. Purchase credits and create your first API key to get started.`;
     return { subject, text, html: `<p>${text}</p><p><a href="https://zwima-group.info/dashboard.html">Open Dashboard</a></p>` };
   },
-  verifyEmail({ email, link }) {
+  verifyEmail({ email, link, code }) {
     const subject = "Verify your ZWIMA AI email";
-    const text = `Please verify your email (${email}) to activate your ZWIMA AI account.`;
-    return { subject, text, html: `<p>${text}</p>${link ? `<p><a href="${link}">Verify Email</a></p>` : ""}` };
+    const text = code
+      ? `Your ZWIMA AI verification code is: ${code}\n\nThis code expires in 30 minutes.`
+      : `Please verify your email (${email}) to activate your ZWIMA AI account.`;
+    const html = code
+      ? `<p>Your verification code is:</p><p style="font-size:24px;font-weight:bold;letter-spacing:4px;">${code}</p><p>This code expires in 30 minutes.</p>`
+      : `<p>${text}</p>${link ? `<p><a href="${link}">Verify Email</a></p>` : ""}`;
+    return { subject, text, html };
   },
-  passwordReset({ email, link }) {
+  passwordReset({ email, link, code }) {
     const subject = "Reset your ZWIMA AI password";
-    const text = `A password reset was requested for ${email}. If this was you, use the link in this email.`;
-    return { subject, text, html: `<p>${text}</p>${link ? `<p><a href="${link}">Reset Password</a></p>` : ""}` };
+    const text = code
+      ? `Your password reset code is: ${code}\n\nEnter this code on the reset page. It expires in 60 minutes.`
+      : `A password reset was requested for ${email}. If this was you, use the link in this email.`;
+    const html = code
+      ? `<p>Your password reset code is:</p><p style="font-size:24px;font-weight:bold;letter-spacing:4px;">${code}</p><p><a href="${link || "#"}">Open reset page</a></p>`
+      : `<p>${text}</p>${link ? `<p><a href="${link}">Reset Password</a></p>` : ""}`;
+    return { subject, text, html };
   },
   billingNotice({ plan, amount }) {
     const subject = "ZWIMA AI billing notice";

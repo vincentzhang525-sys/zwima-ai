@@ -42,12 +42,15 @@ model ApiKey {
 }
 
 model Provider {
-  id        String   @id @default(cuid())
-  slug      String   @unique
-  name      String
-  enabled   Boolean  @default(true)
-  config    Json?
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String
+  enabled      Boolean  @default(true)
+  config       Json?
+  lastError    String?
+  lastLatency  Int?
+  lastHealthAt DateTime?
+  createdAt    DateTime @default(now())
 
   usageLogs UsageLog[]
 }
@@ -90,6 +93,7 @@ model UsageLog {
   inputTokens  Int
   outputTokens Int
   costCredits  Int
+  latencyMs    Int?
   createdAt    DateTime @default(now())
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -29,6 +29,7 @@ export default async function UsagePage() {
           inputTokens: l.inputTokens,
           outputTokens: l.outputTokens,
           cost: l.costCredits,
+          latencyMs: l.latencyMs,
         }))}
       />
     </div>

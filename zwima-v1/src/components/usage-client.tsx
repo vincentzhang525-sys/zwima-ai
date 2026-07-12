@@ -12,6 +12,7 @@ type UsageRow = {
   inputTokens: number;
   outputTokens: number;
   cost: number;
+  latencyMs: number | null;
 };
 
 const PAGE_SIZE = 10;
@@ -37,13 +38,14 @@ export function UsageClient({ initialLogs }: { initialLogs: UsageRow[] }) {
               <th className="pb-2 pr-4">Model</th>
               <th className="pb-2 pr-4">Input Tokens</th>
               <th className="pb-2 pr-4">Output Tokens</th>
-              <th className="pb-2">Cost</th>
+              <th className="pb-2 pr-4">Cost</th>
+              <th className="pb-2">Latency</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-6 text-center text-slate-500">
+                <td colSpan={7} className="py-6 text-center text-slate-500">
                   No usage records yet
                 </td>
               </tr>
@@ -55,7 +57,8 @@ export function UsageClient({ initialLogs }: { initialLogs: UsageRow[] }) {
                 <td className="py-2 pr-4">{row.model}</td>
                 <td className="py-2 pr-4">{row.inputTokens}</td>
                 <td className="py-2 pr-4">{row.outputTokens}</td>
-                <td className="py-2">{row.cost}</td>
+                <td className="py-2 pr-4">{row.cost}</td>
+                <td className="py-2">{row.latencyMs != null ? `${row.latencyMs}ms` : "—"}</td>
               </tr>
             ))}
           </tbody>

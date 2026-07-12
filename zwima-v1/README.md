@@ -29,6 +29,14 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Set root directory to `zwima-v1`, add env vars from `.env.example`, and connect a PostgreSQL database (Neon/Supabase/Vercel Postgres).
 
+## Phase 3 — Provider Integration
+
+- Real adapters: OpenAI, Gemini, DeepSeek, Qwen, Claude
+- Unified router — no hardcoded provider routing in business layer
+- Credits engine with margin multiplier
+- `GET /api/v1/models`, `GET /api/v1/health`, `POST /api/v1/chat`
+- Admin providers dashboard at `/dashboard/providers`
+
 ## Next phase
 
-Provider API Integration — connect live OpenAI, Gemini, DeepSeek, Qwen, and Claude adapters.
+Enterprise Token Billing Engine (Phase 4)

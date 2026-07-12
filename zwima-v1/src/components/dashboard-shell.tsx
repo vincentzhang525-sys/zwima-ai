@@ -9,6 +9,7 @@ import {
   Key,
   LayoutDashboard,
   Menu,
+  Server,
   Settings,
   Wallet,
   X,
@@ -24,6 +25,7 @@ const NAV = [
   { href: "/dashboard/balance", label: "Balance", icon: Wallet },
   { href: "/dashboard/usage", label: "Usage", icon: Gauge },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
+  { href: "/dashboard/providers", label: "Providers", icon: Server },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 

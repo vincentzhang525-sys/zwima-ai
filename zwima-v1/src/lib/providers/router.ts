@@ -1,58 +1,98 @@
-import type { AIProvider, ChatRequest, ChatResponse } from "./types";
+import type { HealthResult, RouteResult } from "./types";
+import { getAllAdapters } from "./registry";
 
-function createStubProvider(slug: string, name: string, models: string[]): AIProvider {
-  return {
-    slug,
-    name,
-    async listModels() {
-      return models;
-    },
-    async isAvailable() {
-      return true;
-    },
-    async chat(request: ChatRequest): Promise<ChatResponse> {
-      const inputTokens = request.messages.reduce((n, m) => n + Math.ceil(m.content.length / 4), 0);
-      const outputTokens = Math.min(request.maxTokens ?? 256, 128);
-      return {
-        content: `[${name}] Phase 2 stub — provider integration in next phase.`,
-        inputTokens,
-        outputTokens,
-        model: request.model,
-        provider: slug,
-      };
-    },
-  };
-}
-
-const PROVIDERS: Record<string, AIProvider> = {
-  openai: createStubProvider("openai", "OpenAI", ["gpt-4o", "gpt-4.1"]),
-  gemini: createStubProvider("gemini", "Gemini", ["gemini-2-flash", "gemini-2-pro"]),
-  deepseek: createStubProvider("deepseek", "DeepSeek", ["deepseek-chat"]),
-  qwen: createStubProvider("qwen", "Qwen", ["qwen-max"]),
-  claude: createStubProvider("claude", "Claude", ["claude-sonnet-4"]),
+type ProviderRuntimeState = {
+  lastHealth: HealthResult | null;
+  lastError: string | null;
+  lastLatencyMs: number | null;
+  lastCheckedAt: Date | null;
+  usageToday: number;
 };
 
-export function getProvider(slug: string): AIProvider | null {
-  return PROVIDERS[slug] ?? null;
-}
+const runtime = new Map<string, ProviderRuntimeState>();
+const dayMarkers = new Map<string, string>();
 
-export function listProviders(): AIProvider[] {
-  return Object.values(PROVIDERS);
-}
-
-export async function routeRequest(model: string): Promise<{ provider: AIProvider; model: string } | null> {
-  const normalized = model.toLowerCase();
-  for (const provider of listProviders()) {
-    const models = await provider.listModels();
-    const match = models.find((m) => m.toLowerCase() === normalized);
-    if (match) return { provider, model: match };
+function stateFor(slug: string): ProviderRuntimeState {
+  if (!runtime.has(slug)) {
+    runtime.set(slug, {
+      lastHealth: null,
+      lastError: null,
+      lastLatencyMs: null,
+      lastCheckedAt: null,
+      usageToday: 0,
+    });
   }
-  if (normalized.startsWith("gpt")) return { provider: PROVIDERS.openai, model };
-  if (normalized.startsWith("gemini")) return { provider: PROVIDERS.gemini, model };
-  if (normalized.startsWith("deepseek")) return { provider: PROVIDERS.deepseek, model };
-  if (normalized.startsWith("qwen")) return { provider: PROVIDERS.qwen, model };
-  if (normalized.startsWith("claude")) return { provider: PROVIDERS.claude, model };
+  return runtime.get(slug)!;
+}
+
+export function recordProviderSuccess(slug: string, latencyMs: number) {
+  const s = stateFor(slug);
+  s.lastError = null;
+  s.lastLatencyMs = latencyMs;
+  s.lastCheckedAt = new Date();
+  s.usageToday += 1;
+}
+
+export function recordProviderError(slug: string, error: string, latencyMs?: number) {
+  const s = stateFor(slug);
+  s.lastError = error;
+  s.lastLatencyMs = latencyMs ?? null;
+  s.lastCheckedAt = new Date();
+}
+
+export function recordHealthCheck(slug: string, health: HealthResult) {
+  const s = stateFor(slug);
+  s.lastHealth = health;
+  s.lastError = health.error;
+  s.lastLatencyMs = health.latencyMs;
+  s.lastCheckedAt = new Date();
+}
+
+export function getProviderRuntime(slug: string) {
+  return stateFor(slug);
+}
+
+export function getAllProviderRuntime() {
+  return getAllAdapters().map((adapter) => ({
+    slug: adapter.slug,
+    name: adapter.name,
+    ...stateFor(adapter.slug),
+  }));
+}
+
+/** Reset usageToday at midnight UTC — called lazily on read. */
+export function refreshDailyCounters() {
+  const today = new Date().toISOString().slice(0, 10);
+  for (const [slug, s] of runtime) {
+    const stored = dayMarkers.get(slug);
+    if (stored !== today) {
+      s.usageToday = 0;
+      dayMarkers.set(slug, today);
+    }
+  }
+}
+
+export async function checkAllProvidersHealth(): Promise<Record<string, string>> {
+  refreshDailyCounters();
+  const result: Record<string, string> = {};
+  await Promise.all(
+    getAllAdapters().map(async (adapter) => {
+      const health = await adapter.health();
+      recordHealthCheck(adapter.slug, health);
+      result[adapter.slug] =
+        health.status === "ok" ? "ok" : health.status === "unconfigured" ? "unconfigured" : "error";
+    })
+  );
+  return result;
+}
+
+export async function routeByModel(model: string): Promise<RouteResult | null> {
+  const normalized = model.trim().toLowerCase();
+  for (const adapter of getAllAdapters()) {
+    const match = adapter.models().find((m) => m.id.toLowerCase() === normalized);
+    if (match) return { adapter, model: match.id };
+  }
   return null;
 }
 
-export { PROVIDERS };
+export { getAllAdapters, getAdapter } from "./registry";

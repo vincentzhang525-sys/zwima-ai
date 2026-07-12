@@ -25,6 +25,13 @@ export async function executeChatRequest(params: {
 
   if (!key) throw new ChatError("Unauthorized", 401);
 
+  if (key.expiresAt && key.expiresAt < new Date()) {
+    throw new ChatError("API key expired", 401);
+  }
+  if (key.usageLimit != null && key.usageCount >= key.usageLimit) {
+    throw new ChatError("API key usage limit exceeded", 429);
+  }
+
   const wallet = key.user.creditBalance;
   const available = (wallet?.credits ?? 0) - (wallet?.frozenCredits ?? 0);
 

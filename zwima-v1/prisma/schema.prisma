@@ -19,31 +19,73 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  apiKeys       ApiKey[]
-  creditBalance CreditBalance?
-  transactions  Transaction[]
-  payments      Payment[]
-  usageLogs     UsageLog[]
-  invoices      Invoice[]
-  subscriptions Subscription[]
-  referral      Referral?
+  apiKeys              ApiKey[]
+  creditBalance        CreditBalance?
+  transactions         Transaction[]
+  payments             Payment[]
+  usageLogs            UsageLog[]
+  invoices             Invoice[]
+  subscriptions        Subscription[]
+  referral             Referral?
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  ownedOrganizations   Organization[]       @relation("OrgOwner")
+  organizationMembers  OrganizationMember[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User                 @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members OrganizationMember[]
+  apiKeys ApiKey[]
+
+  @@index([ownerId])
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrgRole  @default(DEVELOPER)
+  invitedEmail   String?
+  accepted       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
 }
 
 model ApiKey {
-  id        String    @id @default(cuid())
-  userId    String
-  name      String
-  keyHash   String
-  prefix    String
-  enabled   Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  lastUsed  DateTime?
+  id             String        @id @default(cuid())
+  userId         String
+  organizationId String?
+  name           String
+  keyHash        String
+  prefix         String
+  enabled        Boolean       @default(true)
+  permission     KeyPermission @default(FULL)
+  ipWhitelist    String?
+  usageLimit     Int?
+  usageCount     Int           @default(0)
+  expiresAt      DateTime?
+  createdAt      DateTime      @default(now())
+  lastUsed       DateTime?
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  usageLogs UsageLog[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  usageLogs    UsageLog[]
 
   @@index([userId])
   @@index([keyHash])
+  @@index([organizationId])
 }
 
 model Provider {
@@ -51,6 +93,8 @@ model Provider {
   slug         String   @unique
   name         String
   enabled      Boolean  @default(true)
+  weight       Int      @default(100)
+  priority     Int      @default(0)
   config       Json?
   lastError    String?
   lastLatency  Int?
@@ -167,6 +211,8 @@ model UsageLog {
   costCredits  Int
   providerCost Decimal? @db.Decimal(12, 6)
   latencyMs    Int?
+  success      Boolean  @default(true)
+  errorMessage String?
   createdAt    DateTime @default(now())
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -174,6 +220,9 @@ model UsageLog {
   provider Provider @relation(fields: [providerId], references: [id])
 
   @@index([userId, createdAt])
+  @@index([providerId, createdAt])
+  @@index([model, createdAt])
+  @@index([apiKeyId, createdAt])
 }
 
 model CreditBalance {
@@ -237,6 +286,69 @@ model ExchangeRate {
   updatedAt    DateTime @updatedAt
 
   @@unique([fromCurrency, toCurrency])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+}
+
+model AuditLog {
+  id        String        @id @default(cuid())
+  userId    String?
+  action    String
+  category  AuditCategory
+  detail    Json?
+  ip        String?
+  createdAt DateTime      @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([category, createdAt])
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  BILLING
+  DEVELOPER
+  VIEWER
+}
+
+enum KeyPermission {
+  FULL
+  READ
+  CHAT
+}
+
+enum NotificationType {
+  LOW_BALANCE
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  API_ERROR
+  PROVIDER_DOWN
+  NEW_INVOICE
+  TEAM_INVITE
+}
+
+enum AuditCategory {
+  LOGIN
+  API_KEY
+  BILLING
+  RECHARGE
+  PROVIDER
+  ADMIN
+  TEAM
 }
 
 enum UserTier {

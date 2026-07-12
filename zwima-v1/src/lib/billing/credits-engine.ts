@@ -186,7 +186,10 @@ export async function chargeForUsage(params: {
       },
     });
 
-    await tx.apiKey.update({ where: { id: params.apiKeyId }, data: { lastUsed: new Date() } });
+    await tx.apiKey.update({
+      where: { id: params.apiKeyId },
+      data: { lastUsed: new Date(), usageCount: { increment: 1 } },
+    });
 
     return { costCredits: customerCredits, usageLogId: usageLog.id, providerCost };
   });

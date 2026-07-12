@@ -10,6 +10,7 @@ publicai/.env
 # Dependencies
 node_modules/
 publicai/node_modules/
+zwima-v1/node_modules/
 zwima-gateway/node_modules/
 
 # OS / editor
@@ -19,3 +20,5 @@ Thumbs.db
 
 # Gateway runtime
 zwima-gateway/.env
+.vercel
+.env*

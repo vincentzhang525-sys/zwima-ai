@@ -83,4 +83,11 @@ try {
   console.log("Smoke user bootstrap skipped:", err instanceof Error ? err.message : err);
 }
 
+console.log("\n--- Stripe Step 2 verify ---");
+try {
+  execSync("node scripts/stripe-step2-verify.mjs", { cwd: root, stdio: "inherit", env });
+} catch {
+  console.log("Stripe Step 2 verify did not pass — see log above.");
+}
+
 execSync("npx next build", { cwd: root, stdio: "inherit", env });

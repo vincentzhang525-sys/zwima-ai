@@ -1,0 +1,77 @@
+{
+  "generatedAt": "2026-07-12T20:25:33.049Z",
+  "env": [
+    {
+      "key": "OPENAI_API_KEY",
+      "status": "缺失",
+      "alias": null
+    },
+    {
+      "key": "GEMINI_API_KEY",
+      "status": "缺失",
+      "alias": null
+    },
+    {
+      "key": "DEEPSEEK_API_KEY",
+      "status": "缺失",
+      "alias": null
+    },
+    {
+      "key": "QWEN_API_KEY",
+      "status": "缺失",
+      "alias": null
+    },
+    {
+      "key": "ANTHROPIC_API_KEY",
+      "status": "缺失",
+      "alias": null
+    }
+  ],
+  "direct": [
+    {
+      "provider": "openai",
+      "env": "OPENAI_API_KEY",
+      "model": "gpt-4o-mini",
+      "skipped": true,
+      "success": false,
+      "error": "key missing locally"
+    },
+    {
+      "provider": "gemini",
+      "env": "GEMINI_API_KEY",
+      "model": "gemini-2.5-flash-lite",
+      "skipped": true,
+      "success": false,
+      "error": "key missing locally"
+    },
+    {
+      "provider": "deepseek",
+      "env": "DEEPSEEK_API_KEY",
+      "model": "deepseek-chat",
+      "skipped": true,
+      "success": false,
+      "error": "key missing locally"
+    },
+    {
+      "provider": "qwen",
+      "env": "QWEN_API_KEY",
+      "model": "qwen-plus",
+      "skipped": true,
+      "success": false,
+      "error": "key missing locally"
+    },
+    {
+      "provider": "claude",
+      "env": "ANTHROPIC_API_KEY",
+      "model": "claude-sonnet-4-20250514",
+      "skipped": true,
+      "success": false,
+      "error": "key missing locally"
+    }
+  ],
+  "publicGateway": {
+    "ok": false,
+    "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
+  },
+  "zwimaV1Deployed": false
+}

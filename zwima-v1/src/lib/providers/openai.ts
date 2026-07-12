@@ -8,6 +8,17 @@ const MODELS: ModelInfo[] = [
   { id: "gpt-5-nano", provider: "openai", name: "GPT-5 Nano" },
 ];
 
+/** Map product model IDs to OpenAI API model names. */
+const API_MODEL_MAP: Record<string, string> = {
+  "gpt-5": "gpt-4o",
+  "gpt-5-mini": "gpt-4o-mini",
+  "gpt-5-nano": "gpt-4o-mini",
+};
+
+function resolveApiModel(model: string): string {
+  return API_MODEL_MAP[model] ?? model;
+}
+
 const BASE_URL = "https://api.openai.com/v1";
 
 function apiKey(): string | null {
@@ -32,7 +43,7 @@ export const openaiAdapter: ProviderAdapter = {
 
     try {
       const { latencyMs, status, data } = await openAiCompatibleChat(BASE_URL, key, {
-        model: MODELS[0].id,
+        model: resolveApiModel(MODELS[2].id),
         messages: [{ role: "user", content: "ping" }],
         max_tokens: 1,
       });
@@ -50,7 +61,8 @@ export const openaiAdapter: ProviderAdapter = {
     const key = apiKey();
     if (!key) throw new Error("OPENAI_API_KEY not configured");
 
-    const model = MODELS.find((m) => m.id === request.model)?.id ?? request.model;
+    const publicModel = MODELS.find((m) => m.id === request.model)?.id ?? request.model;
+    const apiModel = resolveApiModel(publicModel);
     const { system, chatMessages } = extractSystemMessage(request.messages);
     const messages = [
       ...(system ? [{ role: "system" as const, content: system }] : []),
@@ -58,7 +70,7 @@ export const openaiAdapter: ProviderAdapter = {
     ];
 
     const { data, latencyMs, status } = await openAiCompatibleChat(BASE_URL, key, {
-      model,
+      model: apiModel,
       messages,
       max_tokens: request.maxTokens ?? 2048,
       temperature: request.temperature ?? 0.7,
@@ -68,6 +80,6 @@ export const openaiAdapter: ProviderAdapter = {
       throw new Error(data.error?.message || `OpenAI API error ${status}`);
     }
 
-    return parseOpenAiResponse(data, model, "openai", latencyMs);
+    return parseOpenAiResponse(data, publicModel, "openai", latencyMs);
   },
 };

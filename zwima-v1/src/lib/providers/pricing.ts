@@ -19,6 +19,7 @@ const MODEL_PRICING: Record<string, ModelPricing> = {
   "deepseek-chat": { inputPer1k: 0.4, outputPer1k: 1.2 },
   "deepseek-reasoner": { inputPer1k: 1, outputPer1k: 3 },
   // Qwen
+  "qwen-turbo": { inputPer1k: 0.3, outputPer1k: 0.6 },
   "qwen-plus": { inputPer1k: 0.8, outputPer1k: 2 },
   "qwen-max": { inputPer1k: 2, outputPer1k: 6 },
   // Claude

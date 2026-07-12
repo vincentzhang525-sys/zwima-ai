@@ -27,10 +27,22 @@ export type CostEstimate = {
   totalCredits: number;
 };
 
+export type ProviderErrorCode =
+  | "invalid_api_key"
+  | "insufficient_balance"
+  | "region_mismatch"
+  | "model_not_available"
+  | "rate_limited"
+  | "timeout"
+  | "provider_unavailable";
+
 export type HealthResult = {
   status: "ok" | "error" | "unconfigured";
   latencyMs: number | null;
   error: string | null;
+  errorCode?: ProviderErrorCode | null;
+  endpoint?: string | null;
+  model?: string | null;
 };
 
 export type ModelInfo = {

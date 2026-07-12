@@ -1,4 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import { applyResolvedDatabaseUrl } from "./database-url";
+
+applyResolvedDatabaseUrl("transaction");
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 

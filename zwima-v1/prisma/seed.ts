@@ -19,6 +19,7 @@ const MODELS: { providerSlug: string; modelId: string; inCost: number; outCost: 
   { providerSlug: "openai", modelId: "gpt-5-nano", inCost: 0.3, outCost: 1 },
   { providerSlug: "deepseek", modelId: "deepseek-chat", inCost: 0.4, outCost: 1.2 },
   { providerSlug: "deepseek", modelId: "deepseek-reasoner", inCost: 1, outCost: 3 },
+  { providerSlug: "qwen", modelId: "qwen-turbo", inCost: 0.3, outCost: 0.6 },
   { providerSlug: "qwen", modelId: "qwen-plus", inCost: 0.8, outCost: 2 },
   { providerSlug: "qwen", modelId: "qwen-max", inCost: 2, outCost: 6 },
   { providerSlug: "claude", modelId: "claude-sonnet", inCost: 1.5, outCost: 5 },

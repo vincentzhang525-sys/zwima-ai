@@ -1,0 +1,68 @@
+{
+  "generatedAt": "2026-07-12T21:21:19.628Z",
+  "base": "https://zwima-group.info",
+  "rows": [
+    {
+      "provider": "openai",
+      "model": "gpt-5-nano",
+      "endpoint": "via /api/v1/health",
+      "direct": "PASS",
+      "unified": "SKIP",
+      "usageLog": "SKIP",
+      "credits": "SKIP",
+      "tx": "SKIP",
+      "latency": "—",
+      "result": "PASS"
+    },
+    {
+      "provider": "gemini",
+      "model": "gemini-2.5-flash-lite",
+      "endpoint": "via /api/v1/health",
+      "direct": "PASS",
+      "unified": "SKIP",
+      "usageLog": "SKIP",
+      "credits": "SKIP",
+      "tx": "SKIP",
+      "latency": "—",
+      "result": "PASS"
+    },
+    {
+      "provider": "deepseek",
+      "model": "deepseek-chat",
+      "endpoint": "via /api/v1/health",
+      "direct": "PASS",
+      "unified": "SKIP",
+      "usageLog": "SKIP",
+      "credits": "SKIP",
+      "tx": "SKIP",
+      "latency": "—",
+      "result": "PASS"
+    },
+    {
+      "provider": "qwen",
+      "model": "qwen-turbo",
+      "endpoint": "via /api/v1/health",
+      "direct": "PASS",
+      "unified": "SKIP",
+      "usageLog": "SKIP",
+      "credits": "SKIP",
+      "tx": "SKIP",
+      "latency": "—",
+      "result": "PASS"
+    },
+    {
+      "provider": "claude",
+      "model": "claude-sonnet",
+      "endpoint": "via /api/v1/health",
+      "direct": "PASS",
+      "unified": "SKIP",
+      "usageLog": "SKIP",
+      "credits": "SKIP",
+      "tx": "SKIP",
+      "latency": "—",
+      "result": "PASS"
+    }
+  ],
+  "passCount": 5,
+  "allPass": true
+}

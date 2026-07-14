@@ -3,7 +3,6 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import pg from "pg";
 import { fileURLToPath } from "node:url";
 import { resolveDatabaseUrl } from "../src/lib/database-url.ts";
 
@@ -14,56 +13,40 @@ console.log("Using DB:", dbUrl.replace(/:[^:@/]+@/, ":***@"));
 
 const env = { ...process.env, DATABASE_URL: dbUrl };
 
-function pgUrl(url) {
-  return url.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?&/, "?").replace(/\?$/, "");
-}
-
-async function schemaReady() {
-  const client = new pg.Client({
-    connectionString: pgUrl(dbUrl),
-    connectionTimeoutMillis: 15000,
-    ssl: { rejectUnauthorized: false },
+console.log("Running database migrations...");
+if (process.env.VERCEL_ENV === "preview") {
+  console.log("Preview: clearing public schema...");
+  execSync("npx prisma db execute --stdin --schema prisma/schema.prisma", {
+    cwd: root,
+    stdio: ["pipe", "inherit", "inherit"],
+    env,
+    input: "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO postgres; GRANT ALL ON SCHEMA public TO public;",
   });
-  try {
-    await client.connect();
-    const result = await client.query(
-      `SELECT EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'public' AND table_name = 'Provider'
-      ) AS ready`
-    );
-    return result.rows[0]?.ready === true;
-  } catch (err) {
-    console.log("Schema check failed:", err instanceof Error ? err.message : err);
-    return false;
-  } finally {
-    await client.end().catch(() => {});
-  }
-}
-
-function applySchemaSql() {
-  const sqlPath = path.join(os.tmpdir(), "zwima-prisma-init.sql");
   const sql = execSync(
     "npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script",
-    { cwd: root, encoding: "utf8", env }
+    { cwd: root, encoding: "utf8", env },
   );
+  const sqlPath = path.join(os.tmpdir(), "zwima-preview-schema.sql");
   fs.writeFileSync(sqlPath, sql);
-  console.log("Applying schema SQL (" + sql.length + " bytes)...");
-  try {
-    execSync(`npx prisma db execute --file "${sqlPath}" --schema prisma/schema.prisma`, {
-      cwd: root,
-      stdio: "inherit",
-      env,
-    });
-  } catch (err) {
-    console.log("Schema apply skipped or partially applied:", err instanceof Error ? err.message : err);
-  }
-}
-
-if (await schemaReady()) {
-  console.log("Schema already present, skipping SQL apply.");
+  console.log("Applying full schema (" + sql.length + " bytes)...");
+  execSync(`npx prisma db execute --file "${sqlPath}" --schema prisma/schema.prisma`, {
+    cwd: root,
+    stdio: "inherit",
+    env,
+  });
+  execSync("npx prisma migrate resolve --applied 20250713180000_phase1_infra", {
+    cwd: root,
+    stdio: "inherit",
+    env,
+  });
+  execSync("npx prisma migrate resolve --applied 20250714120000_phase2_commercial", {
+    cwd: root,
+    stdio: "inherit",
+    env,
+  });
+  console.log("Preview migration baseline complete.");
 } else {
-  applySchemaSql();
+  execSync("npx prisma migrate deploy", { cwd: root, stdio: "inherit", env });
 }
 
 execSync("npx prisma generate", { cwd: root, stdio: "inherit", env });
@@ -84,10 +67,14 @@ try {
 }
 
 console.log("\n--- Stripe Step 2 verify ---");
+if (process.env.STRIPE_PREVIEW_DISABLED === "true") {
+  console.log("Stripe Step 2 verify SKIPPED — STRIPE_PREVIEW_DISABLED=true");
+} else {
 try {
   execSync("node scripts/stripe-step2-verify.mjs", { cwd: root, stdio: "inherit", env });
 } catch {
   console.log("Stripe Step 2 verify did not pass — see log above.");
+}
 }
 
 execSync("npx next build", { cwd: root, stdio: "inherit", env });

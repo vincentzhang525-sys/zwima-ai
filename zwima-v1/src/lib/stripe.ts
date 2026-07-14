@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { prisma } from "./prisma";
+import { assertStripePaymentsAllowed } from "./stripe-preview-guard";
 
 let stripeClient: Stripe | null = null;
 
@@ -29,6 +30,8 @@ export async function createCheckoutSession(params: {
   packageId: string;
   couponCode?: string;
 }) {
+  assertStripePaymentsAllowed();
+
   const pkg = await getCreditPackage(params.packageId);
   if (!pkg) throw new Error("Invalid package");
 

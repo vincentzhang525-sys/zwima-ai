@@ -133,6 +133,7 @@ export async function chargeForUsage(params: {
   outputTokens: number;
   latencyMs: number;
   userTier?: UserTier;
+  requestId?: string;
 }) {
   const marginCtx: MarginContext = {
     providerSlug: params.providerSlug,
@@ -172,6 +173,7 @@ export async function chargeForUsage(params: {
         outputTokens: params.outputTokens,
         costCredits: customerCredits,
         providerCost,
+        requestId: params.requestId,
         latencyMs: params.latencyMs,
       },
     });

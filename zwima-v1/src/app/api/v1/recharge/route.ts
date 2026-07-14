@@ -3,10 +3,12 @@ import { requireDbUser } from "@/lib/auth";
 import { createCheckoutSession } from "@/lib/stripe";
 import { BillingEngine } from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
+import { StripePreviewDisabledError, assertStripePaymentsAllowed, stripePreviewDisabledPayload } from "@/lib/stripe-preview-guard";
 
 /** Enterprise recharge API */
 export async function POST(req: Request) {
   try {
+    assertStripePaymentsAllowed();
     const user = await requireDbUser();
     const body = await req.json();
     const packageId = String(body.packageId || body.package || "");
@@ -46,6 +48,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ checkoutUrl: result.session!.url, paymentId: payment.id, credits: result.totalCredits });
   } catch (err) {
+    if (err instanceof StripePreviewDisabledError) {
+      return NextResponse.json(stripePreviewDisabledPayload(), { status: 403 });
+    }
     return NextResponse.json({ error: err instanceof Error ? err.message : "Recharge failed" }, { status: 500 });
   }
 }

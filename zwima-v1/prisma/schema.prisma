@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── Users & Organizations ───────────────────────────────────────────────────
+
 model User {
   id            String   @id @default(cuid())
   clerkId       String   @unique
@@ -31,18 +33,24 @@ model User {
   auditLogs            AuditLog[]
   ownedOrganizations   Organization[]       @relation("OrgOwner")
   organizationMembers  OrganizationMember[]
+  aiAuditLogs          AiAuditLog[]
+  revokedApiKeys       ApiKey[]             @relation("ApiKeyRevokedBy")
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  ownerId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  name                  String
+  ownerId               String
+  defaultRoutingPolicyId String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  owner   User                 @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members OrganizationMember[]
-  apiKeys ApiKey[]
+  owner           User              @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members         OrganizationMember[]
+  apiKeys         ApiKey[]
+  routingPolicies RoutingPolicy[]
+  aiAuditLogs     AiAuditLog[]
+  securityEvents  SecurityEvent[]
 
   @@index([ownerId])
 }
@@ -63,47 +71,193 @@ model OrganizationMember {
   @@index([userId])
 }
 
+// ─── API Keys ────────────────────────────────────────────────────────────────
+
 model ApiKey {
-  id             String        @id @default(cuid())
-  userId         String
-  organizationId String?
-  name           String
-  keyHash        String
-  prefix         String
-  enabled        Boolean       @default(true)
-  permission     KeyPermission @default(FULL)
-  ipWhitelist    String?
-  usageLimit     Int?
-  usageCount     Int           @default(0)
-  expiresAt      DateTime?
-  createdAt      DateTime      @default(now())
-  lastUsed       DateTime?
+  id                 String        @id @default(cuid())
+  userId             String
+  organizationId     String?
+  name               String
+  keyHash            String
+  prefix             String
+  enabled            Boolean       @default(true)
+  status             ApiKeyStatus  @default(ACTIVE)
+  permission         KeyPermission @default(FULL)
+  permissions        String[]      @default([])
+  ipWhitelist        String?
+  usageLimit         Int?
+  usageCount         Int           @default(0)
+  rpmLimit           Int?
+  tpmLimit           Int?
+  dailyBudget        Int?
+  monthlyBudget      Int?
+  currentMonthUsage  Int           @default(0)
+  currentMonthStart  DateTime?
+  allowedProviders   String[]      @default([])
+  allowedModels      String[]      @default([])
+  environment        String        @default("production")
+  metadata           Json?
+  expiresAt          DateTime?
+  revokedAt          DateTime?
+  revokedById        String?
+  revokeReason       String?
+  createdAt          DateTime      @default(now())
+  lastUsed           DateTime?
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  revokedBy    User?         @relation("ApiKeyRevokedBy", fields: [revokedById], references: [id], onDelete: SetNull)
   usageLogs    UsageLog[]
+  aiAuditLogs  AiAuditLog[]
+  securityEvents SecurityEvent[]
 
   @@index([userId])
   @@index([keyHash])
   @@index([organizationId])
+  @@index([status])
 }
+
+// ─── Provider Infrastructure ─────────────────────────────────────────────────
 
 model Provider {
-  id           String   @id @default(cuid())
-  slug         String   @unique
-  name         String
-  enabled      Boolean  @default(true)
-  weight       Int      @default(100)
-  priority     Int      @default(0)
-  config       Json?
-  lastError    String?
-  lastLatency  Int?
-  lastHealthAt DateTime?
-  createdAt    DateTime @default(now())
+  id                String         @id @default(cuid())
+  slug              String         @unique
+  name              String
+  enabled           Boolean        @default(true)
+  status            ProviderStatus @default(ACTIVE)
+  baseUrl           String?
+  region            String?
+  dataResidency     String?
+  supportsStreaming Boolean        @default(false)
+  supportsTools     Boolean        @default(false)
+  supportsVision    Boolean        @default(false)
+  weight            Int            @default(100)
+  priority          Int            @default(0)
+  config            Json?
+  lastError         String?
+  lastLatency       Int?
+  lastHealthAt      DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
-  usageLogs UsageLog[]
+  models      ProviderModel[]
+  health      ProviderHealth?
+  usageLogs   UsageLog[]
+  aiAuditLogs AiAuditLog[]
 }
 
+model ProviderModel {
+  id                  String              @id @default(cuid())
+  providerId          String
+  modelCode           String
+  displayName         String
+  modelFamily         String?
+  modelType           ModelType           @default(CHAT)
+  contextWindow       Int?
+  maxOutputTokens     Int?
+  qualityTier         QualityTier         @default(STANDARD)
+  speedTier           SpeedTier           @default(BALANCED)
+  status              ProviderModelStatus @default(DRAFT)
+  replacementModelId  String?
+  deprecationDate     DateTime?
+  releaseDate         DateTime?
+  region              String?
+  euAvailable         Boolean             @default(true)
+  supportsStreaming   Boolean             @default(false)
+  supportsTools       Boolean             @default(false)
+  supportsVision      Boolean             @default(false)
+  supportsJson        Boolean             @default(false)
+  supportsReasoning   Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  provider          Provider               @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  replacementModel  ProviderModel?         @relation("ModelReplacement", fields: [replacementModelId], references: [id], onDelete: SetNull)
+  replacedBy        ProviderModel[]        @relation("ModelReplacement")
+  pricing           ModelPricingRecord[]
+  compliance        ModelComplianceProfile?
+  aiAuditLogs       AiAuditLog[]
+
+  @@unique([providerId, modelCode])
+  @@index([modelCode])
+  @@index([status])
+  @@index([replacementModelId])
+}
+
+model ModelComplianceProfile {
+  id                         String            @id @default(cuid())
+  providerModelId            String            @unique
+  transparencyRequired       Boolean           @default(false)
+  aiGeneratedLabelRequired     Boolean           @default(true)
+  deepfakeDisclosureRequired   Boolean           @default(false)
+  complianceStatus           ComplianceStatus  @default(PENDING_REVIEW)
+  notes                      String?
+  reviewedAt                 DateTime?
+  reviewedBy                 String?
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+
+  providerModel ProviderModel @relation(fields: [providerModelId], references: [id], onDelete: Cascade)
+
+  @@index([complianceStatus])
+}
+
+model ModelPricingRecord {
+  id                               String        @id @default(cuid())
+  providerModelId                  String
+  currency                         Currency      @default(EUR)
+  inputPricePerMillionTokens       Decimal       @db.Decimal(14, 6)
+  cachedInputPricePerMillionTokens Decimal?      @db.Decimal(14, 6)
+  cacheWritePricePerMillionTokens  Decimal?      @db.Decimal(14, 6)
+  outputPricePerMillionTokens      Decimal       @db.Decimal(14, 6)
+  longContextPricePerMillionTokens Decimal?      @db.Decimal(14, 6)
+  requestPrice                     Decimal?      @db.Decimal(14, 6)
+  imagePrice                       Decimal?      @db.Decimal(14, 6)
+  audioPrice                       Decimal?      @db.Decimal(14, 6)
+  searchToolPricePerRequest        Decimal?      @db.Decimal(14, 6)
+  batchDiscount                    Decimal?      @db.Decimal(6, 4)
+  retryCostMultiplier              Decimal?      @default(1) @db.Decimal(6, 4)
+  providerDiscount                 Decimal?      @db.Decimal(6, 4)
+  internalCostMultiplier           Decimal       @default(1) @db.Decimal(6, 4)
+  platformMarkupPercent            Decimal       @default(30) @db.Decimal(6, 2)
+  minimumCharge                    Decimal?      @db.Decimal(10, 4)
+  effectiveFrom                    DateTime      @default(now())
+  effectiveUntil                   DateTime?
+  promotionName                    String?
+  promotionActive                  Boolean       @default(false)
+  promotionEndDate                 DateTime?
+  pricingStatus                    PricingStatus @default(DRAFT)
+  sourceUrl                        String?
+  verifiedAt                       DateTime?
+  verifiedBy                       String?
+  notes                            String?
+  createdAt                        DateTime      @default(now())
+  updatedAt                        DateTime      @updatedAt
+
+  providerModel ProviderModel @relation(fields: [providerModelId], references: [id], onDelete: Cascade)
+
+  @@index([providerModelId, effectiveFrom])
+  @@index([pricingStatus, effectiveFrom, effectiveUntil])
+}
+
+model ProviderHealth {
+  id                  String         @id @default(cuid())
+  providerId          String         @unique
+  status              HealthStatus   @default(UNKNOWN)
+  latencyP50          Int?
+  latencyP95          Int?
+  successRate         Decimal?       @db.Decimal(5, 4)
+  errorRate           Decimal?       @db.Decimal(5, 4)
+  lastSuccessAt       DateTime?
+  lastFailureAt       DateTime?
+  lastErrorCode       String?
+  consecutiveFailures Int            @default(0)
+  updatedAt           DateTime       @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+// Legacy pricing — kept for backward compatibility during migration
 model ModelPricing {
   id               String   @id @default(cuid())
   providerSlug     String
@@ -118,6 +272,136 @@ model ModelPricing {
   @@unique([providerSlug, modelId])
   @@index([providerSlug])
 }
+
+// ─── Routing ─────────────────────────────────────────────────────────────────
+
+model RoutingPolicy {
+  id                    String          @id @default(cuid())
+  organizationId        String?
+  name                  String
+  strategy              RoutingStrategy @default(BALANCED)
+  status                PolicyStatus    @default(ACTIVE)
+  allowedProviders      String[]        @default([])
+  blockedProviders      String[]        @default([])
+  allowedModels         String[]        @default([])
+  blockedModels         String[]        @default([])
+  requiredRegion        String?
+  minimumQualityTier    QualityTier?
+  maximumLatencyMs      Int?
+  maximumCostPerRequest Decimal?        @db.Decimal(12, 6)
+  monthlyBudgetLimit    Int?
+  fallbackEnabled       Boolean         @default(true)
+  maxRetries            Int               @default(2)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+}
+
+model RoutingWeightConfig {
+  id                String   @id @default(cuid())
+  name              String   @unique @default("default")
+  costWeight        Decimal  @default(0.3) @db.Decimal(4, 3)
+  latencyWeight     Decimal  @default(0.25) @db.Decimal(4, 3)
+  qualityWeight     Decimal  @default(0.2) @db.Decimal(4, 3)
+  reliabilityWeight Decimal  @default(0.15) @db.Decimal(4, 3)
+  regionWeight      Decimal  @default(0.1) @db.Decimal(4, 3)
+  updatedAt         DateTime @updatedAt
+}
+
+model PlatformConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+// ─── AI Audit & Security ─────────────────────────────────────────────────────
+
+model AiAuditLog {
+  id                    String          @id @default(cuid())
+  organizationId        String?
+  userId                String?
+  apiKeyId              String?
+  requestId             String          @unique
+  correlationId         String?
+  providerId            String?
+  providerModelId       String?
+  routingPolicyId       String?
+  requestType           String          @default("chat")
+  capability            String          @default("chat")
+  promptHash            String?
+  completionHash        String?
+  inputTokens           Int             @default(0)
+  outputTokens          Int             @default(0)
+  totalTokens           Int             @default(0)
+  estimatedProviderCost Decimal?        @db.Decimal(14, 6)
+  actualProviderCost    Decimal?        @db.Decimal(14, 6)
+  customerCharge        Int?
+  margin                Decimal?        @db.Decimal(14, 6)
+  currency              Currency        @default(EUR)
+  latencyMs             Int?
+  status                AuditRequestStatus @default(PENDING)
+  errorCode             String?
+  fallbackCount         Int             @default(0)
+  attemptedProviders    String[]        @default([])
+  routingReason         String?
+  selectedProvider      String?
+  selectedModel         String?
+  strategy              String?
+  region                String?
+  dataResidency         String?
+  retentionUntil        DateTime?
+  createdAt             DateTime        @default(now())
+
+  organization  Organization?  @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  apiKey        ApiKey?        @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  provider      Provider?      @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  providerModel ProviderModel? @relation(fields: [providerModelId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([apiKeyId, createdAt])
+  @@index([requestId])
+  @@index([status, createdAt])
+  @@index([providerId, createdAt])
+}
+
+model SecurityEvent {
+  id             String            @id @default(cuid())
+  type           SecurityEventType
+  severity       SecuritySeverity  @default(MEDIUM)
+  organizationId String?
+  apiKeyId       String?
+  ipAddress      String?
+  userAgent      String?
+  details        Json?
+  resolvedAt     DateTime?
+  createdAt      DateTime          @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  apiKey       ApiKey?       @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([type, createdAt])
+  @@index([apiKeyId, createdAt])
+}
+
+model IdempotencyRecord {
+  id              String   @id @default(cuid())
+  clientRequestId String
+  apiKeyId        String
+  requestId       String
+  responseHash    String?
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime
+
+  @@unique([clientRequestId, apiKeyId])
+  @@index([expiresAt])
+}
+
+// ─── Billing (unchanged core) ──────────────────────────────────────────────────
 
 model MarginRule {
   id         String      @id @default(cuid())
@@ -164,6 +448,7 @@ model Payment {
   userId          String
   stripeSessionId String?       @unique
   stripePaymentId String?
+  stripeEventId   String?       @unique
   packageId       String?
   couponCode      String?
   amountEur       Decimal       @db.Decimal(10, 2)
@@ -213,6 +498,7 @@ model UsageLog {
   latencyMs    Int?
   success      Boolean  @default(true)
   errorMessage String?
+  requestId    String?
   createdAt    DateTime @default(now())
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -223,6 +509,7 @@ model UsageLog {
   @@index([providerId, createdAt])
   @@index([model, createdAt])
   @@index([apiKeyId, createdAt])
+  @@index([requestId])
 }
 
 model CreditBalance {
@@ -317,6 +604,8 @@ model AuditLog {
   @@index([category, createdAt])
 }
 
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
 enum OrgRole {
   OWNER
   ADMIN
@@ -329,6 +618,125 @@ enum KeyPermission {
   FULL
   READ
   CHAT
+  MODELS_READ
+  USAGE_READ
+  BILLING_READ
+  ADMIN
+}
+
+enum ApiKeyStatus {
+  ACTIVE
+  DISABLED
+  EXPIRED
+  REVOKED
+  COMPROMISED
+}
+
+enum ProviderStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  DEPRECATED
+}
+
+enum ProviderModelStatus {
+  DRAFT
+  PREVIEW
+  ACTIVE
+  INACTIVE
+  DEPRECATED
+  SUNSET
+}
+
+enum ComplianceStatus {
+  PENDING_REVIEW
+  COMPLIANT
+  NON_COMPLIANT
+  EXEMPT
+}
+
+enum PricingStatus {
+  DRAFT
+  VERIFIED
+  EXPIRED
+}
+
+enum ModelType {
+  CHAT
+  EMBEDDING
+  IMAGE
+  AUDIO
+  REASONING
+}
+
+enum QualityTier {
+  ECONOMY
+  STANDARD
+  PREMIUM
+  FLAGSHIP
+}
+
+enum SpeedTier {
+  FAST
+  BALANCED
+  QUALITY
+}
+
+enum Currency {
+  EUR
+  USD
+}
+
+enum HealthStatus {
+  HEALTHY
+  DEGRADED
+  DOWN
+  UNKNOWN
+}
+
+enum RoutingStrategy {
+  LOWEST_COST
+  LOWEST_LATENCY
+  HIGHEST_QUALITY
+  BALANCED
+  EU_PREFERRED
+  PROVIDER_PRIORITY
+  MODEL_PINNED
+  BUDGET_MODE
+  PREMIUM_MODE
+}
+
+enum PolicyStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+enum AuditRequestStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  FALLBACK
+}
+
+enum SecurityEventType {
+  API_KEY_ABUSE
+  RATE_LIMIT_SPIKE
+  BUDGET_SPIKE
+  AUTH_FAILURE_SPIKE
+  CROSS_TENANT_ATTEMPT
+  PROVIDER_FAILURE
+  LOW_MARGIN_ALERT
+  PRICING_EXPIRED
+  UNUSUAL_REGION
+  WEBHOOK_REPLAY
+}
+
+enum SecuritySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 enum NotificationType {
@@ -339,6 +747,7 @@ enum NotificationType {
   PROVIDER_DOWN
   NEW_INVOICE
   TEAM_INVITE
+  SECURITY_ALERT
 }
 
 enum AuditCategory {
@@ -349,6 +758,9 @@ enum AuditCategory {
   PROVIDER
   ADMIN
   TEAM
+  AI_REQUEST
+  SECURITY
+  COMPLIANCE
 }
 
 enum UserTier {

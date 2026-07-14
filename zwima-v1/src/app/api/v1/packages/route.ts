@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { listCreditPackages } from "@/lib/stripe";
+import { isStripePreviewDisabled } from "@/lib/stripe-preview-guard";
 
 export async function GET() {
   const packages = await listCreditPackages();
   return NextResponse.json({
+    stripePreviewDisabled: isStripePreviewDisabled(),
     packages: packages.map((p) => ({
       id: p.id,
       label: p.label,

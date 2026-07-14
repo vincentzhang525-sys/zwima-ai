@@ -4,51 +4,75 @@ import {
   BarChart3,
   CreditCard,
   FlaskConical,
+  FolderKanban,
   Gauge,
-  History,
   Key,
   LayoutDashboard,
-  Server,
+  ScrollText,
   Settings,
   Shield,
-  Tags,
-  Users,
-  Wallet,
-  Bell,
-  Building2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { cn } from "@/lib/utils";
+import { cn, formatCost } from "@/lib/utils";
 
-const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/dashboard/playground", label: "Playground", icon: FlaskConical },
+const CUSTOMER_NAV = [
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
   { href: "/dashboard/api-keys", label: "API Keys", icon: Key },
-  { href: "/dashboard/usage/history", label: "Usage Explorer", icon: History },
-  { href: "/dashboard/wallet", label: "Wallet", icon: Wallet },
+  { href: "/dashboard/playground", label: "Playground", icon: FlaskConical },
+  { href: "/dashboard/usage", label: "Usage", icon: BarChart3 },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
-  { href: "/dashboard/invoices", label: "Invoices", icon: CreditCard },
-  { href: "/dashboard/team", label: "Team", icon: Users },
-  { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
-  { href: "/dashboard/audit", label: "Audit Log", icon: Shield },
-  { href: "/dashboard/providers", label: "Providers", icon: Server },
-  { href: "/dashboard/admin/console", label: "Admin Console", icon: Building2 },
-  { href: "/dashboard/admin/revenue", label: "Revenue", icon: Gauge },
-  { href: "/dashboard/admin/pricing", label: "Pricing", icon: Tags },
+  { href: "/dashboard/logs", label: "Logs", icon: ScrollText },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+const ADMIN_NAV = [
+  { href: "/dashboard/admin", label: "Operations", icon: Gauge },
+  { href: "/dashboard/admin/routing", label: "Routing Admin", icon: Gauge },
+  { href: "/dashboard/admin/audit", label: "AI Audit", icon: Shield },
+];
+
+type HeaderStats = {
+  organization: { name: string };
+  creditBalance: number;
+  monthCostEur: number;
+};
+
+export function DashboardShell({
+  children,
+  isAdmin = false,
+}: {
+  children: React.ReactNode;
+  isAdmin?: boolean;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [header, setHeader] = useState<HeaderStats | null>(null);
+
+  useEffect(() => {
+    fetch("/api/workspace/overview")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d) {
+          setHeader({
+            organization: d.organization,
+            creditBalance: d.creditBalance,
+            monthCostEur: d.monthCostEur,
+          });
+        }
+      })
+      .catch(() => undefined);
+  }, [pathname]);
+
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -59,21 +83,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           )}
         >
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between">
             <Logo />
-            <button type="button" className="lg:hidden" onClick={() => setOpen(false)}>
+            <button type="button" className="lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
               <X className="h-5 w-5" />
             </button>
           </div>
           <nav className="space-y-1">
-            {NAV.map(({ href, label, icon: Icon }) => (
+            {CUSTOMER_NAV.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
-                  pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
+                  isActive(href)
                     ? "bg-blue-900 text-white dark:bg-blue-700"
                     : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                 )}
@@ -82,14 +106,49 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 {label}
               </Link>
             ))}
+            {isAdmin && (
+              <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
+                <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Admin</p>
+                {ADMIN_NAV.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
+                      isActive(href)
+                        ? "bg-slate-800 text-white"
+                        : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </nav>
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
-          <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 lg:px-6">
-            <button type="button" className="lg:hidden" onClick={() => setOpen(true)}>
+          <header className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 lg:px-6">
+            <button type="button" className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
               <Menu className="h-5 w-5" />
             </button>
+            <div className="flex flex-1 flex-wrap items-center gap-4 text-sm">
+              <div>
+                <p className="text-xs text-slate-500">Organization</p>
+                <p className="font-medium">{header?.organization.name ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Credits</p>
+                <p className="font-medium">{header ? formatCost(header.creditBalance) : "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">This month</p>
+                <p className="font-medium">{header ? `€${header.monthCostEur.toFixed(4)}` : "—"}</p>
+              </div>
+            </div>
             <div className="ml-auto flex items-center gap-3">
               <NotificationBell />
               <ThemeToggle />

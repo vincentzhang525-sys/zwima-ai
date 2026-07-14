@@ -5,8 +5,13 @@ import { processRefund } from "@/lib/billing/credits-engine";
 import { handleSubscriptionRenewal } from "@/lib/billing/subscription-engine";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { isStripePreviewDisabled, stripePreviewDisabledPayload } from "@/lib/stripe-preview-guard";
 
 export async function POST(req: Request) {
+  if (isStripePreviewDisabled()) {
+    return NextResponse.json(stripePreviewDisabledPayload(), { status: 403 });
+  }
+
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
 
@@ -23,6 +28,12 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Invalid signature" }, { status: 400 });
+  }
+
+  // Idempotency: skip already-processed Stripe events
+  const existing = await prisma.payment.findFirst({ where: { stripeEventId: event.id } });
+  if (existing) {
+    return NextResponse.json({ received: true, duplicate: true });
   }
 
   switch (event.type) {
@@ -45,7 +56,11 @@ export async function POST(req: Request) {
           });
           await prisma.payment.update({
             where: { id: payment.id },
-            data: { status: "COMPLETED", stripePaymentId: session.payment_intent as string },
+            data: {
+              status: "COMPLETED",
+              stripePaymentId: session.payment_intent as string,
+              stripeEventId: event.id,
+            },
           });
         } else if (!payment) {
           const newPayment = await prisma.payment.create({
@@ -53,6 +68,7 @@ export async function POST(req: Request) {
               userId,
               stripeSessionId: session.id,
               stripePaymentId: session.payment_intent as string,
+              stripeEventId: event.id,
               amountEur,
               credits,
               status: "COMPLETED",
@@ -105,7 +121,7 @@ export async function POST(req: Request) {
     case "charge.refunded": {
       const charge = event.data.object as Stripe.Charge;
       const payment = await prisma.payment.findFirst({ where: { stripePaymentId: charge.payment_intent as string } });
-      if (payment) {
+      if (payment && payment.status !== "REFUNDED") {
         await processRefund(payment.userId, payment.credits, Number(payment.amountEur), "Stripe refund");
         await prisma.payment.update({ where: { id: payment.id }, data: { status: "REFUNDED" } });
       }

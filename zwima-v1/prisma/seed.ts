@@ -1,29 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import { getAllAdapters } from "../src/lib/providers/registry";
 
 const prisma = new PrismaClient();
 
 const PROVIDERS = [
-  { slug: "openai", name: "OpenAI" },
-  { slug: "gemini", name: "Gemini" },
-  { slug: "deepseek", name: "DeepSeek" },
-  { slug: "qwen", name: "Qwen" },
-  { slug: "claude", name: "Claude" },
-];
-
-const MODELS: { providerSlug: string; modelId: string; inCost: number; outCost: number }[] = [
-  { providerSlug: "gemini", modelId: "gemini-2.5-pro", inCost: 2, outCost: 8 },
-  { providerSlug: "gemini", modelId: "gemini-2.5-flash", inCost: 0.5, outCost: 1.5 },
-  { providerSlug: "gemini", modelId: "gemini-2.5-flash-lite", inCost: 0.2, outCost: 0.6 },
-  { providerSlug: "openai", modelId: "gpt-5", inCost: 5, outCost: 15 },
-  { providerSlug: "openai", modelId: "gpt-5-mini", inCost: 1, outCost: 4 },
-  { providerSlug: "openai", modelId: "gpt-5-nano", inCost: 0.3, outCost: 1 },
-  { providerSlug: "deepseek", modelId: "deepseek-chat", inCost: 0.4, outCost: 1.2 },
-  { providerSlug: "deepseek", modelId: "deepseek-reasoner", inCost: 1, outCost: 3 },
-  { providerSlug: "qwen", modelId: "qwen-turbo", inCost: 0.3, outCost: 0.6 },
-  { providerSlug: "qwen", modelId: "qwen-plus", inCost: 0.8, outCost: 2 },
-  { providerSlug: "qwen", modelId: "qwen-max", inCost: 2, outCost: 6 },
-  { providerSlug: "claude", modelId: "claude-sonnet", inCost: 1.5, outCost: 5 },
-  { providerSlug: "claude", modelId: "claude-opus", inCost: 4, outCost: 12 },
+  { slug: "openai", name: "OpenAI", region: "US", dataResidency: "US" },
+  { slug: "gemini", name: "Google Gemini", region: "US", dataResidency: "US" },
+  { slug: "deepseek", name: "DeepSeek", region: "CN", dataResidency: "CN" },
+  { slug: "qwen", name: "Qwen", region: "CN", dataResidency: "CN" },
+  { slug: "claude", name: "Anthropic Claude", region: "US", dataResidency: "US" },
 ];
 
 const PACKAGES = [
@@ -43,15 +28,98 @@ const MARGINS = [
 ];
 
 async function main() {
+  // Providers
   for (const p of PROVIDERS) {
     await prisma.provider.upsert({
       where: { slug: p.slug },
-      create: { slug: p.slug, name: p.name, enabled: true },
-      update: { name: p.name },
+      create: {
+        slug: p.slug,
+        name: p.name,
+        enabled: true,
+        status: "ACTIVE",
+        region: p.region,
+        dataResidency: p.dataResidency,
+      },
+      update: { name: p.name, region: p.region, dataResidency: p.dataResidency },
     });
   }
 
-  for (const m of MODELS) {
+  // ProviderModel from adapters + DRAFT placeholder pricing
+  const adapters = getAllAdapters();
+  for (const adapter of adapters) {
+    const provider = await prisma.provider.findUnique({ where: { slug: adapter.slug } });
+    if (!provider) continue;
+
+    for (const m of adapter.models()) {
+      const pm = await prisma.providerModel.upsert({
+        where: { providerId_modelCode: { providerId: provider.id, modelCode: m.id } },
+        create: {
+          providerId: provider.id,
+          modelCode: m.id,
+          displayName: m.name,
+          modelFamily: adapter.slug,
+          status: "DRAFT",
+          qualityTier: "STANDARD",
+        },
+        update: { displayName: m.name },
+      });
+
+      const existingDraft = await prisma.modelPricingRecord.findFirst({
+        where: { providerModelId: pm.id, pricingStatus: "DRAFT" },
+      });
+      if (!existingDraft) {
+        await prisma.modelPricingRecord.create({
+          data: {
+            providerModelId: pm.id,
+            currency: "EUR",
+            inputPricePerMillionTokens: 0,
+            outputPricePerMillionTokens: 0,
+            platformMarkupPercent: 30,
+            pricingStatus: "DRAFT",
+            notes: "PLACEHOLDER — pending admin verification. Not used in production routing.",
+            sourceUrl: "https://admin.zwima-group.info/pricing",
+          },
+        });
+      }
+
+      await prisma.modelComplianceProfile.upsert({
+        where: { providerModelId: pm.id },
+        create: {
+          providerModelId: pm.id,
+          transparencyRequired: false,
+          aiGeneratedLabelRequired: true,
+          deepfakeDisclosureRequired: false,
+          complianceStatus: "PENDING_REVIEW",
+        },
+        update: {},
+      });
+
+      await prisma.providerHealth.upsert({
+        where: { providerId: provider.id },
+        create: { providerId: provider.id, status: "UNKNOWN" },
+        update: {},
+      });
+    }
+  }
+
+  // Legacy ModelPricing (production billing continuity)
+  const LEGACY_MODELS: { providerSlug: string; modelId: string; inCost: number; outCost: number }[] = [
+    { providerSlug: "gemini", modelId: "gemini-2.5-pro", inCost: 2, outCost: 8 },
+    { providerSlug: "gemini", modelId: "gemini-2.5-flash", inCost: 0.5, outCost: 1.5 },
+    { providerSlug: "gemini", modelId: "gemini-2.5-flash-lite", inCost: 0.2, outCost: 0.6 },
+    { providerSlug: "openai", modelId: "gpt-5", inCost: 5, outCost: 15 },
+    { providerSlug: "openai", modelId: "gpt-5-mini", inCost: 1, outCost: 4 },
+    { providerSlug: "openai", modelId: "gpt-5-nano", inCost: 0.3, outCost: 1 },
+    { providerSlug: "deepseek", modelId: "deepseek-chat", inCost: 0.4, outCost: 1.2 },
+    { providerSlug: "deepseek", modelId: "deepseek-reasoner", inCost: 1, outCost: 3 },
+    { providerSlug: "qwen", modelId: "qwen-turbo", inCost: 0.3, outCost: 0.6 },
+    { providerSlug: "qwen", modelId: "qwen-plus", inCost: 0.8, outCost: 2 },
+    { providerSlug: "qwen", modelId: "qwen-max", inCost: 2, outCost: 6 },
+    { providerSlug: "claude", modelId: "claude-sonnet", inCost: 1.5, outCost: 5 },
+    { providerSlug: "claude", modelId: "claude-opus", inCost: 4, outCost: 12 },
+  ];
+
+  for (const m of LEGACY_MODELS) {
     const marginPct = 30;
     const mult = 1 + marginPct / 100;
     await prisma.modelPricing.upsert({
@@ -73,6 +141,26 @@ async function main() {
       },
     });
   }
+
+  // Default global routing policy
+  const globalPolicy = await prisma.routingPolicy.findFirst({ where: { organizationId: null, name: "Global Default" } });
+  if (!globalPolicy) {
+    await prisma.routingPolicy.create({
+      data: {
+        name: "Global Default",
+        strategy: "BALANCED",
+        status: "ACTIVE",
+        fallbackEnabled: true,
+        maxRetries: 2,
+      },
+    });
+  }
+
+  await prisma.routingWeightConfig.upsert({
+    where: { name: "default" },
+    create: { name: "default" },
+    update: {},
+  });
 
   for (const pkg of PACKAGES) {
     const existing = await prisma.creditPackage.findFirst({ where: { label: pkg.label } });
@@ -107,7 +195,23 @@ async function main() {
     update: { enabled: true },
   });
 
-  console.log("Seeded providers, pricing, packages, margins, exchange rate, coupon");
+  const missingCompliance = await prisma.providerModel.findMany({
+    where: { compliance: null },
+    select: { id: true },
+  });
+  for (const m of missingCompliance) {
+    await prisma.modelComplianceProfile.create({
+      data: {
+        providerModelId: m.id,
+        transparencyRequired: false,
+        aiGeneratedLabelRequired: true,
+        deepfakeDisclosureRequired: false,
+        complianceStatus: "PENDING_REVIEW",
+      },
+    });
+  }
+
+  console.log("Seeded providers, models (DRAFT), legacy pricing, routing policy, packages");
 }
 
 main()

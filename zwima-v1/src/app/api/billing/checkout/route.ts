@@ -3,9 +3,11 @@ import { requireDbUser } from "@/lib/auth";
 import { createCheckoutSession } from "@/lib/stripe";
 import { BillingEngine } from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
+import { StripePreviewDisabledError, assertStripePaymentsAllowed, stripePreviewDisabledPayload } from "@/lib/stripe-preview-guard";
 
 export async function POST(req: Request) {
   try {
+    assertStripePaymentsAllowed();
     const user = await requireDbUser();
     const body = await req.json();
     const packageId = String(body.packageId || "");
@@ -64,6 +66,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url: result.session!.url, paymentId: payment.id });
   } catch (err) {
+    if (err instanceof StripePreviewDisabledError) {
+      return NextResponse.json(stripePreviewDisabledPayload(), { status: 403 });
+    }
     console.error("[billing/checkout]", err);
     return NextResponse.json({ error: err instanceof Error ? err.message : "Checkout failed" }, { status: 500 });
   }

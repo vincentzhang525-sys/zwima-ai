@@ -1,6 +1,7 @@
 import { prisma } from "../prisma";
 import type { SubscriptionPlan } from "@prisma/client";
 import { getStripe } from "../stripe";
+import { assertStripePaymentsAllowed } from "../stripe-preview-guard";
 import { processRecharge } from "./credits-engine";
 
 export async function createSubscriptionCheckout(params: {
@@ -10,6 +11,8 @@ export async function createSubscriptionCheckout(params: {
   amountEur: number;
   creditsPerPeriod: number;
 }) {
+  assertStripePaymentsAllowed();
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -91,6 +94,8 @@ export async function handleSubscriptionRenewal(stripeSubscriptionId: string, us
 }
 
 export async function cancelSubscription(userId: string, subscriptionId: string) {
+  assertStripePaymentsAllowed();
+
   const sub = await prisma.subscription.findFirst({ where: { id: subscriptionId, userId } });
   if (!sub) throw new Error("Subscription not found");
 

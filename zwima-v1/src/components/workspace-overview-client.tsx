@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { SkeletonCard, SkeletonTable } from "@/components/ui/skeleton";
 import { formatCost } from "@/lib/utils";
+import { fetchWorkspaceOverview } from "@/lib/workspace/overview-fetch";
 
 type Overview = {
   creditBalance: number;
@@ -50,10 +51,9 @@ export function WorkspaceOverviewClient() {
   async function load() {
     setLoading(true);
     setError("");
-    const res = await fetch("/api/workspace/overview");
-    const json = await res.json();
-    if (!res.ok) setError(json.error?.message || "Failed to load");
-    else setData(json);
+    const json = await fetchWorkspaceOverview();
+    if (!json) setError("Failed to load");
+    else setData(json as Overview);
     setLoading(false);
   }
 

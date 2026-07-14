@@ -22,28 +22,43 @@ export async function GET() {
     });
 
     const usageWhere = await buildOrgUsageWhere(ctx.organizationId);
-    const enriched = await Promise.all(
-      projects.map(async (project) => {
-        const projectKeyIds = keys
-          .filter((k) => parseApiKeyMetadata(k.metadata).projectId === project.id)
-          .map((k) => k.id);
-        const usage = projectKeyIds.length
-          ? await prisma.usageLog.aggregate({
-              where: { ...usageWhere, apiKeyId: { in: projectKeyIds } },
-              _sum: { costCredits: true },
-              _count: { id: true },
-            })
-          : { _sum: { costCredits: 0 }, _count: { id: 0 } };
-
-        return {
-          ...project,
-          apiKeyCount: projectKeyIds.length,
-          usageRequests: usage._count.id,
-          usageCostCredits: usage._sum.costCredits ?? 0,
-          usageCostEur: creditsToEur(usage._sum.costCredits ?? 0),
-        };
-      })
+    const keyIds = keys.map((k) => k.id);
+    const usageRows = keyIds.length
+      ? await prisma.usageLog.groupBy({
+          by: ["apiKeyId"],
+          where: { ...usageWhere, apiKeyId: { in: keyIds } },
+          _sum: { costCredits: true },
+          _count: { id: true },
+        })
+      : [];
+    const usageByKeyId = new Map(
+      usageRows.map((row) => [
+        row.apiKeyId,
+        { costCredits: row._sum.costCredits ?? 0, requests: row._count.id },
+      ]),
     );
+
+    const enriched = projects.map((project) => {
+      const projectKeyIds = keys
+        .filter((k) => parseApiKeyMetadata(k.metadata).projectId === project.id)
+        .map((k) => k.id);
+      let usageRequests = 0;
+      let usageCostCredits = 0;
+      for (const keyId of projectKeyIds) {
+        const usage = usageByKeyId.get(keyId);
+        if (!usage) continue;
+        usageRequests += usage.requests;
+        usageCostCredits += usage.costCredits;
+      }
+
+      return {
+        ...project,
+        apiKeyCount: projectKeyIds.length,
+        usageRequests,
+        usageCostCredits,
+        usageCostEur: creditsToEur(usageCostCredits),
+      };
+    });
 
     return NextResponse.json({ projects: enriched });
   } catch (err) {

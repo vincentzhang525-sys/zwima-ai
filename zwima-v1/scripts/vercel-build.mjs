@@ -4,12 +4,12 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolveDatabaseUrl } from "../src/lib/database-url.ts";
+import { resolveDirectDatabaseUrl } from "../src/lib/database-url.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-const dbUrl = resolveDatabaseUrl("session");
-console.log("Using DB:", dbUrl.replace(/:[^:@/]+@/, ":***@"));
+const dbUrl = resolveDirectDatabaseUrl();
+console.log("Using DB (DIRECT_URL / session for build only):", dbUrl.replace(/:[^:@/]+@/, ":***@"));
 
 const env = { ...process.env, DATABASE_URL: dbUrl };
 

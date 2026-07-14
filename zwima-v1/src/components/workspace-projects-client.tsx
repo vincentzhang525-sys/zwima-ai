@@ -27,11 +27,17 @@ export function WorkspaceProjectsClient() {
 
   async function load() {
     setLoading(true);
-    const res = await fetch("/api/workspace/projects");
-    const data = await res.json();
-    if (!res.ok) setError(data.error?.message || "Failed");
-    else setProjects(data.projects ?? []);
-    setLoading(false);
+    setError("");
+    try {
+      const res = await fetch("/api/workspace/projects");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setError(data.error?.message || "Failed to load projects");
+      else setProjects(data.projects ?? []);
+    } catch {
+      setError("Failed to load projects");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {

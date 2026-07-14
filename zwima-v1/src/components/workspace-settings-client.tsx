@@ -28,13 +28,19 @@ export function WorkspaceSettingsClient() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
 
-  async function load() {
-    setLoading(true);
-    const res = await fetch("/api/workspace/settings");
-    const data = await res.json();
-    if (!res.ok) setError(data.error?.message || "Failed");
-    else { setSettings(data.settings); setError(""); }
-    setLoading(false);
+  async function load(options?: { silent?: boolean }) {
+    if (!options?.silent) setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/workspace/settings");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) setError(data.error?.message || "Failed to load settings");
+      else { setSettings(data.settings); setError(""); }
+    } catch {
+      setError("Failed to load settings");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, []);
@@ -48,8 +54,10 @@ export function WorkspaceSettingsClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(settings),
     });
-    if (res.ok) { setSaved(true); load(); }
-    else {
+    if (res.ok) {
+      setSaved(true);
+      await load({ silent: true });
+    } else {
       const data = await res.json();
       setError(data.error?.message || "Save failed");
     }

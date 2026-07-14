@@ -11,6 +11,10 @@
     "typecheck": "tsc --noEmit",
     "test": "npx vitest run",
     "test:watch": "vitest",
+    "e2e:auth": "node scripts/e2e-auth.mjs",
+    "e2e:auth:setup": "playwright test --project=setup --headed",
+    "e2e:phase4": "node scripts/e2e-phase4.mjs",
+    "e2e:phase4:headed": "node scripts/e2e-phase4.mjs --headed",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
@@ -33,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

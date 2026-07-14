@@ -21,6 +21,7 @@ import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn, formatCost } from "@/lib/utils";
+import { fetchWorkspaceOverview } from "@/lib/workspace/overview-fetch";
 
 const CUSTOMER_NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -57,19 +58,16 @@ export function DashboardShell({
   const [header, setHeader] = useState<HeaderStats | null>(null);
 
   useEffect(() => {
-    fetch("/api/workspace/overview")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d) {
-          setHeader({
-            organization: d.organization,
-            creditBalance: d.creditBalance,
-            monthCostEur: d.monthCostEur,
-          });
-        }
-      })
-      .catch(() => undefined);
-  }, [pathname]);
+    fetchWorkspaceOverview().then((d) => {
+      if (d?.organization) {
+        setHeader({
+          organization: d.organization as { name: string },
+          creditBalance: Number(d.creditBalance ?? 0),
+          monthCostEur: Number(d.monthCostEur ?? 0),
+        });
+      }
+    });
+  }, []);
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));

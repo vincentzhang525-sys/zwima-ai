@@ -65,6 +65,10 @@ export function mergeProviderConfig(
 export function redactApiKeysForResponse(config: ProviderAdminConfig): ProviderAdminConfig {
   return {
     ...config,
-    apiKeys: config.apiKeys?.map(({ secret: _s, ...k }) => k),
+    apiKeys: config.apiKeys?.map((entry) => {
+      const copy = { ...entry };
+      delete copy.secret;
+      return copy;
+    }),
   };
 }

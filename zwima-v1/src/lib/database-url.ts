@@ -22,22 +22,43 @@ function regionFromDatabaseUrl(url: string | undefined) {
 
 function buildPoolerUrl(ref: string, password: string, region: string, port: string) {
   const encoded = encodeURIComponent(password);
-  const query = port === "6543" ? "?pgbouncer=true&sslmode=require" : "?sslmode=require";
-  return `postgresql://postgres.${ref}:${encoded}@${region}.pooler.supabase.com:${port}/postgres${query}`;
+  if (port === "6543") {
+    return `postgresql://postgres.${ref}:${encoded}@${region}.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require&connection_limit=1&pool_timeout=30`;
+  }
+  return `postgresql://postgres.${ref}:${encoded}@${region}.pooler.supabase.com:${port}/postgres?sslmode=require`;
+}
+
+/** Prisma runtime URL — transaction pooler (6543) must use pgbouncer=true (no prepared statements). */
+export function resolvePrismaRuntimeDatabaseUrl(raw = process.env.DATABASE_URL ?? ""): string {
+  const url = raw.trim();
+  if (!url) return url;
+  const u = new URL(url.replace(/^postgres(ql)?:\/\//i, "http://"));
+  const isTransactionPooler = u.port === "6543" || (u.hostname.includes("pooler.supabase.com") && u.port !== "5432");
+  if (!isTransactionPooler) {
+    return url;
+  }
+  u.searchParams.set("pgbouncer", "true");
+  if (!u.searchParams.has("sslmode")) u.searchParams.set("sslmode", "require");
+  if (!u.searchParams.has("connection_limit")) u.searchParams.set("connection_limit", "1");
+  if (!u.searchParams.has("pool_timeout")) u.searchParams.set("pool_timeout", "30");
+  return u.toString().replace(/^http:\/\//, "postgresql://");
 }
 
 function normalizeExistingUrl(raw: string, port: string) {
   let url = raw;
   url = url.replace(/:\d+\//, `:${port}/`).replace(/:\d+(?=\/)/, `:${port}`);
-  url = url.replace(/\?pgbouncer=true&?/i, port === "6543" ? "?pgbouncer=true&" : "?");
   url = url.replace(/\?&/, "?").replace(/\?$/, "");
-  if (!url.includes("sslmode=")) {
-    url += url.includes("?") ? "&sslmode=require" : "?sslmode=require";
+  const u = new URL(url.replace(/^postgres(ql)?:\/\//i, "http://"));
+  if (port === "6543") {
+    u.port = "6543";
+    u.searchParams.set("pgbouncer", "true");
+    u.searchParams.set("sslmode", "require");
+    u.searchParams.set("connection_limit", "1");
+    u.searchParams.set("pool_timeout", "30");
+  } else if (!u.searchParams.has("sslmode")) {
+    u.searchParams.set("sslmode", "require");
   }
-  if (port === "6543" && !url.includes("pgbouncer=true")) {
-    url += url.includes("?") ? "&pgbouncer=true" : "?pgbouncer=true";
-  }
-  return url;
+  return u.toString().replace(/^http:\/\//, "postgresql://");
 }
 
 export type DatabaseUrlMode = "session" | "transaction";
@@ -78,7 +99,15 @@ export function resolveDatabaseUrlCandidates(mode: DatabaseUrlMode = "session") 
 }
 
 export function applyResolvedDatabaseUrl(mode: DatabaseUrlMode = "transaction") {
+  // Never override an explicit Vercel/runtime DATABASE_URL — only fill when missing.
+  if (process.env.DATABASE_URL?.trim()) return;
   if (process.env.SUPABASE_DB_PASSWORD && process.env.SUPABASE_URL) {
     process.env.DATABASE_URL = resolveDatabaseUrl(mode);
   }
+}
+
+/** Direct/session URL for Prisma migrate, db execute, and seed — never for app runtime. */
+export function resolveDirectDatabaseUrl(): string {
+  if (process.env.DIRECT_URL?.trim()) return process.env.DIRECT_URL.trim();
+  return resolveDatabaseUrl("session");
 }

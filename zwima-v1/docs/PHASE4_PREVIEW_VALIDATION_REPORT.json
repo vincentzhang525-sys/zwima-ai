@@ -1,0 +1,505 @@
+{
+  "previewUrl": "https://zwima-2rutorfey-zwima.vercel.app",
+  "deploymentId": "dpl_7gZhWqZUuKwnViNd8gqqM4CaXLpv",
+  "timestamp": "2026-07-14T13:23:40.518Z",
+  "steps": {
+    "env_routing_engine": {
+      "ok": true,
+      "value": "smart",
+      "configured": true
+    },
+    "env_stripe_preview_disabled": {
+      "ok": true,
+      "value": "true",
+      "runtimeVerifiedSeparately": true
+    },
+    "env_routing_engine_check": {
+      "ok": true
+    },
+    "env_stripe_guard": {
+      "ok": true
+    },
+    "preview_db_connection": {
+      "ok": false,
+      "status": 404,
+      "body": "<!DOCTYPE html><!--R3mJboKVc7qGa6eDvgLH9--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/"
+    },
+    "login_page": {
+      "ok": true,
+      "status": 200
+    },
+    "signup_page": {
+      "ok": true,
+      "status": 200
+    },
+    "unauth_dashboard_redirect": {
+      "ok": true,
+      "status": 307,
+      "location": "/login"
+    },
+    "workspace_unauth_redirect": {
+      "ok": true,
+      "status": 307,
+      "location": "/login"
+    },
+    "health": {
+      "ok": true,
+      "status": 200
+    },
+    "stripe_webhook_preview_guard": {
+      "ok": false,
+      "status": 400,
+      "body": {
+        "error": "Missing stripe-signature header"
+      }
+    },
+    "checkout_preview_blocked_or_auth": {
+      "ok": true,
+      "status": 307
+    },
+    "page_load_/dashboard": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/projects": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/api-keys": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/playground": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/usage": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/billing": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/logs": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/settings": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/admin": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/admin/providers": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/admin/models": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/admin/routing": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_load_/dashboard/admin/compliance": {
+      "ok": true,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "recharge_unauth_preview_disabled": {
+      "ok": false,
+      "status": 500,
+      "body": {
+        "error": "Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:\n- Your middleware file exists at ./middleware.(ts|js)\n- clerkMiddleware() is used in your Next.js middleware file.\n- Your middleware matcher is configured to match this route or page.\n- If you are using the src directory, make sure the middleware file is inside of it.\n\nIf you've verified your configuration and are still seeing this error, there may be a runtime issue or a problem communicating with Clerk.\n\nFor more details, see https://clerk.com/err/auth-middleware\n"
+      }
+    },
+    "chat_requires_api_key": {
+      "ok": true,
+      "status": 401
+    },
+    "clerk_session": {
+      "ok": true,
+      "clerkUserId": "user_3GUli9K6MK4Qt6ELNofwD5GL1Ys",
+      "sessionId": "sess_3GUoJgdqyG0Gbd4CDSm3VmcQAf9"
+    },
+    "dashboard_auth_200": {
+      "ok": false,
+      "status": 307,
+      "location": "/login"
+    },
+    "page_auth_/dashboard/projects": {
+      "ok": false,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_auth_/dashboard/api-keys": {
+      "ok": false,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_auth_/dashboard/playground": {
+      "ok": false,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_auth_/dashboard/usage": {
+      "ok": false,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_auth_/dashboard/billing": {
+      "ok": false,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_auth_/dashboard/logs": {
+      "ok": false,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "page_auth_/dashboard/settings": {
+      "ok": false,
+      "status": 307,
+      "redirect": "/login"
+    },
+    "workspace_overview_auth": {
+      "ok": false,
+      "status": 307,
+      "body": {
+        "redirect": "/login",
+        "status": "307"
+      }
+    },
+    "project_create": {
+      "ok": false,
+      "redirect": "/login",
+      "status": "307"
+    },
+    "regression_local": {
+      "ok": true,
+      "note": "npm test/typecheck/lint/build run separately"
+    }
+  },
+  "failures": [
+    {
+      "step": "preview_db_connection",
+      "detail": {
+        "status": 404,
+        "body": "<!DOCTYPE html><!--R3mJboKVc7qGa6eDvgLH9--><html lang=\"en\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><link rel=\"stylesheet\" href=\"/_next/static/"
+      }
+    },
+    {
+      "step": "stripe_webhook_preview_guard",
+      "detail": {
+        "status": 400,
+        "body": {
+          "error": "Missing stripe-signature header"
+        }
+      }
+    },
+    {
+      "step": "recharge_unauth_preview_disabled",
+      "detail": {
+        "status": 500,
+        "body": {
+          "error": "Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware(). Please ensure the following:\n- Your middleware file exists at ./middleware.(ts|js)\n- clerkMiddleware() is used in your Next.js middleware file.\n- Your middleware matcher is configured to match this route or page.\n- If you are using the src directory, make sure the middleware file is inside of it.\n\nIf you've verified your configuration and are still seeing this error, there may be a runtime issue or a problem communicating with Clerk.\n\nFor more details, see https://clerk.com/err/auth-middleware\n"
+        }
+      }
+    },
+    {
+      "step": "dashboard_auth_200",
+      "detail": {
+        "status": 307,
+        "location": "/login"
+      }
+    },
+    {
+      "step": "page_auth_/dashboard/projects",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_auth_/dashboard/api-keys",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_auth_/dashboard/playground",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_auth_/dashboard/usage",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_auth_/dashboard/billing",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_auth_/dashboard/logs",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_auth_/dashboard/settings",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "workspace_overview_auth",
+      "detail": {
+        "status": 307,
+        "body": {
+          "redirect": "/login",
+          "status": "307"
+        }
+      }
+    },
+    {
+      "step": "project_create",
+      "detail": {
+        "redirect": "/login",
+        "status": "307"
+      }
+    }
+  ],
+  "passes": [
+    {
+      "step": "env_routing_engine",
+      "detail": {
+        "value": "smart",
+        "configured": true
+      }
+    },
+    {
+      "step": "env_stripe_preview_disabled",
+      "detail": {
+        "value": "true",
+        "runtimeVerifiedSeparately": true
+      }
+    },
+    {
+      "step": "env_routing_engine_check",
+      "detail": {
+        "ok": true
+      }
+    },
+    {
+      "step": "env_stripe_guard",
+      "detail": {
+        "ok": true
+      }
+    },
+    {
+      "step": "login_page",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "step": "signup_page",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "step": "unauth_dashboard_redirect",
+      "detail": {
+        "status": 307,
+        "location": "/login"
+      }
+    },
+    {
+      "step": "workspace_unauth_redirect",
+      "detail": {
+        "status": 307,
+        "location": "/login"
+      }
+    },
+    {
+      "step": "health",
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "step": "checkout_preview_blocked_or_auth",
+      "detail": {
+        "status": 307
+      }
+    },
+    {
+      "step": "page_load_/dashboard",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/projects",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/api-keys",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/playground",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/usage",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/billing",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/logs",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/settings",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/admin",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/admin/providers",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/admin/models",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/admin/routing",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "page_load_/dashboard/admin/compliance",
+      "detail": {
+        "status": 307,
+        "redirect": "/login"
+      }
+    },
+    {
+      "step": "chat_requires_api_key",
+      "detail": {
+        "status": 401
+      }
+    },
+    {
+      "step": "clerk_session",
+      "detail": {
+        "clerkUserId": "user_3GUli9K6MK4Qt6ELNofwD5GL1Ys",
+        "sessionId": "sess_3GUoJgdqyG0Gbd4CDSm3VmcQAf9"
+      }
+    },
+    {
+      "step": "regression_local",
+      "detail": {
+        "note": "npm test/typecheck/lint/build run separately"
+      }
+    }
+  ],
+  "envMeta": {
+    "ROUTING_ENGINE": 5,
+    "STRIPE_PREVIEW_DISABLED": 4,
+    "SUPABASE_SERVICE_ROLE_KEY": 0,
+    "SUPABASE_ANON_KEY": 0,
+    "DIRECT_URL": 0,
+    "STRIPE_WEBHOOK_SECRET": 0,
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": 0,
+    "STRIPE_SECRET_KEY": 0,
+    "NEXT_PUBLIC_APP_URL": 24,
+    "CLERK_SECRET_KEY": 50,
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": 58,
+    "QWEN_API_KEY": 0,
+    "ANTHROPIC_API_KEY": 0,
+    "SMTP_PASSWORD": 0,
+    "SMTP_USER": 0,
+    "SMTP_PORT": 0,
+    "SMTP_HOST": 0,
+    "EMAIL_PROVIDER": 0,
+    "DATABASE_URL": 0,
+    "DEEPSEEK_API_KEY": 0,
+    "GEMINI_API_KEY": 0,
+    "OPENAI_API_KEY": 0
+  },
+  "gitCommit": "(local deploy)",
+  "summary": {
+    "passed": 26,
+    "failed": 13,
+    "readyForReleaseCandidate": "NO"
+  }
+}

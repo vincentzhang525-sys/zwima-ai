@@ -9,7 +9,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import pg from "pg";
-import { resolveDatabaseUrl } from "../src/lib/database-url.ts";
+import { resolveDirectDatabaseUrl } from "../src/lib/database-url.ts";
 
 const projectId = "prj_gT8eCGD649DAhVlJ0YCCX2wx3D9B";
 const teamId = "team_ywGwgNDnLs6bqeh18JOgHg2p";
@@ -51,7 +51,7 @@ async function upsertVercelEnv(key, value) {
 }
 
 async function main() {
-  const dbUrl = resolveDatabaseUrl("session");
+  const dbUrl = resolveDirectDatabaseUrl();
   const pgUrl = dbUrl.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?&/, "?").replace(/\?$/, "");
   const client = new pg.Client({ connectionString: pgUrl, ssl: { rejectUnauthorized: false } });
   await client.connect();

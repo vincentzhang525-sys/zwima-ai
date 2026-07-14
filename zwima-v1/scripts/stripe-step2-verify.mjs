@@ -55,8 +55,8 @@ async function testStripeApi(secretKey) {
 }
 
 async function getDbClient() {
-  const { resolveDatabaseUrl } = await import("../src/lib/database-url.ts");
-  const dbUrl = resolveDatabaseUrl("session");
+  const { resolveDirectDatabaseUrl } = await import("../src/lib/database-url.ts");
+  const dbUrl = resolveDirectDatabaseUrl();
   const pgUrl = dbUrl.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?&/, "?").replace(/\?$/, "");
   const client = new pg.Client({ connectionString: pgUrl, ssl: { rejectUnauthorized: false } });
   await client.connect();

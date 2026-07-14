@@ -1,5 +1,31 @@
 import { NextResponse } from "next/server";
 
+function redactConnection(raw: string | undefined) {
+  const value = raw ?? "";
+  if (!value) {
+    return { present: false, poolerType: null, host: null, port: null, username: null, query: {} };
+  }
+  try {
+    const u = new URL(value.replace(/^postgres(ql)?:\/\//i, "http://"));
+    const userParts = u.username.split(".");
+    const username =
+      userParts.length > 1
+        ? `${userParts[0]}.${userParts[1].slice(0, 4)}***`
+        : `${u.username.slice(0, 4)}***`;
+    const port = u.port || "5432";
+    const query = Object.fromEntries(u.searchParams.entries());
+    let poolerType: string | null = "other";
+    if (u.hostname.includes("pooler.supabase.com")) {
+      poolerType = port === "6543" ? "transaction" : port === "5432" ? "session" : "pooler";
+    } else if (u.hostname.includes("supabase.co")) {
+      poolerType = "direct";
+    }
+    return { present: true, poolerType, host: u.hostname, port, username, query };
+  } catch {
+    return { present: true, poolerType: "invalid", host: null, port: null, username: null, query: {} };
+  }
+}
+
 function analyzeConnectionString(raw: string | undefined) {
   const value = raw ?? "";
   const first = value.charAt(0);
@@ -61,7 +87,13 @@ export async function GET() {
       (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "").startsWith("pk_") &&
       (process.env.CLERK_SECRET_KEY ?? "").startsWith("sk_") &&
       !(process.env.CLERK_SECRET_KEY ?? "").includes("placeholder"),
-    databaseUrl: analyzeConnectionString(process.env.DATABASE_URL),
-    directUrl: analyzeConnectionString(process.env.DIRECT_URL),
+    databaseUrl: {
+      ...analyzeConnectionString(process.env.DATABASE_URL),
+      ...redactConnection(process.env.DATABASE_URL),
+    },
+    directUrl: {
+      ...analyzeConnectionString(process.env.DIRECT_URL),
+      ...redactConnection(process.env.DIRECT_URL),
+    },
   });
 }

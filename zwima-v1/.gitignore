@@ -12,6 +12,20 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/playwright/.auth/
+/artifacts/
+*-rc-out.txt
+*-report.txt
+test-report.txt
+prisma-gen-report.txt
+typecheck-report.txt
+build-out.txt
+lint-out.txt
+vitest-out.txt
+migrate-diff-err.txt
+git-status-out.txt
 
 # next.js
 /.next/

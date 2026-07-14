@@ -39,21 +39,24 @@ export function WorkspaceApiKeysClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function load() {
-    setLoading(true);
-    const [keysRes, projectsRes] = await Promise.all([
-      fetch("/api/workspace/api-keys"),
-      fetch("/api/workspace/projects"),
-    ]);
-    const keysData = await keysRes.json();
-    const projectsData = await projectsRes.json();
-    if (!keysRes.ok) setError(keysData.error?.message || "Failed");
-    else {
-      setKeys(keysData.keys ?? []);
-      setError("");
+  async function load(options?: { silent?: boolean }) {
+    if (!options?.silent) setLoading(true);
+    setError("");
+    try {
+      const [keysRes, projectsRes] = await Promise.all([
+        fetch("/api/workspace/api-keys"),
+        fetch("/api/workspace/projects"),
+      ]);
+      const keysData = await keysRes.json().catch(() => ({}));
+      const projectsData = await projectsRes.json().catch(() => ({}));
+      if (!keysRes.ok) setError(keysData.error?.message || "Failed to load API keys");
+      else setKeys(keysData.keys ?? []);
+      setProjects((projectsData.projects ?? []).map((p: Project) => ({ id: p.id, name: p.name })));
+    } catch {
+      setError("Failed to load API keys");
+    } finally {
+      setLoading(false);
     }
-    setProjects((projectsData.projects ?? []).map((p: Project) => ({ id: p.id, name: p.name })));
-    setLoading(false);
   }
 
   useEffect(() => {
@@ -71,7 +74,9 @@ export function WorkspaceApiKeysClient() {
     if (res.ok) {
       setNewKey(data.fullKey);
       setName("");
-      load();
+      await load({ silent: true });
+    } else {
+      setError(data.error?.message || "Failed to create API key");
     }
   }
 
@@ -88,8 +93,10 @@ export function WorkspaceApiKeysClient() {
     if (!confirm("Rotate this key? The old key will stop working immediately.")) return;
     const res = await fetch(`/api/workspace/api-keys/${id}/rotate`, { method: "POST" });
     const data = await res.json();
-    if (res.ok) setNewKey(data.fullKey);
-    load();
+    if (res.ok) {
+      setNewKey(data.fullKey);
+      await load({ silent: true });
+    }
   }
 
   async function revokeKey(id: string) {

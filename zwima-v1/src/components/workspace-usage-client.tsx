@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -43,23 +43,24 @@ export function WorkspaceUsageClient() {
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
 
-  async function load(nextPage = page) {
+  const load = useCallback(async (nextPage = 1) => {
     setLoading(true);
     const res = await fetch(`/api/workspace/usage?range=${range}&page=${nextPage}`);
     const json = await res.json();
     if (!res.ok) setError(json.error?.message || "Failed");
     else { setData(json); setError(""); }
     setLoading(false);
-  }
-
-  useEffect(() => {
-    load(1);
-    setPage(1);
   }, [range]);
 
   useEffect(() => {
-    load(page);
-  }, [page]);
+    setPage(1);
+    void load(1);
+  }, [load]);
+
+  useEffect(() => {
+    if (page === 1) return;
+    void load(page);
+  }, [page, load]);
 
   if (loading && !data) return <p className="text-sm text-slate-500">Loading usage…</p>;
   if (error) return <ErrorState message={error} onRetry={() => load()} />;

@@ -316,6 +316,11 @@ test("F — Usage filters and CSV export", async ({ page }) => {
 });
 
 test("G — Billing preview guard", async ({ page, request }) => {
+  const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? "";
+  const isProduction = /zwima-group\.info/i.test(baseUrl);
+  const isPreview = /\.vercel\.app/i.test(baseUrl);
+  test.skip(isProduction || !isPreview, "Billing preview guard applies only on Vercel preview deployments");
+
   await page.goto("/dashboard/billing");
   await expect(page.getByText("Payments are temporarily unavailable in Preview")).toBeVisible();
   await expect(page.getByRole("button", { name: /Recharge.*disabled/i })).toBeDisabled();

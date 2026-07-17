@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
-import { ChatError, executeChatRequest } from "@/lib/chat-service";
-import { errorResponse } from "@/lib/api-errors";
+import { gatewayChat, RoutingError } from "@/core/api";
+import { ApiError, errorResponse } from "@/lib/api-errors";
 import { generateRequestId } from "@/lib/request-id";
-import type { ChatMessage } from "@/lib/providers/types";
-import {
-  buildTransparencyHeaders,
-  getComplianceForModel,
-  logComplianceAudit,
-} from "@/lib/compliance/ai-compliance";
+import { validateV1ApiKey } from "@/core/api/auth";
+import { persistV1ChatUsage } from "@/lib/billing/v1-chat-usage";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const requestId = req.headers.get("x-request-id") ?? generateRequestId();
@@ -15,62 +12,53 @@ export async function POST(req: Request) {
   try {
     const authHeader = req.headers.get("authorization") || "";
     const apiKey = authHeader.replace(/^Bearer\s+/i, "").trim();
+    const keyContext = await validateV1ApiKey(apiKey, requestId);
 
     const body = await req.json();
-    const model = String(body.model || "gemini-2.5-flash");
-    const messages: ChatMessage[] = Array.isArray(body.messages)
+    const messages = Array.isArray(body.messages)
       ? body.messages
-      : [{ role: "user", content: String(body.prompt || "") }];
+      : [{ role: "user" as const, content: String(body.prompt || "") }];
 
-    const result = await executeChatRequest({
-      apiKeyRaw: apiKey,
-      model,
-      messages,
-      maxTokens: body.maxTokens ?? body.max_tokens,
-      temperature: body.temperature,
-      strategy: body.strategy ?? body.routingPolicy,
-      clientRequestId: body.clientRequestId,
+    const result = await gatewayChat(
+      {
+        model: body.model ? String(body.model) : undefined,
+        provider: body.provider,
+        messages,
+        maxTokens: body.maxTokens ?? body.max_tokens,
+        temperature: body.temperature,
+        region: body.region,
+        requireEuCompliance: body.requireEuCompliance ?? body.eu,
+        organizationId: keyContext.organizationId,
+        monthlyBudgetUsd: keyContext.monthlyBudgetUsd ?? null,
+      },
       requestId,
+    );
+
+    const workspace = await prisma.enterpriseWorkspace.findFirst({
+      where: { organizationId: keyContext.organizationId },
+      select: { id: true },
+      orderBy: { createdAt: "asc" },
     });
 
-    const responseHeaders = new Headers();
-    let compliance: Record<string, unknown> | undefined;
+    const providerReportedUsage = result.inputTokens > 0 || result.outputTokens > 0;
 
-    if (result.routingHeaders) {
-      for (const [k, v] of Object.entries(result.routingHeaders)) {
-        responseHeaders.set(k, v);
-      }
-    }
-
-    if (result.providerModelId) {
-      const profile = await getComplianceForModel(result.providerModelId);
-      if (profile) {
-        compliance = {
-          status: profile.complianceStatus,
-          transparencyRequired: profile.transparencyRequired,
-          aiGeneratedLabelRequired: profile.aiGeneratedLabelRequired,
-          deepfakeDisclosureRequired: profile.deepfakeDisclosureRequired,
-          gdpr: profile.gdpr,
-        };
-        const transparencyHeaders = buildTransparencyHeaders({
-          transparencyRequired: profile.transparencyRequired,
-          aiGeneratedLabelRequired: profile.aiGeneratedLabelRequired,
-          deepfakeDisclosureRequired: profile.deepfakeDisclosureRequired,
-          complianceStatus: profile.complianceStatus,
-          gdpr: profile.gdpr,
-        });
-        for (const [key, value] of Object.entries(transparencyHeaders)) {
-          responseHeaders.set(key, value);
-        }
-        if (Object.keys(transparencyHeaders).length > 0) {
-          await logComplianceAudit({
-            providerModelId: result.providerModelId,
-            action: "chat_transparency_headers",
-            detail: { requestId: result.requestId, headers: transparencyHeaders },
-          });
-        }
-      }
-    }
+    const billed = await persistV1ChatUsage({
+      key: {
+        userId: keyContext.userId,
+        apiKeyId: keyContext.apiKeyId,
+        organizationId: keyContext.organizationId,
+        userTier: keyContext.userTier,
+      },
+      requestId: result.requestId || requestId,
+      providerSlug: result.provider,
+      model: result.model,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      latencyMs: result.latencyMs,
+      messages,
+      providerReportedUsage,
+      workspaceId: workspace?.id ?? null,
+    });
 
     return NextResponse.json(
       {
@@ -78,22 +66,39 @@ export async function POST(req: Request) {
         content: result.content,
         model: result.model,
         provider: result.provider,
-        routing: result.routingReason
-          ? { reason: result.routingReason, fallbackCount: result.fallbackCount ?? 0 }
-          : undefined,
-        compliance,
+        routing: result.routing,
         usage: {
-          inputTokens: result.inputTokens,
-          outputTokens: result.outputTokens,
-          costCredits: result.costCredits,
+          inputTokens: billed.inputTokens,
+          outputTokens: billed.outputTokens,
+          totalTokens: billed.totalTokens,
           latencyMs: result.latencyMs,
+          costUsd: result.cost.totalCostUsd,
+          costCredits: billed.costCredits,
+          usageLogId: billed.usageLogId,
+          usageSource: billed.usageSource,
+          replayed: billed.replayed,
         },
       },
-      { headers: responseHeaders },
+      {
+        headers: {
+          "x-zwima-provider": result.provider,
+          "x-zwima-model": result.model,
+          "x-zwima-routing-score": String(result.routing.score),
+          "x-zwima-failover-count": String(result.routing.failoverCount),
+          "x-zwima-usage-log-id": billed.usageLogId,
+          "x-zwima-usage-source": billed.usageSource,
+        },
+      },
     );
   } catch (err) {
-    if (err instanceof ChatError) {
-      return NextResponse.json({ ...err.toJSON(), error: { ...err.toJSON().error, requestId } }, { status: err.status });
+    if (err instanceof RoutingError) {
+      return NextResponse.json(
+        { error: { code: "ROUTING_FAILED", message: err.message, requestId } },
+        { status: err.status },
+      );
+    }
+    if (err instanceof ApiError) {
+      return errorResponse(err, requestId);
     }
     return errorResponse(err instanceof Error ? err : new Error("Request failed"), requestId);
   }

@@ -17,6 +17,7 @@ export type ApiErrorCode =
   | "VALIDATION_ERROR"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
+  | "BILLING_PERSISTENCE_FAILED"
   | "INTERNAL_ERROR";
 
 export class ApiError extends Error {

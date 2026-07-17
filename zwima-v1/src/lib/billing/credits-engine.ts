@@ -134,7 +134,15 @@ export async function chargeForUsage(params: {
   latencyMs: number;
   userTier?: UserTier;
   requestId?: string;
-}) {
+  usageSource?: "provider" | "estimated";
+  organizationId?: string;
+  workspaceId?: string | null;
+}): Promise<{
+  costCredits: number;
+  usageLogId: string;
+  providerCost: number;
+  replayed?: boolean;
+}> {
   const marginCtx: MarginContext = {
     providerSlug: params.providerSlug,
     modelId: params.model,
@@ -151,6 +159,26 @@ export async function chargeForUsage(params: {
   });
 
   return prisma.$transaction(async (tx) => {
+    if (params.requestId) {
+      const existing = await tx.usageLog.findFirst({
+        where: { requestId: params.requestId },
+      });
+      if (existing) {
+        return {
+          costCredits: existing.costCredits,
+          usageLogId: existing.id,
+          providerCost: Number(existing.providerCost ?? providerCost),
+          replayed: true,
+        };
+      }
+    }
+
+    await tx.creditBalance.upsert({
+      where: { userId: params.userId },
+      create: { userId: params.userId, credits: 0 },
+      update: {},
+    });
+
     const balance = await tx.creditBalance.findUnique({ where: { userId: params.userId } });
     const available = (balance?.credits ?? 0) - (balance?.frozenCredits ?? 0);
     if (available < customerCredits) throw new Error("Insufficient credits");
@@ -175,6 +203,7 @@ export async function chargeForUsage(params: {
         providerCost,
         requestId: params.requestId,
         latencyMs: params.latencyMs,
+        success: true,
       },
     });
 
@@ -184,7 +213,17 @@ export async function chargeForUsage(params: {
         type: "USAGE",
         amount: customerCredits,
         description: `${params.providerSlug}/${params.model}`,
-        metadata: { usageLogId: usageLog.id, providerCost },
+        metadata: {
+          usageLogId: usageLog.id,
+          providerCost,
+          usageSource: params.usageSource ?? "provider",
+          totalTokens: params.inputTokens + params.outputTokens,
+          currency: "CREDITS",
+          requestId: params.requestId,
+          organizationId: params.organizationId,
+          workspaceId: params.workspaceId ?? null,
+          status: "SUCCESS",
+        },
       },
     });
 

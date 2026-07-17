@@ -10,7 +10,9 @@ const MODELS: ModelInfo[] = [
 /** Map public model IDs to Anthropic API model names. */
 const MODEL_MAP: Record<string, string> = {
   "claude-sonnet": "claude-sonnet-4-20250514",
+  "claude-sonnet-4": "claude-sonnet-4-20250514",
   "claude-opus": "claude-opus-4-20250514",
+  "claude-opus-4": "claude-opus-4-20250514",
 };
 
 type AnthropicResponse = {

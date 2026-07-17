@@ -2,20 +2,31 @@
 /**
  * Phase 6 final production smoke test — all 5 providers.
  * Requires SMOKE_TEST_API_KEY on Vercel or local env for unified API tests.
+ * Never prints secret values.
  */
 const BASE = process.env.SMOKE_BASE_URL || "https://zwima-group.info";
 const API_KEY = process.env.SMOKE_TEST_API_KEY?.trim() || "";
 
 const PROVIDERS = [
-  { slug: "openai", model: "gpt-5-nano", healthKey: "openai" },
-  { slug: "gemini", model: "gemini-2.5-flash-lite", healthKey: "gemini" },
+  { slug: "openai", model: "gpt-5-mini", healthKey: "openai" },
+  { slug: "gemini", model: "gemini-2.5-flash", healthKey: "gemini" },
   { slug: "deepseek", model: "deepseek-chat", healthKey: "deepseek" },
   { slug: "qwen", model: "qwen-turbo", healthKey: "qwen" },
-  { slug: "claude", model: "claude-sonnet", healthKey: "claude" },
+  { slug: "claude", model: "claude-sonnet-4", healthKey: "claude" },
 ];
 
 function row(provider, model, endpoint, direct, unified, usageLog, credits, tx, latency, result) {
   return { provider, model, endpoint, direct, unified, usageLog, credits, tx, latency, result };
+}
+
+function providerOnline(health, slug) {
+  if (health?.[slug] === "ok") return true;
+  const list = Array.isArray(health?.providers) ? health.providers : [];
+  const entry = list.find((p) => p?.provider === slug || p?.slug === slug);
+  if (!entry) return false;
+  if (entry.online === true) return true;
+  if (entry.status === "ok") return true;
+  return false;
 }
 
 async function fetchJson(url, init = {}, timeoutMs = 90000) {
@@ -45,13 +56,15 @@ async function unifiedChat(model) {
       temperature: 0,
     }),
   });
+  const content = String(data.content || data.choices?.[0]?.message?.content || "").trim();
+  const errMsg = data.error?.message || data.error || null;
   return {
-    ok: status === 200 && String(data.content || "").trim().length > 0,
+    ok: status === 200 && content.length > 0,
     status,
-    content: String(data.content || "").slice(0, 40),
+    content: content.slice(0, 40),
     usage: data.usage || null,
     provider: data.provider,
-    error: data.error || null,
+    error: errMsg,
     usageLogId: data.usage?.usageLogId || null,
   };
 }
@@ -65,9 +78,13 @@ async function main() {
   const rows = [];
 
   for (const p of PROVIDERS) {
-    const healthOk = health[p.healthKey] === "ok";
+    const healthOk = providerOnline(health, p.healthKey);
     const unified = await unifiedChat(p.model);
     const latency = unified.usage?.latencyMs ?? null;
+
+    if (!unified.ok && !unified.skip && unified.error) {
+      console.log(`[${p.slug}] chat fail: HTTP ${unified.status} ${String(unified.error).slice(0, 120)}`);
+    }
 
     rows.push(
       row(

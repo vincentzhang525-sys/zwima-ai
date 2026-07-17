@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   "/sso-callback(.*)",
   "/api/webhooks(.*)",
   "/api/v1(.*)",
+  "/api/workspace(.*)",
 ]);
 
 function clerkConfigured(): boolean {
@@ -19,7 +20,7 @@ function clerkConfigured(): boolean {
 
 const withClerk = clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
-    await auth.protect();
+    await auth.protect({ unauthenticatedUrl: "/login" });
   }
 });
 

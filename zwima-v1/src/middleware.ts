@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
   "/api/v1(.*)",
   "/api/workspace(.*)",
+  "/__clerk(.*)",
 ]);
 
 function clerkConfigured(): boolean {
@@ -18,12 +19,24 @@ function clerkConfigured(): boolean {
   return pk.startsWith("pk_") && sk.startsWith("sk_") && !sk.includes("placeholder") && !pk.includes("placeholder");
 }
 
-const withClerk = clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    const signInUrl = new URL("/login", req.url).toString();
-    await auth.protect({ unauthenticatedUrl: signInUrl });
-  }
-});
+/**
+ * Production publishable key encodes FAPI host clerk.zwima-group.info.
+ * That hostname has no DNS (NXDOMAIN). Proxy FAPI through the app domain
+ * so Clerk JS loads from https://zwima-group.info/__clerk instead.
+ */
+const withClerk = clerkMiddleware(
+  async (auth, req) => {
+    if (!isPublicRoute(req)) {
+      const signInUrl = new URL("/login", req.url).toString();
+      await auth.protect({ unauthenticatedUrl: signInUrl });
+    }
+  },
+  {
+    frontendApiProxy: {
+      enabled: true,
+    },
+  },
+);
 
 function withoutClerk(req: NextRequest) {
   if (!isPublicRoute(req)) {
@@ -38,5 +51,6 @@ export const config = {
   matcher: [
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
+    "/__clerk/(.*)",
   ],
 };

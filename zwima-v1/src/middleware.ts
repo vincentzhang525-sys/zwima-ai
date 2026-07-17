@@ -20,7 +20,8 @@ function clerkConfigured(): boolean {
 
 const withClerk = clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
-    await auth.protect({ unauthenticatedUrl: "/login" });
+    const signInUrl = new URL("/login", req.url).toString();
+    await auth.protect({ unauthenticatedUrl: signInUrl });
   }
 });
 

@@ -5,6 +5,10 @@ import { generateRequestId } from "@/lib/request-id";
 import { validateV1ApiKey } from "@/core/api/auth";
 import { persistV1ChatUsage } from "@/lib/billing/v1-chat-usage";
 import { prisma } from "@/lib/prisma";
+import {
+  LiveProviderCallsDisabledError,
+  PROVIDER_LIVE_CALLS_DISABLED,
+} from "@/lib/providers/live-provider-gate";
 
 export async function POST(req: Request) {
   const requestId = req.headers.get("x-request-id") ?? generateRequestId();
@@ -19,6 +23,7 @@ export async function POST(req: Request) {
       ? body.messages
       : [{ role: "user" as const, content: String(body.prompt || "") }];
 
+    // No DB auto-migration / model-lifecycle side effects on the request path.
     const result = await gatewayChat(
       {
         model: body.model ? String(body.model) : undefined,
@@ -91,6 +96,18 @@ export async function POST(req: Request) {
       },
     );
   } catch (err) {
+    if (err instanceof LiveProviderCallsDisabledError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: PROVIDER_LIVE_CALLS_DISABLED,
+            message: err.message,
+            requestId,
+          },
+        },
+        { status: 403 },
+      );
+    }
     if (err instanceof RoutingError) {
       return NextResponse.json(
         { error: { code: "ROUTING_FAILED", message: err.message, requestId } },

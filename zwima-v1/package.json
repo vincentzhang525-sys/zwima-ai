@@ -16,7 +16,8 @@
     "e2e:phase4": "node scripts/e2e-phase4.mjs",
     "e2e:phase4:headed": "node scripts/e2e-phase4.mjs --headed",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push",
+    "db:push": "node scripts/db-push-authorized.mjs",
+    "db:migrate:authorized": "node scripts/db-migrate-authorized.mjs",
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate"
   },

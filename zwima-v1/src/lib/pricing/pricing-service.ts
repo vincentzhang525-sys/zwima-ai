@@ -8,7 +8,8 @@ export type ActivePricing = {
   providerModelId: string;
   providerSlug: string;
   modelCode: string;
-  currency: "EUR" | "USD";
+  /** Provider list currency (M4 extended Currency enum: EUR/USD/GBP/CNY/…) */
+  currency: string;
   inputPricePerMillion: number;
   outputPricePerMillion: number;
   platformMarkupPercent: number;

@@ -37,6 +37,9 @@ git-status-out.txt
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.pfx
 
 # debug
 npm-debug.log*
@@ -44,8 +47,23 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (never commit real env)
+.env
+.env.*
+!.env.example
+
+# dumps / backups / credential material
+*.dump
+*.sql.backup
+*.bak
+credentials.json
+**/credentials.json
+**/service-account*.json
+**/backups/
+**/backup/
+ZWIMA_SECURE_BACKUPS/
+**/ZWIMA_SECURE_BACKUPS/
+local-db-exports/
 
 # vercel
 .vercel
@@ -56,3 +74,4 @@ next-env.d.ts
 
 .vercel
 .env*
+!.env.example

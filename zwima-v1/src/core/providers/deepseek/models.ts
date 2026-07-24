@@ -1,0 +1,48 @@
+import type { ModelRegistryEntry } from "../types";
+
+const RELEASE = "2025-01-10";
+
+export const DEEPSEEK_MODELS: ModelRegistryEntry[] = [
+  {
+    modelId: "deepseek-chat",
+    provider: "deepseek",
+    displayName: "DeepSeek Chat",
+    contextWindow: 64_000,
+    streaming: true,
+    functionCalling: true,
+    vision: false,
+    image: false,
+    embedding: false,
+    audio: false,
+    video: false,
+    inputCostPer1M: 0.27,
+    outputCostPer1M: 1.1,
+    lifecycle: "ACTIVE",
+    regionAvailability: ["GLOBAL", "APAC"],
+    euCompliance: false,
+    releaseDate: RELEASE,
+    deprecatedDate: null,
+    replacementModel: null,
+  },
+  {
+    modelId: "deepseek-reasoner",
+    provider: "deepseek",
+    displayName: "DeepSeek Reasoner",
+    contextWindow: 64_000,
+    streaming: true,
+    functionCalling: false,
+    vision: false,
+    image: false,
+    embedding: false,
+    audio: false,
+    video: false,
+    inputCostPer1M: 0.55,
+    outputCostPer1M: 2.19,
+    lifecycle: "ACTIVE",
+    regionAvailability: ["GLOBAL", "APAC"],
+    euCompliance: false,
+    releaseDate: RELEASE,
+    deprecatedDate: null,
+    replacementModel: null,
+  },
+];

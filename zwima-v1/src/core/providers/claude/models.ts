@@ -1,0 +1,48 @@
+import type { ModelRegistryEntry } from "../types";
+
+const RELEASE = "2025-01-20";
+
+export const CLAUDE_MODELS: ModelRegistryEntry[] = [
+  {
+    modelId: "claude-sonnet-4",
+    provider: "claude",
+    displayName: "Claude Sonnet 4",
+    contextWindow: 200_000,
+    streaming: true,
+    functionCalling: true,
+    vision: true,
+    image: false,
+    embedding: false,
+    audio: false,
+    video: false,
+    inputCostPer1M: 3,
+    outputCostPer1M: 15,
+    lifecycle: "ACTIVE",
+    regionAvailability: ["GLOBAL", "US", "EU"],
+    euCompliance: true,
+    releaseDate: RELEASE,
+    deprecatedDate: null,
+    replacementModel: null,
+  },
+  {
+    modelId: "claude-opus-4",
+    provider: "claude",
+    displayName: "Claude Opus 4",
+    contextWindow: 200_000,
+    streaming: true,
+    functionCalling: true,
+    vision: true,
+    image: false,
+    embedding: false,
+    audio: false,
+    video: false,
+    inputCostPer1M: 15,
+    outputCostPer1M: 75,
+    lifecycle: "ACTIVE",
+    regionAvailability: ["GLOBAL", "US"],
+    euCompliance: false,
+    releaseDate: RELEASE,
+    deprecatedDate: null,
+    replacementModel: null,
+  },
+];

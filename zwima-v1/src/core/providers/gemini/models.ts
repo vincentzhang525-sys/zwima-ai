@@ -1,0 +1,48 @@
+import type { ModelRegistryEntry } from "../types";
+
+const RELEASE = "2025-02-01";
+
+export const GEMINI_MODELS: ModelRegistryEntry[] = [
+  {
+    modelId: "gemini-2.5-pro",
+    provider: "gemini",
+    displayName: "Gemini 2.5 Pro",
+    contextWindow: 1_000_000,
+    streaming: true,
+    functionCalling: true,
+    vision: true,
+    image: true,
+    embedding: false,
+    audio: true,
+    video: false,
+    inputCostPer1M: 1.25,
+    outputCostPer1M: 5,
+    lifecycle: "ACTIVE",
+    regionAvailability: ["GLOBAL", "US", "EU"],
+    euCompliance: true,
+    releaseDate: RELEASE,
+    deprecatedDate: null,
+    replacementModel: null,
+  },
+  {
+    modelId: "gemini-2.5-flash",
+    provider: "gemini",
+    displayName: "Gemini 2.5 Flash",
+    contextWindow: 1_000_000,
+    streaming: true,
+    functionCalling: true,
+    vision: true,
+    image: false,
+    embedding: false,
+    audio: false,
+    video: false,
+    inputCostPer1M: 0.15,
+    outputCostPer1M: 0.6,
+    lifecycle: "ACTIVE",
+    regionAvailability: ["GLOBAL", "US", "EU"],
+    euCompliance: true,
+    releaseDate: RELEASE,
+    deprecatedDate: null,
+    replacementModel: null,
+  },
+];

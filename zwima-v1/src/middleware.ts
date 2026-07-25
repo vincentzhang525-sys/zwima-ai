@@ -8,11 +8,22 @@ const isPublicRoute = createRouteMatcher([
   "/signup(.*)",
   "/forgot-password(.*)",
   "/sso-callback(.*)",
+  "/cookies(.*)",
+  "/imprint(.*)",
+  "/impressum(.*)",
+  "/privacy(.*)",
+  "/terms(.*)",
+  "/legal(.*)",
   "/api/webhooks(.*)",
+  "/api/health(.*)",
+  "/api/internal(.*)",
   "/api/v1(.*)",
   "/api/workspace(.*)",
   "/__clerk(.*)",
 ]);
+
+/** Auth entry pages — signed-in users must not stay here. */
+const isAuthEntryRoute = createRouteMatcher(["/login(.*)", "/signup(.*)", "/forgot-password(.*)"]);
 
 function clerkConfigured(): boolean {
   const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
@@ -22,11 +33,26 @@ function clerkConfigured(): boolean {
 
 /**
  * Production publishable key encodes FAPI host clerk.zwima-group.info.
- * That hostname has no DNS (NXDOMAIN). Proxy FAPI through the app domain
- * so Clerk JS loads from https://zwima-group.info/__clerk instead.
+ * Preview / Development (pk_test): never enable the Frontend API proxy.
  */
+function shouldEnableFrontendApiProxy(): boolean {
+  const vercelEnv = (process.env.VERCEL_ENV || "").toLowerCase();
+  if (vercelEnv === "preview" || vercelEnv === "development") return false;
+
+  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+  if (pk.startsWith("pk_test_")) return false;
+
+  return Boolean(process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.trim()) || pk.startsWith("pk_live_");
+}
+
 const withClerk = clerkMiddleware(
   async (auth, req) => {
+    const session = await auth();
+
+    if (session.userId && isAuthEntryRoute(req)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
     if (!isPublicRoute(req)) {
       const signInUrl = new URL("/login", req.url).toString();
       await auth.protect({ unauthenticatedUrl: signInUrl });
@@ -34,7 +60,7 @@ const withClerk = clerkMiddleware(
   },
   {
     frontendApiProxy: {
-      enabled: true,
+      enabled: shouldEnableFrontendApiProxy(),
     },
   },
 );

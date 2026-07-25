@@ -6,13 +6,16 @@ describe("middleware public auth routes", () => {
   it("allows unauthenticated /forgot-password without weakening dashboard protection", () => {
     const file = path.join(process.cwd(), "src/middleware.ts");
     const src = readFileSync(file, "utf8");
+    const publicBlock = src.slice(src.indexOf("createRouteMatcher(["), src.indexOf("]);", src.indexOf("createRouteMatcher([")) + 3);
 
-    expect(src).toMatch(/\/forgot-password\(\.\*\)/);
-    expect(src).toMatch(/\/login\(\.\*\)/);
-    expect(src).toMatch(/\/signup\(\.\*\)/);
+    expect(publicBlock).toMatch(/\/forgot-password\(\.\*\)/);
+    expect(publicBlock).toMatch(/\/login\(\.\*\)/);
+    expect(publicBlock).toMatch(/\/signup\(\.\*\)/);
+    expect(publicBlock).toMatch(/\/privacy\(\.\*\)/);
+    expect(publicBlock).toMatch(/\/api\/health\(\.\*\)/);
 
-    // Protected app surfaces must not be listed as public
-    expect(src).not.toMatch(/\/dashboard/);
-    expect(src).not.toMatch(/\/admin/);
+    // Protected app surfaces must not be listed as public matchers
+    expect(publicBlock).not.toMatch(/\/dashboard/);
+    expect(publicBlock).not.toMatch(/\/admin/);
   });
 });

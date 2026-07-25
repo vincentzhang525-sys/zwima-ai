@@ -79,6 +79,19 @@ await check("providers_route", "/api/v1/providers", {
   bodyIncludes: ["providers", "PROVIDER_LIVE_CALLS_DISABLED"],
   bodyExcludes: ['"online":true'],
 });
+await check("legal_privacy", "/privacy", { expectStatus: [200] });
+await check("legal_terms", "/terms", { expectStatus: [200] });
+await check("legal_cookies", "/cookies", { expectStatus: [200] });
+await check("legal_imprint", "/imprint", { expectStatus: [200] });
+await check("ops_health", "/api/health", {
+  expectStatus: [200, 503],
+  bodyIncludes: ["live", "ready"],
+  bodyExcludes: ['"online":true'],
+});
+await check("ops_health_live", "/api/health/live", { expectStatus: [200] });
+await check("internal_model_auth", "/api/internal/model-availability/latency", {
+  expectStatus: [401, 403, 307, 308],
+});
 await check("m4_fx_admin_api", "/api/v1/admin/cost-optimization/fx-policies", {
   expectStatus: [401, 403, 307, 308],
 });

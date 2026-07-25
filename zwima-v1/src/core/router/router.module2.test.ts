@@ -177,15 +177,26 @@ describe("Phase 5 Module 2 — Smart Routing Engine", () => {
     });
 
     it("prefers healthy providers", async () => {
-      recordFailure("deepseek");
-      recordFailure("deepseek");
-      recordFailure("deepseek");
-      recordSuccess("gemini", 100);
-      recordSuccess("gemini", 100);
-      await runHealthChecks();
-      const healthy = getProviderHealthScore("gemini");
-      const unhealthy = getProviderHealthScore("deepseek");
-      expect(healthy).toBeGreaterThan(unhealthy);
+      const prevVercel = process.env.VERCEL_ENV;
+      const prevLive = process.env.LIVE_PROVIDER_CALLS_ENABLED;
+      process.env.VERCEL_ENV = "production";
+      process.env.LIVE_PROVIDER_CALLS_ENABLED = "true";
+      try {
+        recordFailure("deepseek");
+        recordFailure("deepseek");
+        recordFailure("deepseek");
+        recordSuccess("gemini", 100);
+        recordSuccess("gemini", 100);
+        await runHealthChecks();
+        const healthy = getProviderHealthScore("gemini");
+        const unhealthy = getProviderHealthScore("deepseek");
+        expect(healthy).toBeGreaterThan(unhealthy);
+      } finally {
+        if (prevVercel === undefined) delete process.env.VERCEL_ENV;
+        else process.env.VERCEL_ENV = prevVercel;
+        if (prevLive === undefined) delete process.env.LIVE_PROVIDER_CALLS_ENABLED;
+        else process.env.LIVE_PROVIDER_CALLS_ENABLED = prevLive;
+      }
     });
   });
 

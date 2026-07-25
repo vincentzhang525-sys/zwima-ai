@@ -1,7 +1,11 @@
 import { randomUUID } from "crypto";
 import type { ProviderAdapter as LegacyAdapter } from "@/lib/providers/types";
 import { getAdapter } from "@/lib/providers/registry";
-import { assertLiveProviderHttpAllowed } from "@/lib/providers/live-provider-gate";
+import {
+  assertLiveProviderHttpAllowed,
+  isLiveProviderHttpAllowed,
+  PROVIDER_LIVE_CALLS_DISABLED,
+} from "@/lib/providers/live-provider-gate";
 import { listModelsByProvider, getModel } from "@/core/providers/model-registry";
 import { requireProvider } from "@/core/providers";
 import type { ProviderId } from "@/core/providers/types";
@@ -164,6 +168,15 @@ export class BridgeProviderAdapter implements UnifiedProviderAdapter {
   }
 
   async health(): Promise<AdapterHealthResult> {
+    if (!isLiveProviderHttpAllowed()) {
+      return {
+        provider: this.id,
+        online: false,
+        latencyMs: null,
+        error: PROVIDER_LIVE_CALLS_DISABLED,
+        configured: configured(this.id),
+      };
+    }
     const bridge = legacyOrStub(this.id);
     if (bridge.mode === "legacy" && bridge.legacy) {
       const h = await bridge.legacy.health();

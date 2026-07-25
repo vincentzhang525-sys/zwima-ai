@@ -20,6 +20,7 @@ import { routingEngine, RoutingError } from "@/core/router";
 import type { RoutingRequest } from "@/core/router";
 import type { AdapterChatRequest } from "@/core/adapters/types";
 import type { ProviderId } from "@/core/providers/types";
+import { isLiveProviderHttpAllowed } from "@/lib/providers/live-provider-gate";
 
 let bootstrapped = false;
 
@@ -27,7 +28,10 @@ export function ensureCoreGateway(): void {
   if (bootstrapped) return;
   bootstrapDefaultProviders();
   bootstrapUnifiedAdapters();
-  startHealthAutoRefresh();
+  // Never auto-probe providers unless Live Provider HTTP is explicitly allowed.
+  if (isLiveProviderHttpAllowed()) {
+    startHealthAutoRefresh();
+  }
   bootstrapped = true;
 }
 

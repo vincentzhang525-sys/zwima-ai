@@ -74,7 +74,11 @@ await check("agents_seed_blocked", "/api/v1/agents/seed", {
 });
 await check("api_keys_auth", "/api/v1/api-keys", { expectStatus: [401, 403, 307, 308] });
 await check("billing_auth", "/api/v1/billing", { expectStatus: [401, 403, 307, 308, 405] });
-await check("providers_route", "/api/v1/providers", { expectStatus: [200, 401, 403, 404] });
+await check("providers_route", "/api/v1/providers", {
+  expectStatus: [200],
+  bodyIncludes: ["providers", "PROVIDER_LIVE_CALLS_DISABLED"],
+  bodyExcludes: ['"online":true'],
+});
 await check("m4_fx_admin_api", "/api/v1/admin/cost-optimization/fx-policies", {
   expectStatus: [401, 403, 307, 308],
 });

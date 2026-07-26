@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { LegalFooterLinks } from "@/components/legal-draft-notice";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
@@ -53,10 +54,7 @@ export function SiteFooter() {
         </div>
         <div>
           <h4 className="font-medium text-slate-900 dark:text-white">Legal</h4>
-          <ul className="mt-3 space-y-2 text-sm text-slate-500">
-            <li>Privacy Policy</li>
-            <li>Terms of Service</li>
-          </ul>
+          <LegalFooterLinks />
         </div>
       </div>
       <div className="border-t border-slate-200 px-4 py-4 text-center text-xs text-slate-400 dark:border-slate-800">

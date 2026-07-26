@@ -1,23 +1,22 @@
 import Link from "next/link";
+import { LegalDraftNotice } from "@/components/legal-draft-notice";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
   title: "Privacy Policy — ZWIMA AI",
-  description: "Privacy Policy / Datenschutzerklärung draft for Zwima Technologie GmbH. Legal review required before Production.",
+  description: "Privacy Policy / Datenschutzerklärung draft for Zwima Technologie GmbH. Draft — subject to final legal review.",
 };
 
 /**
  * Additive public Privacy Policy draft (P1.8).
- * Not final legal text — LEGAL REVIEW REQUIRED BEFORE PRODUCTION.
+ * Not final legal text — draft remains subject to final legal review.
  */
 export default function PrivacyPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
-        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          LEGAL REVIEW REQUIRED BEFORE PRODUCTION
-        </p>
+        <LegalDraftNotice />
         <p className="mt-2 text-xs text-slate-500">
           This page is a transparency draft for V1 launch preparation. It is <strong>not</strong> a final effective legal
           text and has <strong>not</strong> been signed off by counsel.
@@ -248,11 +247,7 @@ export default function PrivacyPage() {
           </section>
         </div>
 
-        <p className="mt-10 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          LEGAL REVIEW REQUIRED BEFORE PRODUCTION
-        </p>
-
-        <p className="mt-6 text-xs text-slate-500">
+        <p className="mt-10 text-xs text-slate-500">
           Related:{" "}
           <Link className="underline" href="/imprint">
             Impressum

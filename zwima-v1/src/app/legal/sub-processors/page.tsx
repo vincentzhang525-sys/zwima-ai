@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { LegalDraftNotice } from "@/components/legal-draft-notice";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
   title: "Sub-processors — ZWIMA AI",
   description:
-    "Draft list of ZWIMA AI sub-processors / Unterauftragsverarbeiter. Legal review required before Production.",
+    "Draft list of ZWIMA AI sub-processors / Unterauftragsverarbeiter. Draft — subject to final legal review.",
 };
 
 const LAST_UPDATED = "2026-07-21";
@@ -79,16 +80,14 @@ const rows: Row[] = [
 
 /**
  * Additive public sub-processors draft (P1.10).
- * Not a signed DPA/SCC annex — LEGAL REVIEW REQUIRED BEFORE PRODUCTION.
+ * Not a signed DPA/SCC annex — draft remains subject to final legal review.
  */
 export default function SubProcessorsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 sm:px-6">
-        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          LEGAL REVIEW REQUIRED BEFORE PRODUCTION
-        </p>
+        <LegalDraftNotice />
         <p className="mt-2 text-xs text-slate-500">
           This page discloses third parties that may process personal data to operate ZWIMA AI. It does{" "}
           <strong>not</strong> claim that DPAs, SCCs, or counsel sign-off are complete, and it is{" "}
@@ -181,11 +180,7 @@ export default function SubProcessorsPage() {
           </p>
         </section>
 
-        <p className="mt-10 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          LEGAL REVIEW REQUIRED BEFORE PRODUCTION
-        </p>
-
-        <p className="mt-6 text-xs text-slate-500">
+        <p className="mt-10 text-xs text-slate-500">
           Related:{" "}
           <Link className="underline" href="/privacy">
             Privacy

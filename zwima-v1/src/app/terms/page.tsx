@@ -1,24 +1,23 @@
 import Link from "next/link";
+import { LegalDraftNotice } from "@/components/legal-draft-notice";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
   title: "Terms of Service — ZWIMA AI",
   description:
-    "Terms of Service / Nutzungsbedingungen draft for Zwima Technologie GmbH. Legal review required before Production.",
+    "Terms of Service / Nutzungsbedingungen draft for Zwima Technologie GmbH. Draft — subject to final legal review.",
 };
 
 /**
  * Additive public Terms draft (P1.9).
- * Not final effective legal text — LEGAL REVIEW REQUIRED BEFORE PRODUCTION.
+ * Not final effective legal text — draft remains subject to final legal review.
  */
 export default function TermsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
-        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          LEGAL REVIEW REQUIRED BEFORE PRODUCTION
-        </p>
+        <LegalDraftNotice />
         <p className="mt-2 text-xs text-slate-500">
           This page is a V1 launch-preparation draft. It is <strong>not</strong> final counsel-approved text and is{" "}
           <strong>not</strong> claimed to be fully in force as a signed legal instrument.
@@ -304,11 +303,7 @@ export default function TermsPage() {
           </section>
         </div>
 
-        <p className="mt-10 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          LEGAL REVIEW REQUIRED BEFORE PRODUCTION
-        </p>
-
-        <p className="mt-6 text-xs text-slate-500">
+        <p className="mt-10 text-xs text-slate-500">
           Related:{" "}
           <Link className="underline" href="/privacy">
             Privacy

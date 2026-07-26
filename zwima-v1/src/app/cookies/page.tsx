@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LegalDraftNotice } from "@/components/legal-draft-notice";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
@@ -7,7 +8,7 @@ export const metadata = {
 };
 
 /**
- * Additive public legal page (P1.5). Draft policy — LEGAL REVIEW REQUIRED BEFORE PRODUCTION.
+ * Additive public legal page (P1.5). Draft policy — remains subject to final legal review.
  * No cookie consent banner on V1 (necessary cookies only).
  */
 export default function CookiesPage() {
@@ -15,9 +16,7 @@ export default function CookiesPage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
-        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          LEGAL REVIEW REQUIRED BEFORE PRODUCTION
-        </p>
+        <LegalDraftNotice />
 
         <h1 className="mt-6 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Cookies</h1>
         <p className="mt-2 text-sm text-slate-500">
@@ -66,8 +65,8 @@ export default function CookiesPage() {
         <section className="mt-10 overflow-x-auto">
           <h2 className="text-lg font-medium text-slate-900 dark:text-white">Cookie table (V1)</h2>
           <p className="mt-2 text-xs text-slate-500">
-            Names and retention may vary with Clerk/hosting configuration. This table is a transparency draft —
-            LEGAL REVIEW REQUIRED BEFORE PRODUCTION.
+            Names and retention may vary with Clerk/hosting configuration. This table is a transparency draft and
+            remains subject to final legal review.
           </p>
           <table className="mt-4 w-full min-w-[640px] border-collapse text-left text-xs text-slate-700 dark:text-slate-300">
             <thead>

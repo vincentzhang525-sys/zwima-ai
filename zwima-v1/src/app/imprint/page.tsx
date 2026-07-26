@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LegalDraftNotice } from "@/components/legal-draft-notice";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
@@ -8,16 +9,14 @@ export const metadata = {
 
 /**
  * Additive public Impressum (P1.7).
- * Phone and VAT omitted until confirmed — LEGAL REVIEW REQUIRED BEFORE PRODUCTION.
+ * Phone and VAT omitted until confirmed — draft remains subject to final legal review.
  */
 export default function ImprintPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
-        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
-          LEGAL REVIEW REQUIRED BEFORE PRODUCTION
-        </p>
+        <LegalDraftNotice />
 
         <h1 className="mt-6 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Impressum</h1>
         <p className="mt-2 text-sm text-slate-500">Angaben gemäß § 5 DDG</p>

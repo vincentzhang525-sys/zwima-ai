@@ -86,6 +86,8 @@ model Organization {
   promptTemplates          PromptTemplate[]
   agentMemories            AgentMemory[]
   agentOrgPolicies         AgentOrgPolicy[]
+  agentTemplates           AgentTemplate[]
+  agentMemoryPolicies      AgentMemoryPolicy[]
   workflowDefinitions      WorkflowDefinition[]
   workflowExecutions       WorkflowExecution[]
   workflowPolicies         WorkflowPolicy[]
@@ -5533,6 +5535,15 @@ enum AgentMemoryScope {
   WORKSPACE
 }
 
+/// M8 Phase 2A — richer memory classification, additive alongside the Phase 1
+/// `AgentMemoryScope`. Stored on `AgentMemory.memoryType` (nullable, so Phase 1
+/// rows created before this migration remain valid with `memoryType = null`).
+enum AgentMemoryType {
+  USER
+  WORKSPACE
+  EXECUTION_SUMMARY
+}
+
 enum AgentStepType {
   PLAN
   MODEL
@@ -5847,13 +5858,90 @@ model AgentMemory {
   createdBy      String
   createdAt      DateTime         @default(now())
 
+  /// --- M8 Phase 2A additive fields (all nullable; existing Phase 1 rows are unaffected) ---
+  /// Set when this entry is scoped to a specific member (memoryType = USER).
+  userId     String?
+  /// Richer Phase 2A classification alongside the Phase 1 `scope` field.
+  memoryType AgentMemoryType?
+  /// Phase 2A bounded plaintext content (still secret-scanned before write and
+  /// length-capped by `AgentMemoryPolicy.maxEntryCharacters`). `valueHash` /
+  /// `valuePreview` above remain the required Phase 1 fields and are always
+  /// populated too, so this column is purely additive.
+  value      String?
+  updatedAt  DateTime         @default(now()) @updatedAt
+
   organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   agent        AgentDefinition @relation(fields: [agentId], references: [agentId], onDelete: Cascade)
 
   @@index([organizationId, agentId, scope])
   @@index([organizationId, workspaceId])
+  @@index([organizationId, agentId, memoryType])
   @@index([runId])
   @@index([expiresAt])
+}
+
+/// M8 Agent Platform Phase 2A — reusable agent templates.
+///
+/// `organizationId = null` marks a system (built-in) template; the actual
+/// content for the three Phase 2A system templates is defined in code
+/// (`src/core/agents/template-catalog.ts`), not seeded into this table. A
+/// `null`-organization row here only ever represents a platform-admin
+/// *override* of a system template's fields, or an additional admin-created
+/// system template — never a required seed row. Workspace/customer templates
+/// always carry a non-null `organizationId`.
+model AgentTemplate {
+  id                 String   @id @default(cuid())
+  templateId         String   @unique
+  organizationId     String?
+  workspaceId        String?
+  name               String
+  slug               String
+  description        String?
+  category           String
+  systemPrompt       String
+  defaultModel       String
+  defaultTemperature Float
+  defaultMaxSteps    Int
+  defaultTimeoutMs   Int
+  defaultCostCeiling Float
+  allowedToolKeys    String[] @default([])
+  isSystemTemplate   Boolean  @default(false)
+  isActive           Boolean  @default(true)
+  createdBy          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, category])
+  @@index([isSystemTemplate, isActive])
+}
+
+/// M8 Agent Platform Phase 2A — per-agent memory policy. Defaults to memory
+/// fully disabled; creating this row (or leaving it absent) never
+/// automatically enables memory for a run — see `memory-policy-service.ts`.
+model AgentMemoryPolicy {
+  id                   String   @id @default(cuid())
+  policyId             String   @unique
+  organizationId       String
+  workspaceId          String?
+  /// String reference to `AgentDefinition.agentId` (not a hard Prisma
+  /// relation, matching the existing `AgentReviewLink`/`AgentDelegation`
+  /// string-ref convention) — one policy row per agent.
+  agentId              String   @unique
+  memoryEnabled        Boolean  @default(false)
+  allowUserMemory      Boolean  @default(false)
+  allowWorkspaceMemory Boolean  @default(false)
+  maxEntries           Int      @default(50)
+  maxEntryCharacters   Int      @default(2000)
+  retentionDays        Int      @default(30)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
 }
 
 /// Links an AgentRun to an existing M6 HumanReviewCase / AIEvent (string refs — no frozen-table FK).

@@ -64,6 +64,31 @@ export const agentsClient = {
   adminPolicies: (signal?: AbortSignal) => request("/api/admin/agent-policies", { signal }),
   upsertPolicy: (body: Record<string, unknown>) =>
     request("/api/admin/agent-policies", { method: "PUT", body: JSON.stringify(body) }),
+
+  // --- M8 Agent Platform Phase 2A: templates ---
+  listTemplates: (qs = "", signal?: AbortSignal) => request(`/api/v1/agent-templates${qs}`, { signal }),
+  getTemplate: (templateId: string, signal?: AbortSignal) =>
+    request(`/api/v1/agent-templates/${templateId}`, { signal }),
+  createTemplate: (body: Record<string, unknown>) =>
+    request("/api/v1/agent-templates", { method: "POST", body: JSON.stringify(body) }),
+  updateTemplate: (templateId: string, body: Record<string, unknown>) =>
+    request(`/api/v1/agent-templates/${templateId}`, { method: "PATCH", body: JSON.stringify(body) }),
+  deleteTemplate: (templateId: string) => request(`/api/v1/agent-templates/${templateId}`, { method: "DELETE" }),
+  createAgentFromTemplate: (body: Record<string, unknown>) =>
+    request("/api/v1/agents/from-template", { method: "POST", body: JSON.stringify(body) }),
+
+  // --- M8 Agent Platform Phase 2A: per-agent memory ---
+  listAgentMemory: (agentId: string, qs = "", signal?: AbortSignal) =>
+    request(`/api/v1/agents/${agentId}/memory${qs}`, { signal }),
+  createAgentMemory: (agentId: string, body: Record<string, unknown>) =>
+    request(`/api/v1/agents/${agentId}/memory`, { method: "POST", body: JSON.stringify(body) }),
+  deleteAgentMemory: (agentId: string, memoryId: string) =>
+    request(`/api/v1/agents/${agentId}/memory/${memoryId}`, { method: "DELETE" }),
+  clearAgentMemory: (agentId: string) => request(`/api/v1/agents/${agentId}/memory`, { method: "DELETE" }),
+  getAgentMemoryPolicy: (agentId: string, signal?: AbortSignal) =>
+    request(`/api/v1/agents/${agentId}/memory/policy`, { signal }),
+  updateAgentMemoryPolicy: (agentId: string, body: Record<string, unknown>) =>
+    request(`/api/v1/agents/${agentId}/memory/policy`, { method: "PATCH", body: JSON.stringify(body) }),
 };
 
 export type { AgentLifecycleStatus, AgentRunStatus };

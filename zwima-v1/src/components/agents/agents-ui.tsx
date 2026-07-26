@@ -4,6 +4,7 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/dashboard/agents", label: "Agents" },
+  { href: "/dashboard/agents/templates", label: "Templates" },
   { href: "/dashboard/tools", label: "Tools" },
   { href: "/dashboard/prompts", label: "Prompts" },
   { href: "/dashboard/agent-memory", label: "Memory" },

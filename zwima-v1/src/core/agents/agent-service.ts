@@ -26,16 +26,44 @@ import { cancelRun, listRuns } from "@/lib/agents/execution-engine";
 import { getAgentDb } from "@/lib/agents/types";
 import { runAgentSafely, getAgentRunWithSteps } from "./agent-runner";
 import { redactSystemPrompt } from "./agent-validator";
+import { createAgentFromTemplate as coreCreateAgentFromTemplate } from "./from-template-service";
+import {
+  createAgentTemplate as coreCreateAgentTemplate,
+  deleteAgentTemplate as coreDeleteAgentTemplate,
+  getAgentTemplate as coreGetAgentTemplate,
+  listAgentTemplates as coreListAgentTemplates,
+  updateAgentTemplate as coreUpdateAgentTemplate,
+  type AgentTemplateRecord,
+} from "./template-service";
+import {
+  getAgentMemoryPolicy as coreGetAgentMemoryPolicy,
+  upsertAgentMemoryPolicy as coreUpsertAgentMemoryPolicy,
+  type AgentMemoryPolicyRecord,
+} from "./memory-policy-service";
+import {
+  clearAgentMemory as coreClearAgentMemory,
+  createAgentMemoryEntry as coreCreateAgentMemoryEntry,
+  deleteAgentMemoryEntry as coreDeleteAgentMemoryEntry,
+  listAgentMemoryEntries as coreListAgentMemoryEntries,
+  type AgentMemoryPhase2Record,
+} from "./memory-phase2-service";
 import type {
   Agent,
   AgentRun,
   AgentRunResult,
   AgentVersion,
+  CreateAgentFromTemplateInput,
   CreateAgentInput,
+  CreateAgentMemoryEntryInput,
+  CreateAgentTemplateInput,
+  ListAgentMemoryQuery,
   ListAgentRunsQuery,
   ListAgentsQuery,
+  ListAgentTemplatesQuery,
   RunAgentInput,
   UpdateAgentInput,
+  UpdateAgentTemplateInput,
+  UpsertAgentMemoryPolicyInput,
 } from "./agent-types";
 
 // ---------------------------------------------------------------------------
@@ -185,4 +213,137 @@ export async function cancelAgentRun(ctx: AgentContext, runId: string, reason?: 
     message: `Run ${run.runId} cancelled${reason ? `: ${reason}` : ""}`,
   });
   return run;
+}
+
+// ---------------------------------------------------------------------------
+// M8 Agent Platform Phase 2A — templates
+// ---------------------------------------------------------------------------
+
+export async function listAgentTemplates(
+  ctx: AgentContext,
+  query: ListAgentTemplatesQuery = {},
+): Promise<AgentTemplateRecord[]> {
+  return coreListAgentTemplates(ctx, query);
+}
+
+export async function getAgentTemplate(ctx: AgentContext, templateId: string): Promise<AgentTemplateRecord> {
+  return coreGetAgentTemplate(ctx, templateId);
+}
+
+export async function createAgentTemplate(
+  ctx: AgentContext,
+  input: CreateAgentTemplateInput,
+): Promise<AgentTemplateRecord> {
+  const template = await coreCreateAgentTemplate(ctx, input);
+  await writeAgentExecutionLog(ctx, {
+    event: "agent_template.created",
+    message: `Agent template '${template.name}' (${template.templateId}) created`,
+    metadata: { templateId: template.templateId, isSystemTemplate: template.isSystemTemplate },
+  });
+  return template;
+}
+
+export async function updateAgentTemplate(
+  ctx: AgentContext,
+  templateId: string,
+  patch: UpdateAgentTemplateInput,
+): Promise<AgentTemplateRecord> {
+  const template = await coreUpdateAgentTemplate(ctx, templateId, patch);
+  await writeAgentExecutionLog(ctx, {
+    event: "agent_template.updated",
+    message: `Agent template '${templateId}' updated`,
+    metadata: { templateId },
+  });
+  return template;
+}
+
+export async function deleteAgentTemplate(ctx: AgentContext, templateId: string): Promise<void> {
+  await coreDeleteAgentTemplate(ctx, templateId);
+  await writeAgentExecutionLog(ctx, {
+    event: "agent_template.deleted",
+    message: `Agent template '${templateId}' deleted`,
+    metadata: { templateId },
+  });
+}
+
+export async function createAgentFromTemplate(
+  ctx: AgentContext,
+  input: CreateAgentFromTemplateInput,
+): Promise<{ agent: Agent; version: AgentVersion; templateId: string; templateSlug: string }> {
+  const result = await coreCreateAgentFromTemplate(ctx, input);
+  const { preview } = redactSystemPrompt(result.version.systemPrompt);
+  await writeAgentExecutionLog(ctx, {
+    agentId: result.agent.agentId,
+    event: "agent.created_from_template",
+    message: `Agent '${result.agent.name}' created from template '${result.templateSlug}' (systemPrompt preview: "${preview}")`,
+    metadata: { versionId: result.version.versionId, templateId: result.templateId },
+  });
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// M8 Agent Platform Phase 2A — memory policy & memory entries
+// ---------------------------------------------------------------------------
+
+export async function getAgentMemoryPolicy(ctx: AgentContext, agentId: string): Promise<AgentMemoryPolicyRecord> {
+  return coreGetAgentMemoryPolicy(ctx, agentId);
+}
+
+export async function upsertAgentMemoryPolicy(
+  ctx: AgentContext,
+  agentId: string,
+  patch: UpsertAgentMemoryPolicyInput,
+): Promise<AgentMemoryPolicyRecord> {
+  const policy = await coreUpsertAgentMemoryPolicy(ctx, agentId, patch);
+  await writeAgentExecutionLog(ctx, {
+    agentId,
+    event: "agent_memory_policy.updated",
+    message: `Memory policy for agent '${agentId}' updated (memoryEnabled=${policy.memoryEnabled})`,
+    metadata: { policyId: policy.policyId },
+  });
+  return policy;
+}
+
+export async function listAgentMemoryEntries(
+  ctx: AgentContext,
+  agentId: string,
+  query: ListAgentMemoryQuery = {},
+): Promise<AgentMemoryPhase2Record[]> {
+  return coreListAgentMemoryEntries(ctx, agentId, query);
+}
+
+export async function createAgentMemoryEntry(
+  ctx: AgentContext,
+  agentId: string,
+  input: CreateAgentMemoryEntryInput,
+): Promise<AgentMemoryPhase2Record> {
+  const entry = await coreCreateAgentMemoryEntry(ctx, { ...input, agentId });
+  await writeAgentExecutionLog(ctx, {
+    agentId,
+    event: "agent_memory.created",
+    message: `Memory entry '${entry.key}' created for agent '${agentId}' (type=${entry.memoryType ?? entry.scope})`,
+    metadata: { memoryId: entry.memoryId },
+  });
+  return entry;
+}
+
+export async function deleteAgentMemoryEntry(ctx: AgentContext, agentId: string, memoryId: string): Promise<void> {
+  await coreDeleteAgentMemoryEntry(ctx, agentId, memoryId);
+  await writeAgentExecutionLog(ctx, {
+    agentId,
+    event: "agent_memory.deleted",
+    message: `Memory entry '${memoryId}' deleted for agent '${agentId}'`,
+    metadata: { memoryId },
+  });
+}
+
+export async function clearAgentMemory(ctx: AgentContext, agentId: string): Promise<{ count: number }> {
+  const result = await coreClearAgentMemory(ctx, agentId);
+  await writeAgentExecutionLog(ctx, {
+    agentId,
+    event: "agent_memory.cleared",
+    message: `All memory cleared for agent '${agentId}' (${result.count} entries removed)`,
+    metadata: { count: result.count },
+  });
+  return result;
 }

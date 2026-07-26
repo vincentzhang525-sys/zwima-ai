@@ -64,6 +64,38 @@ export function makeFakeModel<T extends Record<string, unknown>>(prefix: string)
       Object.assign(row, data);
       return row;
     },
+    async upsert({
+      where,
+      create,
+      update,
+    }: {
+      where: Record<string, unknown>;
+      create: Record<string, unknown>;
+      update: Record<string, unknown>;
+    }): Promise<T> {
+      const row = rows.find((r) => rowMatches(r, where));
+      if (row) {
+        Object.assign(row, update);
+        return row;
+      }
+      counter += 1;
+      const created = { id: `${prefix}_${counter}`, ...create } as unknown as T;
+      rows.push(created);
+      return created;
+    },
+    async delete({ where }: { where: Record<string, unknown> }): Promise<T> {
+      const idx = rows.findIndex((r) => rowMatches(r, where));
+      if (idx === -1) throw new Error(`${prefix}: row not found for delete`);
+      const [removed] = rows.splice(idx, 1);
+      return removed;
+    },
+    async deleteMany({ where }: { where?: Record<string, unknown> } = {}): Promise<{ count: number }> {
+      const before = rows.length;
+      const kept = rows.filter((r) => !rowMatches(r, where));
+      rows.length = 0;
+      rows.push(...kept);
+      return { count: before - rows.length };
+    },
     async count({ where }: { where?: Record<string, unknown> } = {}): Promise<number> {
       return rows.filter((r) => rowMatches(r, where)).length;
     },
@@ -78,5 +110,9 @@ export function makeFakeAgentDb() {
     agentRunStep: makeFakeModel("stp"),
     toolDefinition: makeFakeModel("tool"),
     toolExecution: makeFakeModel("exe"),
+    agentMemory: makeFakeModel("mem"),
+    agentTemplate: makeFakeModel("tpl"),
+    agentMemoryPolicy: makeFakeModel("mpo"),
+    agentExecutionLog: makeFakeModel("log"),
   };
 }

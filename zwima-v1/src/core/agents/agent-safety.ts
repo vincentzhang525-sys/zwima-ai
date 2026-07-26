@@ -84,3 +84,28 @@ export function isAllowedToolKey(key: string): key is AllowedToolKey {
   if (FORBIDDEN_TOOL_KEYS.includes(key)) return false;
   return (ALLOWED_TOOL_KEYS as readonly string[]).includes(key);
 }
+
+// ---------------------------------------------------------------------------
+// M8 Agent Platform Phase 2A — template & memory ceilings
+//
+// These bound the new AgentTemplate / AgentMemoryPolicy surfaces. They are
+// independent hard ceilings, not a relaxation of anything above: a template
+// can never request a higher step/timeout/cost budget than Phase 1 already
+// allows, and memory policy limits are bounded regardless of what an org
+// requests.
+// ---------------------------------------------------------------------------
+
+/** Number of most-recent memory entries injected as read-only context into a run when memory is enabled. */
+export const RECENT_MEMORY_INJECTION_LIMIT = 5;
+
+/** Hard ceiling on `AgentMemoryPolicy.maxEntries`, regardless of what an org requests. */
+export const MAX_MEMORY_POLICY_ENTRIES_CLAMP = 500;
+
+/** Hard ceiling on `AgentMemoryPolicy.maxEntryCharacters`, regardless of what an org requests. */
+export const MAX_MEMORY_POLICY_ENTRY_CHARS_CLAMP = 10_000;
+
+/** Hard ceiling on `AgentMemoryPolicy.retentionDays`, regardless of what an org requests. */
+export const MAX_MEMORY_POLICY_RETENTION_DAYS_CLAMP = 365;
+
+/** Maximum number of custom (non-system) templates allowlisted tool keys — mirrors `RunAgentSchema`'s `toolIds` cap. */
+export const MAX_TEMPLATE_TOOL_KEYS = 20;

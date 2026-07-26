@@ -29,6 +29,15 @@ const MOCK_TOOL_SEED_META: Record<MockToolKey, { name: string; description: stri
     name: "Email Draft (Mock)",
     description: "Drafts an email (to/subject/body) and returns it as text only. Never sends email.",
   },
+  current_datetime: {
+    name: "Current Date/Time",
+    description: "Returns the current local server date/time. No network access, no arguments required.",
+  },
+  workspace_usage_summary: {
+    name: "Workspace Usage Summary",
+    description:
+      "Read-only summary of this organization's agent run counts and estimated cost. Never accepts a caller-supplied organization/workspace id.",
+  },
 };
 
 function validateHandlerKey(handlerKey: string) {

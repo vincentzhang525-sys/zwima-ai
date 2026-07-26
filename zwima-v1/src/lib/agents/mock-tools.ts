@@ -1,5 +1,7 @@
 import { createHash } from "crypto";
 import { AgentServiceError } from "./errors";
+import { currentDatetimeTool } from "@/core/agents/tools/current-datetime";
+import { workspaceUsageSummaryTool } from "@/core/agents/tools/workspace-usage-summary";
 
 /**
  * M8 Agent Platform — Mock tool runtime.
@@ -13,7 +15,14 @@ import { AgentServiceError } from "./errors";
 export type MockToolInput = Record<string, unknown>;
 export type MockToolOutput = Record<string, unknown>;
 
-export type MockToolHandler = (input: MockToolInput) => Promise<MockToolOutput>;
+/** Trusted, server-derived call context — never populate this from tool `input`. */
+export type MockToolContext = {
+  organizationId?: string;
+  workspaceId?: string | null;
+  runId?: string;
+};
+
+export type MockToolHandler = (input: MockToolInput, context?: MockToolContext) => Promise<MockToolOutput>;
 
 // ---------------------------------------------------------------------------
 // calculator — safe arithmetic evaluator (no eval/Function)
@@ -214,6 +223,8 @@ export const MOCK_TOOL_KEYS = [
   "web-search-mock",
   "document-retrieval-mock",
   "email-draft-mock",
+  "current_datetime",
+  "workspace_usage_summary",
 ] as const;
 export type MockToolKey = (typeof MOCK_TOOL_KEYS)[number];
 
@@ -222,15 +233,31 @@ export const MOCK_TOOL_HANDLERS: Record<MockToolKey, MockToolHandler> = {
   "web-search-mock": webSearchMockTool,
   "document-retrieval-mock": documentRetrievalMockTool,
   "email-draft-mock": emailDraftMockTool,
+  current_datetime: (input, context) =>
+    currentDatetimeTool(input, {
+      organizationId: context?.organizationId ?? "",
+      workspaceId: context?.workspaceId ?? null,
+      runId: context?.runId,
+    }),
+  workspace_usage_summary: (input, context) =>
+    workspaceUsageSummaryTool(input, {
+      organizationId: context?.organizationId ?? "",
+      workspaceId: context?.workspaceId ?? null,
+      runId: context?.runId,
+    }),
 };
 
 export function isMockToolKey(value: string): value is MockToolKey {
   return (MOCK_TOOL_KEYS as readonly string[]).includes(value);
 }
 
-export async function runMockTool(handlerKey: string, input: MockToolInput): Promise<MockToolOutput> {
+export async function runMockTool(
+  handlerKey: string,
+  input: MockToolInput,
+  context?: MockToolContext,
+): Promise<MockToolOutput> {
   if (!isMockToolKey(handlerKey)) {
     throw new AgentServiceError("TOOL_NOT_FOUND", `Unknown mock tool handler: ${handlerKey}`, 404);
   }
-  return MOCK_TOOL_HANDLERS[handlerKey](input);
+  return MOCK_TOOL_HANDLERS[handlerKey](input, context);
 }

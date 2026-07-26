@@ -402,7 +402,11 @@ export async function executeRun(ctx: AgentContext, runId: string): Promise<Agen
       });
       const started = Date.now();
       try {
-        const toolOutput = await runMockTool(toolRequest.toolKey, toolRequest.args ?? {});
+        const toolOutput = await runMockTool(toolRequest.toolKey, toolRequest.args ?? {}, {
+          organizationId: run.organizationId,
+          workspaceId: run.workspaceId,
+          runId: run.runId,
+        });
         if (toolDef?.currentVersionId) {
           const execution = await db.toolExecution.create({
             data: {

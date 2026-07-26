@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 export class AgentServiceError extends Error {
   code: string;
   status: number;
@@ -43,6 +45,15 @@ export function mapAgentError(err: unknown): {
       status: err.status,
       retryable: err.retryable,
       details: err.details,
+    };
+  }
+  if (err instanceof ZodError) {
+    return {
+      code: "VALIDATION_ERROR",
+      message: "Invalid request payload",
+      status: 400,
+      retryable: false,
+      details: err.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
     };
   }
   if (err && typeof err === "object" && "code" in err && "status" in err) {

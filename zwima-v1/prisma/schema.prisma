@@ -98,6 +98,8 @@ model Organization {
   modelEffectiveCostSnapshots ModelEffectiveCostSnapshot[]
   agentToolExecutions      AgentToolExecution[]
   agentResourceAccesses    AgentResourceAccess[]
+  agentToolBindings        AgentToolBinding[]
+  agentExecutionLogs       AgentExecutionLog[]
   workflowExecutionHistories WorkflowExecutionHistory[]
   enterpriseAiModelScores  EnterpriseAIModelScore[]
   backgroundJobs           BackgroundJob[]
@@ -5911,6 +5913,56 @@ model AgentOrgPolicy {
 
   @@unique([organizationId, key])
   @@index([organizationId])
+}
+
+// ─── M8 Agent Platform Phase 1 additions (additive only) ────────────────────
+
+/// Binds a tool (by key, and optionally a specific ToolDefinition) to an agent
+/// (or a specific agent version) within an organization. Used by the Phase 1
+/// `src/core/agents` facade to decide which tools an agent run may invoke,
+/// independent of the looser `AgentVersion.toolIds` string array.
+model AgentToolBinding {
+  id             String   @id @default(cuid())
+  bindingId      String   @unique @default(cuid())
+  organizationId String
+  agentId        String
+  agentVersionId String?
+  toolId         String?
+  key            String
+  enabled        Boolean  @default(true)
+  createdBy      String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([agentId, key, agentVersionId])
+  @@index([organizationId, agentId, enabled])
+  @@index([toolId])
+}
+
+/// Append-only audit trail for the Phase 1 agent facade (create/run/cancel/
+/// safety-block events). System prompts and other sensitive content must be
+/// redacted (hashed/previewed) by the caller before being written here —
+/// this table itself has no redaction logic.
+model AgentExecutionLog {
+  id             String   @id @default(cuid())
+  logId          String   @unique @default(cuid())
+  organizationId String
+  workspaceId    String?
+  agentId        String?
+  runId          String?
+  level          String
+  event          String
+  message        String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, agentId, createdAt])
+  @@index([runId])
+  @@index([event])
 }
 
 // ─── M9 Workflow Automation (additive; Mock execution only) ─────────────────

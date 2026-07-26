@@ -215,24 +215,40 @@ export async function emailDraftMockTool(input: MockToolInput): Promise<MockTool
 }
 
 // ---------------------------------------------------------------------------
-// Registry / dispatcher
+// Registry / dispatcher — Phase 1 runtime ONLY
 // ---------------------------------------------------------------------------
 
+/**
+ * Phase 1 executable mock/runtime tool keys — exact set aligned with
+ * `src/core/agents/agent-safety.ts#ALLOWED_TOOL_KEYS`.
+ */
 export const MOCK_TOOL_KEYS = [
   "calculator",
-  "web-search-mock",
-  "document-retrieval-mock",
-  "email-draft-mock",
   "current_datetime",
   "workspace_usage_summary",
 ] as const;
 export type MockToolKey = (typeof MOCK_TOOL_KEYS)[number];
 
-export const MOCK_TOOL_HANDLERS: Record<MockToolKey, MockToolHandler> = {
-  calculator: calculatorTool,
+/**
+ * Phase 2 reserved handlers — source retained for a future phase but NOT
+ * registered in Phase 1 runtime, seed, allowlist, or `runMockTool`.
+ */
+export const PHASE2_RESERVED_MOCK_TOOL_KEYS = [
+  "web-search-mock",
+  "document-retrieval-mock",
+  "email-draft-mock",
+] as const;
+export type Phase2ReservedMockToolKey = (typeof PHASE2_RESERVED_MOCK_TOOL_KEYS)[number];
+
+/** @internal Phase 2 only — do not export into Phase 1 allowlists or seed. */
+export const PHASE2_RESERVED_MOCK_HANDLERS: Record<Phase2ReservedMockToolKey, MockToolHandler> = {
   "web-search-mock": webSearchMockTool,
   "document-retrieval-mock": documentRetrievalMockTool,
   "email-draft-mock": emailDraftMockTool,
+};
+
+export const MOCK_TOOL_HANDLERS: Record<MockToolKey, MockToolHandler> = {
+  calculator: calculatorTool,
   current_datetime: (input, context) =>
     currentDatetimeTool(input, {
       organizationId: context?.organizationId ?? "",
@@ -256,6 +272,14 @@ export async function runMockTool(
   input: MockToolInput,
   context?: MockToolContext,
 ): Promise<MockToolOutput> {
+  // Phase 2 reserved keys must not execute even if called directly.
+  if ((PHASE2_RESERVED_MOCK_TOOL_KEYS as readonly string[]).includes(handlerKey)) {
+    throw new AgentServiceError(
+      "TOOL_NOT_ALLOWED",
+      `Tool '${handlerKey}' is reserved for a later phase and is not executable in Phase 1`,
+      403,
+    );
+  }
   if (!isMockToolKey(handlerKey)) {
     throw new AgentServiceError("TOOL_NOT_FOUND", `Unknown mock tool handler: ${handlerKey}`, 404);
   }

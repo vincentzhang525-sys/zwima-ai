@@ -3,6 +3,7 @@ import { assertAgentPermission, type AgentContext } from "./auth";
 import { AgentServiceError } from "./errors";
 import { estimateMockCost, mockChatCompletion, type MockChatMessage } from "./mock-provider";
 import { runMockTool } from "./mock-tools";
+import { isAllowedToolKey } from "@/core/agents/agent-safety";
 import { requestAgentRunReview } from "./review-bridge";
 import {
   getAgentDb,
@@ -402,6 +403,13 @@ export async function executeRun(ctx: AgentContext, runId: string): Promise<Agen
       });
       const started = Date.now();
       try {
+        if (!isAllowedToolKey(toolRequest.toolKey)) {
+          throw new AgentServiceError(
+            "TOOL_NOT_ALLOWED",
+            `Tool '${toolRequest.toolKey}' is not on the Phase 1 allowlist`,
+            403,
+          );
+        }
         const toolOutput = await runMockTool(toolRequest.toolKey, toolRequest.args ?? {}, {
           organizationId: run.organizationId,
           workspaceId: run.workspaceId,

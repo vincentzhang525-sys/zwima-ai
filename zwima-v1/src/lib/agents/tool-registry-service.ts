@@ -12,22 +12,11 @@ export type CreateToolInput = {
   outputSchema?: Record<string, unknown>;
 };
 
+/** Phase 1 seed metadata — only the three frozen allowlisted tools. */
 const MOCK_TOOL_SEED_META: Record<MockToolKey, { name: string; description: string }> = {
   calculator: {
     name: "Calculator",
     description: "Evaluates basic arithmetic expressions (+ - * / and parentheses). Local, deterministic, no network.",
-  },
-  "web-search-mock": {
-    name: "Web Search (Mock)",
-    description: "Returns deterministic synthetic search results for a query. No live web request is made.",
-  },
-  "document-retrieval-mock": {
-    name: "Document Retrieval (Mock)",
-    description: "Returns deterministic synthetic document chunks for a query. No real document store is queried.",
-  },
-  "email-draft-mock": {
-    name: "Email Draft (Mock)",
-    description: "Drafts an email (to/subject/body) and returns it as text only. Never sends email.",
   },
   current_datetime: {
     name: "Current Date/Time",
@@ -161,8 +150,9 @@ export async function setToolStatus(
 }
 
 /**
- * Idempotently seeds the four built-in mock tools (calculator, web-search-mock,
- * document-retrieval-mock, email-draft-mock) as org-scoped ENABLED tools.
+ * Idempotently seeds the Phase 1 allowlisted tools only
+ * (calculator, current_datetime, workspace_usage_summary).
+ * Phase 2 reserved mocks are never seeded here.
  */
 export async function seedMockTools(ctx: AgentContext): Promise<ToolDefinitionRecord[]> {
   assertAgentPermission(ctx, "admin");

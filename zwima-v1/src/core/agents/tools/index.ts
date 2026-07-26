@@ -20,12 +20,8 @@ export const CORE_TOOL_REGISTRY: Record<string, ToolDescriptor> = Object.fromEnt
 );
 
 /**
- * Dispatches a tool call by key, enforcing the Phase 1 allowlist first. Only
- * dispatches the three net-new core tools directly — the pre-existing safe
- * mock tools (`web-search-mock`, `document-retrieval-mock`,
- * `email-draft-mock`) continue to run through
- * `src/lib/agents/mock-tools.ts#runMockTool`, which `agent-runner.ts` calls
- * separately when the requested key isn't one of the three core tools.
+ * Dispatches a tool call by key, enforcing the Phase 1 allowlist first.
+ * Only the three frozen Phase 1 tools are executable.
  */
 export async function runCoreTool(key: string, input: ToolInput, context: ToolExecutionContext): Promise<ToolOutput> {
   if (!isAllowedToolKey(key)) {

@@ -11,6 +11,9 @@ import {
   clampOutputTokens,
   isAllowedToolKey,
 } from "../agent-safety";
+import { validateToolRequest } from "../agent-validator";
+import { AgentServiceError } from "@/lib/agents/errors";
+import { runMockTool } from "@/lib/agents/mock-tools";
 
 describe("agent-safety constants", () => {
   it("matches the Phase 1 spec values", () => {
@@ -32,17 +35,24 @@ describe("agent-safety constants", () => {
   });
 });
 
-describe("tool allowlist", () => {
-  it("allows the three required Phase 1 core tools", () => {
+describe("Phase 1 tool allowlist exact set", () => {
+  it("ALLOWED_TOOL_KEYS equals exactly the three frozen Phase 1 tools", () => {
+    expect([...ALLOWED_TOOL_KEYS].sort()).toEqual(
+      ["calculator", "current_datetime", "workspace_usage_summary"].sort(),
+    );
+    expect(ALLOWED_TOOL_KEYS).toHaveLength(3);
+  });
+
+  it("allows only the three required Phase 1 tools", () => {
     expect(isAllowedToolKey("calculator")).toBe(true);
     expect(isAllowedToolKey("current_datetime")).toBe(true);
     expect(isAllowedToolKey("workspace_usage_summary")).toBe(true);
   });
 
-  it("allows the pre-existing safe mock tools", () => {
-    expect(isAllowedToolKey("web-search-mock")).toBe(true);
-    expect(isAllowedToolKey("document-retrieval-mock")).toBe(true);
-    expect(isAllowedToolKey("email-draft-mock")).toBe(true);
+  it("rejects former Phase 2 mock tools that must not be Phase 1 executable", () => {
+    expect(isAllowedToolKey("web-search-mock")).toBe(false);
+    expect(isAllowedToolKey("document-retrieval-mock")).toBe(false);
+    expect(isAllowedToolKey("email-draft-mock")).toBe(false);
   });
 
   it("rejects every forbidden tool category", () => {
@@ -54,12 +64,53 @@ describe("tool allowlist", () => {
   it("rejects unknown / made-up tool names", () => {
     expect(isAllowedToolKey("delete_database")).toBe(false);
     expect(isAllowedToolKey("")).toBe(false);
-    expect(isAllowedToolKey("Calculator")).toBe(false); // case sensitive
+    expect(isAllowedToolKey("Calculator")).toBe(false);
   });
 
   it("allowlist never contains a forbidden key (defense in depth)", () => {
     for (const forbidden of FORBIDDEN_TOOL_KEYS) {
-      expect(ALLOWED_TOOL_KEYS.includes(forbidden)).toBe(false);
+      expect((ALLOWED_TOOL_KEYS as readonly string[]).includes(forbidden)).toBe(false);
     }
+  });
+});
+
+describe("Phase 1 tool allowlist negative acceptance", () => {
+  const rejected = [
+    "web-search-mock",
+    "document-retrieval-mock",
+    "email-draft-mock",
+    "shell",
+    "arbitrary-http",
+    "filesystem-write",
+    "raw-sql",
+    "email-send",
+    "payment",
+  ] as const;
+
+  it("validateToolRequest rejects every negative case", () => {
+    for (const key of rejected) {
+      expect(() => validateToolRequest(key)).toThrow(AgentServiceError);
+      try {
+        validateToolRequest(key);
+      } catch (err) {
+        expect((err as AgentServiceError).code).toBe("TOOL_NOT_ALLOWED");
+        expect((err as AgentServiceError).status).toBe(403);
+      }
+    }
+  });
+
+  it("runMockTool rejects Phase 2 reserved mocks and does not execute them", async () => {
+    await expect(runMockTool("web-search-mock", { query: "x" })).rejects.toMatchObject({
+      code: "TOOL_NOT_ALLOWED",
+      status: 403,
+    });
+    await expect(runMockTool("document-retrieval-mock", { query: "x" })).rejects.toMatchObject({
+      code: "TOOL_NOT_ALLOWED",
+      status: 403,
+    });
+    await expect(runMockTool("email-draft-mock", { to: "a@b.c", subject: "s", body: "b" })).rejects.toMatchObject({
+      code: "TOOL_NOT_ALLOWED",
+      status: 403,
+    });
   });
 });

@@ -18,17 +18,27 @@ import { isMockToolKey, MOCK_TOOL_KEYS, runMockTool } from "@/lib/agents/mock-to
 import { AgentServiceError } from "@/lib/agents/errors";
 
 describe("Phase 1 core tools registered in the mock tool runtime", () => {
-  it("includes the three required Phase 1 tools", () => {
-    expect(MOCK_TOOL_KEYS).toContain("calculator");
-    expect(MOCK_TOOL_KEYS).toContain("current_datetime");
-    expect(MOCK_TOOL_KEYS).toContain("workspace_usage_summary");
+  it("includes exactly the three required Phase 1 tools", () => {
+    expect([...MOCK_TOOL_KEYS].sort()).toEqual(
+      ["calculator", "current_datetime", "workspace_usage_summary"].sort(),
+    );
+    expect(MOCK_TOOL_KEYS).toHaveLength(3);
     expect(isMockToolKey("current_datetime")).toBe(true);
     expect(isMockToolKey("workspace_usage_summary")).toBe(true);
+    expect(isMockToolKey("web-search-mock")).toBe(false);
+    expect(isMockToolKey("document-retrieval-mock")).toBe(false);
+    expect(isMockToolKey("email-draft-mock")).toBe(false);
   });
 
   it("runMockTool rejects an unknown/forbidden tool key", async () => {
     await expect(runMockTool("shell", {})).rejects.toBeInstanceOf(AgentServiceError);
     await expect(runMockTool("raw_sql", {})).rejects.toBeInstanceOf(AgentServiceError);
+  });
+
+  it("runMockTool rejects Phase 2 reserved mocks", async () => {
+    await expect(runMockTool("web-search-mock", { query: "x" })).rejects.toMatchObject({
+      code: "TOOL_NOT_ALLOWED",
+    });
   });
 });
 

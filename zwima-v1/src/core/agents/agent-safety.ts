@@ -7,8 +7,6 @@
  * never loosen, these values in a later phase).
  */
 
-import { MOCK_TOOL_KEYS, type MockToolKey } from "@/lib/agents/mock-tools";
-
 /** Maximum number of AgentRunStep rows a single run may accumulate (PLAN/MODEL/TOOL/REVIEW/...). */
 export const MAX_AGENT_STEPS = 8;
 
@@ -34,47 +32,55 @@ export function clampOutputTokens(value: number | undefined | null): number {
 }
 
 // ---------------------------------------------------------------------------
-// Tool allowlist
+// Tool allowlist — Phase 1 frozen exact set (no extras, no env/fallback enable)
 // ---------------------------------------------------------------------------
 
-/** Net-new Phase 1 tools (see `src/core/agents/tools`). */
-export const CORE_TOOL_KEYS = ["calculator", "current_datetime", "workspace_usage_summary"] as const;
-export type CoreToolKey = (typeof CORE_TOOL_KEYS)[number];
-
 /**
- * Full Phase 1 tool allowlist: the three required core tools plus the
- * pre-existing safe mock tools already allowlisted in `src/lib/agents`
- * (all synthetic, local, no network/filesystem/SQL/email/payment side
- * effects). Anything not in this set is rejected before it ever reaches
- * the execution engine.
+ * Phase 1 executable tool allowlist — exact frozen set.
+ * Must NOT include Phase 2 reserved mock keys (web-search-mock, etc.).
  */
-export const ALLOWED_TOOL_KEYS: readonly string[] = Array.from(
-  new Set<string>([...CORE_TOOL_KEYS, ...MOCK_TOOL_KEYS]),
-);
+export const ALLOWED_TOOL_KEYS = Object.freeze([
+  "calculator",
+  "current_datetime",
+  "workspace_usage_summary",
+] as const);
 
-/** Tool names that must NEVER be allowlisted, regardless of future changes — defense in depth for the allowlist check. */
+/** Alias kept for callers that previously imported CORE_TOOL_KEYS. */
+export const CORE_TOOL_KEYS = ALLOWED_TOOL_KEYS;
+export type CoreToolKey = (typeof ALLOWED_TOOL_KEYS)[number];
+export type AllowedToolKey = CoreToolKey;
+
+/** Tool names that must NEVER be allowlisted — defense in depth. */
 export const FORBIDDEN_TOOL_KEYS: readonly string[] = [
   "shell",
   "exec",
   "http_request",
   "fetch_url",
   "http",
+  "arbitrary-http",
   "filesystem_write",
+  "filesystem-write",
   "write_file",
   "fs_write",
   "raw_sql",
+  "raw-sql",
   "sql",
   "execute_sql",
   "send_email",
   "email_send",
+  "email-send",
   "payment",
   "charge_card",
   "create_payment",
   "stripe_charge",
+  // Phase 2 reserved — source may exist, but must not be Phase 1 executable
+  "web-search-mock",
+  "document-retrieval-mock",
+  "email-draft-mock",
 ];
 
-export function isAllowedToolKey(key: string): key is CoreToolKey | MockToolKey {
+export function isAllowedToolKey(key: string): key is AllowedToolKey {
   if (!key) return false;
   if (FORBIDDEN_TOOL_KEYS.includes(key)) return false;
-  return ALLOWED_TOOL_KEYS.includes(key);
+  return (ALLOWED_TOOL_KEYS as readonly string[]).includes(key);
 }

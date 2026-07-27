@@ -71,5 +71,13 @@ export default defineConfig({
       },
     },
     ...phase4Projects,
+    {
+      name: "m8-phase2b",
+      testMatch: /m8-phase2b\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: authFile,
+      },
+    },
   ],
 });

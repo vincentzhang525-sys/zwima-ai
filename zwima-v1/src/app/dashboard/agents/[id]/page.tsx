@@ -15,9 +15,13 @@ type MemoryPolicy = {
   memoryEnabled: boolean;
   allowUserMemory: boolean;
   allowWorkspaceMemory: boolean;
+  allowAgentMemory: boolean;
+  allowRead: boolean;
+  allowExecutionSummaryWrite: boolean;
   maxEntries: number;
   maxEntryCharacters: number;
   retentionDays: number;
+  workspaceMemoryDeferred?: boolean;
 };
 
 type MemoryEntry = {
@@ -26,7 +30,9 @@ type MemoryEntry = {
   scope: string;
   key: string;
   valuePreview: string;
+  createdBy?: string;
   createdAt: string;
+  updatedAt?: string;
   expiresAt?: string | null;
 };
 
@@ -36,16 +42,29 @@ function AgentMemorySection({ agentId }: { agentId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [draftLimits, setDraftLimits] = useState({ maxEntries: 50, maxEntryCharacters: 2000, retentionDays: 30 });
 
   async function refresh() {
+    setLoading(true);
     const [policyRes, entriesRes] = await Promise.all([
       agentsClient.getAgentMemoryPolicy(agentId),
       agentsClient.listAgentMemory(agentId),
     ]);
     if (!policyRes.success) setError(policyRes.error?.message || "Failed to load memory policy");
-    else setPolicy(policyRes.data as MemoryPolicy);
+    else {
+      const p = policyRes.data as MemoryPolicy;
+      setPolicy(p);
+      setDraftLimits({
+        maxEntries: p.maxEntries,
+        maxEntryCharacters: p.maxEntryCharacters,
+        retentionDays: p.retentionDays,
+      });
+    }
     if (!entriesRes.success) setError(entriesRes.error?.message || "Failed to load memory entries");
     else setEntries((entriesRes.data as MemoryEntry[]) || []);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -53,22 +72,36 @@ function AgentMemorySection({ agentId }: { agentId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agentId]);
 
-  async function toggleEnabled() {
-    if (!policy) return;
-    const res = await agentsClient.updateAgentMemoryPolicy(agentId, { memoryEnabled: !policy.memoryEnabled });
+  async function patchPolicy(body: Record<string, unknown>, successMsg?: string) {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    const res = await agentsClient.updateAgentMemoryPolicy(agentId, body);
+    setSaving(false);
     if (!res.success) setError(res.error?.message || "Update failed");
     else {
-      setError(null);
-      setMsg(policy.memoryEnabled ? "Memory disabled" : "Memory enabled");
+      setMsg(successMsg || "Policy saved");
       await refresh();
     }
   }
 
-  async function toggleType(field: "allowUserMemory" | "allowWorkspaceMemory") {
+  async function toggleEnabled() {
     if (!policy) return;
-    const res = await agentsClient.updateAgentMemoryPolicy(agentId, { [field]: !policy[field] });
-    if (!res.success) setError(res.error?.message || "Update failed");
-    else await refresh();
+    await patchPolicy(
+      { memoryEnabled: !policy.memoryEnabled },
+      policy.memoryEnabled ? "Memory disabled" : "Memory enabled",
+    );
+  }
+
+  async function toggleFlag(
+    field: "allowUserMemory" | "allowAgentMemory" | "allowRead" | "allowExecutionSummaryWrite",
+  ) {
+    if (!policy) return;
+    await patchPolicy({ [field]: !policy[field] });
+  }
+
+  async function saveLimits() {
+    await patchPolicy({ ...draftLimits }, "Limits saved");
   }
 
   async function deleteEntry(memoryId: string) {
@@ -87,6 +120,9 @@ function AgentMemorySection({ agentId }: { agentId: string }) {
     }
   }
 
+  if (loading && !policy) {
+    return <AgentsStateBox state="loading" message="Loading memory…" />;
+  }
   if (!policy) return null;
 
   return (
@@ -104,35 +140,118 @@ function AgentMemorySection({ agentId }: { agentId: string }) {
           type="checkbox"
           data-testid="memory-enabled-toggle"
           checked={policy.memoryEnabled}
+          disabled={saving}
           onChange={toggleEnabled}
         />
         Memory enabled for this agent
       </label>
 
       {policy.memoryEnabled && (
-        <div className="space-y-2 pl-6 text-sm text-slate-700">
+        <div className="space-y-3 pl-6 text-sm text-slate-700">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
               data-testid="memory-allow-user-toggle"
               checked={policy.allowUserMemory}
-              onChange={() => toggleType("allowUserMemory")}
+              disabled={saving}
+              onChange={() => toggleFlag("allowUserMemory")}
             />
-            Allow user-scoped memory
+            Allow USER memory
           </label>
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
-              data-testid="memory-allow-workspace-toggle"
-              checked={policy.allowWorkspaceMemory}
-              onChange={() => toggleType("allowWorkspaceMemory")}
+              data-testid="memory-allow-agent-toggle"
+              checked={policy.allowAgentMemory}
+              disabled={saving}
+              onChange={() => toggleFlag("allowAgentMemory")}
             />
-            Allow workspace-scoped memory
+            Allow AGENT memory
           </label>
-          <p className="text-xs text-slate-500" data-testid="memory-limits">
-            Limits: max {policy.maxEntries} entries, {policy.maxEntryCharacters} characters each, retained{" "}
-            {policy.retentionDays} days.
-          </p>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              data-testid="memory-allow-execution-summary-toggle"
+              checked={policy.allowExecutionSummaryWrite}
+              disabled={saving}
+              onChange={() => toggleFlag("allowExecutionSummaryWrite")}
+            />
+            Allow EXECUTION_SUMMARY auto-write
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              data-testid="memory-allow-read-toggle"
+              checked={policy.allowRead}
+              disabled={saving}
+              onChange={() => toggleFlag("allowRead")}
+            />
+            Allow reading historical memory into runs
+          </label>
+
+          <div
+            className="rounded border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
+            data-testid="memory-workspace-disabled"
+          >
+            <label className="flex items-center gap-2 opacity-60">
+              <input
+                type="checkbox"
+                data-testid="memory-allow-workspace-toggle"
+                checked={false}
+                disabled
+                readOnly
+              />
+              Allow WORKSPACE memory (disabled)
+            </label>
+            <p className="mt-1" data-testid="memory-workspace-deferred-note">
+              Workspace memory is temporarily unavailable until authenticated workspace binding is
+              enabled.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-xs" data-testid="memory-limits-form">
+            <label>
+              maxEntries
+              <input
+                type="number"
+                className="mt-1 w-full rounded border px-2 py-1"
+                data-testid="memory-max-entries"
+                value={draftLimits.maxEntries}
+                onChange={(e) => setDraftLimits((d) => ({ ...d, maxEntries: Number(e.target.value) }))}
+              />
+            </label>
+            <label>
+              maxEntryCharacters
+              <input
+                type="number"
+                className="mt-1 w-full rounded border px-2 py-1"
+                data-testid="memory-max-chars"
+                value={draftLimits.maxEntryCharacters}
+                onChange={(e) =>
+                  setDraftLimits((d) => ({ ...d, maxEntryCharacters: Number(e.target.value) }))
+                }
+              />
+            </label>
+            <label>
+              retentionDays
+              <input
+                type="number"
+                className="mt-1 w-full rounded border px-2 py-1"
+                data-testid="memory-retention-days"
+                value={draftLimits.retentionDays}
+                onChange={(e) => setDraftLimits((d) => ({ ...d, retentionDays: Number(e.target.value) }))}
+              />
+            </label>
+          </div>
+          <button
+            type="button"
+            data-testid="memory-save-limits"
+            disabled={saving}
+            onClick={saveLimits}
+            className="rounded bg-slate-900 px-3 py-1.5 text-xs text-white disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Save limits"}
+          </button>
         </div>
       )}
 
@@ -167,12 +286,20 @@ function AgentMemorySection({ agentId }: { agentId: string }) {
         ) : (
           <ul className="mt-2 divide-y rounded border border-slate-200" data-testid="memory-entries-list">
             {entries.map((e) => (
-              <li key={e.memoryId} className="flex items-center justify-between gap-3 px-3 py-2 text-xs">
+              <li key={e.memoryId} className="flex items-start justify-between gap-3 px-3 py-2 text-xs">
                 <div>
                   <span className="font-medium text-slate-800">
                     [{e.memoryType || e.scope}] {e.key}
                   </span>
-                  <span className="ml-2 text-slate-500">{e.valuePreview}</span>
+                  <span className="ml-2 text-slate-500" data-testid={`memory-preview-${e.memoryId}`}>
+                    {e.valuePreview}
+                  </span>
+                  <div className="mt-1 text-[10px] text-slate-400">
+                    created {new Date(e.createdAt).toLocaleString()}
+                    {e.updatedAt ? ` · updated ${new Date(e.updatedAt).toLocaleString()}` : ""}
+                    {e.expiresAt ? ` · expires ${new Date(e.expiresAt).toLocaleString()}` : ""}
+                    {e.createdBy ? ` · by ${e.createdBy}` : ""}
+                  </div>
                 </div>
                 <button
                   data-testid={`memory-delete-${e.memoryId}`}

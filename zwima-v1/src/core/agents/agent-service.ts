@@ -294,14 +294,35 @@ export async function upsertAgentMemoryPolicy(
   agentId: string,
   patch: UpsertAgentMemoryPolicyInput,
 ): Promise<AgentMemoryPolicyRecord> {
-  const policy = await coreUpsertAgentMemoryPolicy(ctx, agentId, patch);
-  await writeAgentExecutionLog(ctx, {
-    agentId,
-    event: "agent_memory_policy.updated",
-    message: `Memory policy for agent '${agentId}' updated (memoryEnabled=${policy.memoryEnabled})`,
-    metadata: { policyId: policy.policyId },
-  });
-  return policy;
+  try {
+    const before = await coreGetAgentMemoryPolicy(ctx, agentId).catch(() => null);
+    const policy = await coreUpsertAgentMemoryPolicy(ctx, agentId, patch);
+    await writeAgentExecutionLog(ctx, {
+      agentId,
+      event: "agent_memory_policy.updated",
+      message: `Memory policy for agent '${agentId}' updated (memoryEnabled=${policy.memoryEnabled})`,
+      metadata: {
+        policyId: policy.policyId,
+        memoryEnabledChanged: before ? before.memoryEnabled !== policy.memoryEnabled : true,
+        allowUserMemory: policy.allowUserMemory,
+        allowAgentMemory: policy.allowAgentMemory,
+        allowExecutionSummaryWrite: policy.allowExecutionSummaryWrite,
+        allowRead: policy.allowRead,
+        result: "ok",
+      },
+    });
+    return policy;
+  } catch (err) {
+    const code = err instanceof Error && "code" in err ? String((err as { code: string }).code) : "ERROR";
+    await writeAgentExecutionLog(ctx, {
+      agentId,
+      level: "warn",
+      event: "agent_memory_policy.rejected",
+      message: `Memory policy update rejected for agent '${agentId}'`,
+      metadata: { result: "rejected", reasonCode: code },
+    });
+    throw err;
+  }
 }
 
 export async function listAgentMemoryEntries(
@@ -317,14 +338,30 @@ export async function createAgentMemoryEntry(
   agentId: string,
   input: CreateAgentMemoryEntryInput,
 ): Promise<AgentMemoryPhase2Record> {
-  const entry = await coreCreateAgentMemoryEntry(ctx, { ...input, agentId });
-  await writeAgentExecutionLog(ctx, {
-    agentId,
-    event: "agent_memory.created",
-    message: `Memory entry '${entry.key}' created for agent '${agentId}' (type=${entry.memoryType ?? entry.scope})`,
-    metadata: { memoryId: entry.memoryId },
-  });
-  return entry;
+  try {
+    const entry = await coreCreateAgentMemoryEntry(ctx, { ...input, agentId });
+    await writeAgentExecutionLog(ctx, {
+      agentId,
+      event: "agent_memory.created",
+      message: `Memory entry '${entry.key}' created for agent '${agentId}' (type=${entry.memoryType ?? entry.scope})`,
+      metadata: { memoryId: entry.memoryId, memoryType: entry.memoryType, result: "ok" },
+    });
+    return entry;
+  } catch (err) {
+    const code = err instanceof Error && "code" in err ? String((err as { code: string }).code) : "ERROR";
+    await writeAgentExecutionLog(ctx, {
+      agentId,
+      level: "warn",
+      event: "agent_memory.rejected",
+      message: `Memory create rejected for agent '${agentId}'`,
+      metadata: {
+        result: "rejected",
+        reasonCode: code,
+        memoryType: input.memoryType,
+      },
+    });
+    throw err;
+  }
 }
 
 export async function deleteAgentMemoryEntry(ctx: AgentContext, agentId: string, memoryId: string): Promise<void> {

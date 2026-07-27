@@ -98,6 +98,12 @@ export function isAllowedToolKey(key: string): key is AllowedToolKey {
 /** Number of most-recent memory entries injected as read-only context into a run when memory is enabled. */
 export const RECENT_MEMORY_INJECTION_LIMIT = 5;
 
+/** Hard ceiling on a single memory entry's injected content (chars). */
+export const MAX_MEMORY_INJECTION_ENTRY_CHARS = 500;
+
+/** Hard ceiling on the total Memory Context block injected into a run (chars). */
+export const MAX_MEMORY_CONTEXT_TOTAL_CHARS = 2_500;
+
 /** Hard ceiling on `AgentMemoryPolicy.maxEntries`, regardless of what an org requests. */
 export const MAX_MEMORY_POLICY_ENTRIES_CLAMP = 500;
 
@@ -109,3 +115,22 @@ export const MAX_MEMORY_POLICY_RETENTION_DAYS_CLAMP = 365;
 
 /** Maximum number of custom (non-system) templates allowlisted tool keys — mirrors `RunAgentSchema`'s `toolIds` cap. */
 export const MAX_TEMPLATE_TOOL_KEYS = 20;
+
+/**
+ * Common instruction-override / tool-abuse patterns filtered from memory
+ * before injection. Layered defense only — not a complete prompt-injection cure.
+ */
+export const MEMORY_INJECTION_OVERRIDE_PATTERNS: readonly RegExp[] = [
+  /ignore\s+(all\s+)?(previous|prior|above)\s+instructions?/gi,
+  /override\s+(the\s+)?system\s+prompt/gi,
+  /disregard\s+(your\s+)?(rules|instructions|system\s+prompt)/gi,
+  /reveal\s+(your\s+)?(secrets?|api\s*keys?|passwords?)/gi,
+  /execute\s+(a\s+)?shell/gi,
+  /run\s+(a\s+)?shell\s+command/gi,
+  /send\s+(an?\s+)?emails?/gi,
+  /create\s+(a\s+)?payment/gi,
+  /charge\s+(a\s+)?(card|payment)/gi,
+  /arbitrary\s+https?\s+request/gi,
+  /fetch\s+https?:\/\//gi,
+  /call\s+(the\s+)?(shell|http|payment|email)\s+tool/gi,
+];

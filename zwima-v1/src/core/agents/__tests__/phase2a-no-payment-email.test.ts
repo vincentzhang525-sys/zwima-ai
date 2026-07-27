@@ -15,6 +15,8 @@ const PHASE2A_FILES = [
   "../memory-phase2-service.ts",
   "../from-template-service.ts",
   "../agent-runner.ts",
+  "../memory-rate-limit.ts",
+  "../memory-sanitize.ts",
 ].map((rel) => path.resolve(__dirname, rel));
 
 const FORBIDDEN_PATTERNS: RegExp[] = [

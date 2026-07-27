@@ -101,8 +101,18 @@ export type AgentRunResult = {
 // M8 Agent Platform Phase 2A — templates & memory (additive to Phase 1 above)
 // ---------------------------------------------------------------------------
 
-export const AGENT_MEMORY_TYPES = ["USER", "WORKSPACE", "EXECUTION_SUMMARY"] as const;
+/**
+ * Phase 2B application-level memory kinds.
+ * WORKSPACE remains in the API surface but is always fail-closed until M7
+ * EnterpriseWorkspace auth binding lands. AGENT is stored without a Prisma
+ * enum value (metadata.phase2bKind) — no migration in Phase 2B.
+ */
+export const AGENT_MEMORY_TYPES = ["USER", "AGENT", "EXECUTION_SUMMARY", "WORKSPACE"] as const;
 export type AgentMemoryType = (typeof AGENT_MEMORY_TYPES)[number];
+
+/** Kinds that are writable/readable in Phase 2B (WORKSPACE excluded). */
+export const PHASE2B_ACTIVE_MEMORY_TYPES = ["USER", "AGENT", "EXECUTION_SUMMARY"] as const;
+export type Phase2bActiveMemoryType = (typeof PHASE2B_ACTIVE_MEMORY_TYPES)[number];
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -143,7 +153,14 @@ export type CreateAgentFromTemplateInput = z.infer<typeof CreateAgentFromTemplat
 export const UpsertAgentMemoryPolicySchema = z.object({
   memoryEnabled: z.boolean().optional(),
   allowUserMemory: z.boolean().optional(),
+  /** Always rejected when true in Phase 2B (WORKSPACE fail-closed). */
   allowWorkspaceMemory: z.boolean().optional(),
+  /** Agent-scoped shared memory (org+agentId). Stored in version config JSON — no schema migration. */
+  allowAgentMemory: z.boolean().optional(),
+  /** When false, runs do not load/inject historical memory even if memoryEnabled. */
+  allowRead: z.boolean().optional(),
+  /** When false, successful runs do not auto-write EXECUTION_SUMMARY entries. */
+  allowExecutionSummaryWrite: z.boolean().optional(),
   maxEntries: z.number().int().min(1).max(500).optional(),
   maxEntryCharacters: z.number().int().min(1).max(10_000).optional(),
   retentionDays: z.number().int().min(1).max(365).optional(),

@@ -33,7 +33,13 @@ function makeCtx(overrides: Partial<AgentContext> = {}): AgentContext {
 
 async function makeEnabledAgent(ctx: AgentContext, patch: Record<string, unknown> = {}) {
   const { agent } = await createAgent(ctx, { name: "Agent", systemPrompt: "p" });
-  await upsertAgentMemoryPolicy(ctx, agent.agentId, { memoryEnabled: true, allowUserMemory: true, allowWorkspaceMemory: true, ...patch });
+  await upsertAgentMemoryPolicy(ctx, agent.agentId, {
+    memoryEnabled: true,
+    allowUserMemory: true,
+    allowAgentMemory: true,
+    allowExecutionSummaryWrite: true,
+    ...patch,
+  });
   return agent;
 }
 
@@ -61,12 +67,12 @@ describe("createAgentMemoryEntry — policy gating", () => {
     ).rejects.toMatchObject({ code: "FORBIDDEN", status: 403 });
   });
 
-  it("rejects WORKSPACE memory when allowWorkspaceMemory is false", async () => {
+  it("rejects WORKSPACE memory with WORKSPACE_MEMORY_CONTEXT_UNAVAILABLE (Phase 2B fail-closed)", async () => {
     const ctx = makeCtx();
-    const agent = await makeEnabledAgent(ctx, { allowWorkspaceMemory: false });
+    const agent = await makeEnabledAgent(ctx);
     await expect(
       createAgentMemoryEntry(ctx, { agentId: agent.agentId, memoryType: "WORKSPACE", key: "k", value: "hello" }),
-    ).rejects.toMatchObject({ code: "FORBIDDEN", status: 403 });
+    ).rejects.toMatchObject({ code: "WORKSPACE_MEMORY_CONTEXT_UNAVAILABLE", status: 409 });
   });
 
   it("creates an entry with valueHash/valuePreview/bounded value populated", async () => {
@@ -112,7 +118,7 @@ describe("createAgentMemoryEntry — secret rejection", () => {
     const agent = await makeEnabledAgent(ctx);
     await expect(
       createAgentMemoryEntry(ctx, { agentId: agent.agentId, memoryType: "USER", key: "k", value }),
-    ).rejects.toMatchObject({ code: "VALIDATION_ERROR", status: 400 });
+    ).rejects.toMatchObject({ code: "MEMORY_CONTAINS_SENSITIVE_DATA", status: 400 });
   });
 });
 
@@ -149,7 +155,7 @@ describe("delete / clear memory", () => {
     const ctx = makeCtx();
     const agent = await makeEnabledAgent(ctx);
     await createAgentMemoryEntry(ctx, { agentId: agent.agentId, memoryType: "USER", key: "k1", value: "v1" });
-    await createAgentMemoryEntry(ctx, { agentId: agent.agentId, memoryType: "WORKSPACE", key: "k2", value: "v2" });
+    await createAgentMemoryEntry(ctx, { agentId: agent.agentId, memoryType: "AGENT", key: "k2", value: "v2" });
     const result = await clearAgentMemory(ctx, agent.agentId);
     expect(result.count).toBe(2);
     const remaining = await listAgentMemoryEntries(ctx, agent.agentId);

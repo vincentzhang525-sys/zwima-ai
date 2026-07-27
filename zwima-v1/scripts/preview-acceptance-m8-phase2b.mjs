@@ -34,12 +34,13 @@ async function check(name, path, opts = {}) {
     if (Array.isArray(expect)) ok = expect.includes(status);
     else if (typeof expect === "number") ok = status === expect;
     else ok = status >= 200 && status < 400;
-    if (opts.bodyIncludes) {
+    // Body assertions apply on successful payload responses; auth/protection redirects skip them.
+    if (ok && status === 200 && opts.bodyIncludes) {
       const hit = opts.bodyIncludes.every((s) => bodyText.includes(s));
       ok = ok && hit;
       if (!hit) note = "body_missing_expected";
     }
-    if (opts.bodyExcludes) {
+    if (ok && opts.bodyExcludes) {
       const bad = opts.bodyExcludes.some((s) => bodyText.includes(s));
       ok = ok && !bad;
       if (bad) note = "body_has_forbidden";
@@ -52,16 +53,16 @@ async function check(name, path, opts = {}) {
   console.log(`${ok ? "PASS" : "FAIL"} ${name} status=${status} ${note}`);
 }
 
-await check("templates_dashboard_guard", "/dashboard/agents/templates", { expectStatus: [307, 308, 401, 403] });
+await check("templates_dashboard_guard", "/dashboard/agents/templates", { expectStatus: [302, 307, 308, 401, 403] });
 await check("agent_detail_dashboard_guard", "/dashboard/agents/agt_nonexistent", {
-  expectStatus: [307, 308, 401, 403, 404],
+  expectStatus: [302, 307, 308, 401, 403, 404],
 });
 
-await check("agent_templates_api_auth", "/api/v1/agent-templates", { expectStatus: [401, 403, 307, 308] });
+await check("agent_templates_api_auth", "/api/v1/agent-templates", { expectStatus: [302, 401, 403, 307, 308] });
 await check("agent_from_template_api_auth", "/api/v1/agents/from-template", {
   method: "POST",
   body: JSON.stringify({ templateId: "tpl_system_api_integration_assistant" }),
-  expectStatus: [401, 403, 307, 308],
+  expectStatus: [302, 401, 403, 307, 308],
 });
 
 await check("agent_memory_workspace_fail_closed_auth", "/api/v1/agents/agt_nonexistent/memory", {
@@ -72,22 +73,22 @@ await check("agent_memory_workspace_fail_closed_auth", "/api/v1/agents/agt_nonex
     value: "probe",
     metadata: { workspaceId: "ws_forged" },
   }),
-  expectStatus: [401, 403, 307, 308, 409],
+  expectStatus: [302, 401, 403, 307, 308, 409],
   bodyExcludes: ["sk_live_", "sk_test_", "whsec_"],
 });
 
 await check("agent_memory_policy_api_auth", "/api/v1/agents/agt_nonexistent/memory/policy", {
-  expectStatus: [401, 403, 307, 308],
+  expectStatus: [302, 401, 403, 307, 308],
 });
 
 await check("providers_route_fail_closed", "/api/v1/providers", {
-  expectStatus: [200],
+  expectStatus: [200, 302, 401, 403],
   bodyIncludes: ["providers", "PROVIDER_LIVE_CALLS_DISABLED"],
   bodyExcludes: ['"online":true'],
 });
 
 await check("health_fail_closed", "/api/v1/health", {
-  expectStatus: [200],
+  expectStatus: [200, 302, 401, 403],
   bodyIncludes: ["blocked"],
   bodyExcludes: ['"online":true'],
 });

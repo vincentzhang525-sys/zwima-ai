@@ -187,9 +187,9 @@
 | 完成状态 | PASS |
 | 完成日期 | 2026-07-28 |
 | Git commit | `bb4846b` |
-| Deployment ID/URL | Preview Git Integration (branch `v1-p0-commercial-loop`) |
-| Database migration | `20260728220000_gap011_legal_consent` — **Preview only** (`PREVIEW_DB_MIGRATE_AUTHORIZED`); additive `LegalConsentAcceptance` + `AccountDeletionRequest` |
-| Test result | Unit: `gap011-legal-consent` + `gap011-sanitize`; typecheck PASS; lint PASS; Preview E2E `gap011-compliance` |
+| Deployment ID/URL | Preview `https://zwima-k41pkqnlo-zwima.vercel.app` (`dpl_4ikSrkGkVFAsg69sKCsr9TtUPTnD`); alias `https://zwima-ai-git-v1-p0-commercial-loop-zwima.vercel.app` |
+| Database migration | `20260728220000_gap011_legal_consent` applied on **Preview only** (`PREVIEW_DB_MIGRATE_AUTHORIZED=true`; build log: All migrations successfully applied) |
+| Test result | Unit: `gap011-legal-consent` + `gap011-sanitize` PASS; typecheck PASS; lint PASS; Preview public E2E `gap011-compliance` 4/4 PASS; authenticated E2E skipped (no local Playwright storageState) |
 | Evidence | Legal pages + version badges; dashboard accept-terms gate; API `TERMS_NOT_ACCEPTED` fail-closed; Settings deletion request; `docs/ZWIMA_AI_CLOSED_BETA_DATA_FLOW.md` |
 | Retest trigger | Legal bundle version bump; counsel replaces draft legal text; Production consent migrate authorized separately |
 | DO_NOT_REPEAT | Re-implement consent ledger / re-migrate Preview; create Clerk users; send real email for deletion; Production migrate without auth |

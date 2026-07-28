@@ -2,8 +2,8 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `3c15727`  
-**LAST_CLOSEOUT:** 2026-07-29 — GAP-010 Deprecation/Migration policy wiring PASS_LOCKED  
+**HEAD:** `7ae7f37`  
+**LAST_CLOSEOUT:** 2026-07-29 — P1 Final Readiness Audit PASS_CONDITIONAL (no GAP re-implement)  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -373,8 +373,8 @@ These remain **incomplete** relative to Closed Beta / Public launch (from audit 
 |----|------|------|--------|
 | M9 | Workflow Automation | EXCLUDED / not started | Frozen: do not start without auth |
 | M8-2C | Workspace Memory | DEFERRED | Explicitly frozen |
-| PUBLIC_PRODUCTION_READY | Launch gate | NO | Platform ~48% at audit; P0 commercial loop closed; P1 Closed Beta gaps locked |
-| CLOSED_BETA_READY | Launch gate | CONDITIONAL | P0+P1 Closed Beta gaps PASS_LOCKED; product/counsel decision remains |
+| PUBLIC_PRODUCTION_READY | Launch gate | NO | Broader public launch; not Closed Beta P0/P1 scope |
+| CLOSED_BETA_READY | Launch gate | CONDITIONAL | P0+P1 engineering PASS_LOCKED; see `docs/ZWIMA_AI_P1_FINAL_READINESS_AUDIT.md` — remaining USER_MANUAL / counsel / deploy authorize only |
 
 ---
 

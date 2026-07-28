@@ -2,7 +2,8 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `585d1e0`  
+**HEAD:** `3f1df6e`  
+**LAST_CLOSEOUT:** 2026-07-29 — Worktree recovery verify; GAP-016 remains PASS_LOCKED; no re-implement  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -232,7 +233,7 @@
 | GAP_016_STATUS | PASS_LOCKED |
 | DUPLICATE_EXECUTION_FORBIDDEN | YES |
 | 完成日期 | 2026-07-28 |
-| Git commit | `585d1e0` |
+| Git commit | `585d1e0` (impl); ledger lock `3f1df6e` |
 | Database migration | NONE (reused `20260728170000_m4_fx_usage_log_additive` schema fields) |
 | FX_HOT_PATH_CONNECTED | YES — `chargeForUsage` → `buildUsageFxCost` + `PrismaFxRateProvider` before debit |
 | FX_FAIL_CLOSED | YES — MISSING/STALE → `FX_RATE_UNAVAILABLE` (503); no invented rates; no debit |
@@ -241,8 +242,9 @@
 | FX_TEST_STATUS | PASS — `gap016-fx-billing-hot-path` + `v1-chat-usage-persistence` |
 | Test result | Unit PASS; typecheck PASS; eslint on touched files PASS; no real Provider/Stripe/email |
 | Evidence | Wire-only into M3 `chargeForUsage`; existing FX engine + UsageLog columns; this ledger |
+| Recovery closeout 2026-07-29 | Historical Completion Check PASS; untracked `scripts/ci/*` classified as GAP-013 draft (not GAP-016) and deleted; formal GAP-016 already on branch; no Production/main/keys/cost |
 | Retest trigger | `related_code_changed` on `chargeForUsage` / FX fail-closed policy; billing currency change |
-| DO_NOT_REPEAT | Re-wire FX hot path; add migration for existing FX columns; invent default FX rates |
+| DO_NOT_REPEAT | Re-wire FX hot path; add migration for existing FX columns; invent default FX rates; start GAP-013 from recovery drafts |
 
 ---
 

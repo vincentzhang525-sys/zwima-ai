@@ -2,7 +2,7 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `TBD_GAP014`  
+**HEAD:** `a7b4907`  
 **LAST_CLOSEOUT:** 2026-07-29 — GAP-014 Backup & Recovery gate PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
@@ -282,7 +282,7 @@
 | GAP_014_STATUS | PASS_LOCKED |
 | DUPLICATE_EXECUTION_FORBIDDEN | YES |
 | 完成日期 | 2026-07-29 |
-| Git commit | (this closeout commit) |
+| Git commit | `a7b4907` |
 | Deployment ID/URL | N/A (docs + dry-run gates only; no Production restore) |
 | Database migration | NONE — no migrate; no Production DB touch |
 | BACKUP_MANIFEST | `docs/ZWIMA_AI_BACKUP_MANIFEST.md` |

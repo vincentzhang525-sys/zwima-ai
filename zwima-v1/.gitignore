@@ -63,6 +63,8 @@ credentials.json
 **/service-account*.json
 **/backups/
 **/backup/
+!scripts/backup/
+!scripts/backup/**
 ZWIMA_SECURE_BACKUPS/
 **/ZWIMA_SECURE_BACKUPS/
 local-db-exports/

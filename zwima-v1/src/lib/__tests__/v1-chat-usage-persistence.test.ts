@@ -5,6 +5,7 @@ const usageLogCreate = vi.fn();
 const creditBalanceUpsert = vi.fn();
 const creditBalanceFindUnique = vi.fn();
 const creditBalanceUpdate = vi.fn();
+const executeRaw = vi.fn();
 const transactionCreate = vi.fn();
 const apiKeyUpdate = vi.fn();
 const providerFindUnique = vi.fn();
@@ -27,6 +28,7 @@ vi.mock("@/lib/prisma", () => ({
     transaction: { create: (...args: unknown[]) => transactionCreate(...args) },
     apiKey: { update: (...args: unknown[]) => apiKeyUpdate(...args) },
     $transaction: (fn: (tx: unknown) => Promise<unknown>) => prismaTransaction(fn),
+    $executeRaw: (...args: unknown[]) => executeRaw(...args),
   },
 }));
 
@@ -59,6 +61,7 @@ describe("v1 chat usage persistence", () => {
     creditBalanceUpsert.mockResolvedValue({});
     creditBalanceFindUnique.mockResolvedValue({ credits: 1000, frozenCredits: 0 });
     creditBalanceUpdate.mockResolvedValue({});
+    executeRaw.mockResolvedValue(1);
     usageLogFindFirst.mockResolvedValue(null);
     usageLogCreate.mockResolvedValue({
       id: "ulog_1",
@@ -77,6 +80,7 @@ describe("v1 chat usage persistence", () => {
         },
         transaction: { create: transactionCreate },
         apiKey: { update: apiKeyUpdate },
+        $executeRaw: executeRaw,
       };
       return fn(tx);
     });
@@ -105,7 +109,8 @@ describe("v1 chat usage persistence", () => {
     expect(result.totalTokens).toBe(15);
     expect(usageLogCreate).toHaveBeenCalledTimes(1);
     expect(transactionCreate).toHaveBeenCalledTimes(1);
-    expect(creditBalanceUpdate).toHaveBeenCalledTimes(1);
+    expect(executeRaw).toHaveBeenCalledTimes(1);
+    expect(creditBalanceUpdate).not.toHaveBeenCalled();
     expect(auditLogCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ action: "API_CHAT_USAGE", category: "BILLING" }),
@@ -157,6 +162,7 @@ describe("v1 chat usage persistence", () => {
     expect(first.replayed).toBe(true);
     expect(first.usageLogId).toBe("ulog_existing");
     expect(usageLogCreate).not.toHaveBeenCalled();
+    expect(executeRaw).not.toHaveBeenCalled();
     expect(creditBalanceUpdate).not.toHaveBeenCalled();
   });
 
@@ -166,7 +172,7 @@ describe("v1 chat usage persistence", () => {
   });
 
   it("insufficient credits surfaces as ApiError", async () => {
-    creditBalanceFindUnique.mockResolvedValue({ credits: 0, frozenCredits: 0 });
+    executeRaw.mockResolvedValue(0);
 
     await expect(
       persistV1ChatUsage({
@@ -180,6 +186,27 @@ describe("v1 chat usage persistence", () => {
         providerReportedUsage: true,
       }),
     ).rejects.toMatchObject({ code: "INSUFFICIENT_CREDITS", status: 402 });
+  });
+
+  it("atomic debit is skipped on insufficient balance (fail-closed, no usage write)", async () => {
+    executeRaw.mockResolvedValue(0);
+
+    await expect(
+      chargeForUsage({
+        userId: "user_1",
+        apiKeyId: "key_1",
+        providerId: "prov_openai",
+        providerSlug: "openai",
+        model: "gpt-5-mini",
+        inputTokens: 10,
+        outputTokens: 5,
+        latencyMs: 10,
+        requestId: "req_no_funds",
+      }),
+    ).rejects.toThrow("Insufficient credits");
+
+    expect(usageLogCreate).not.toHaveBeenCalled();
+    expect(transactionCreate).not.toHaveBeenCalled();
   });
 
   it("database write failure does not masquerade as success", async () => {

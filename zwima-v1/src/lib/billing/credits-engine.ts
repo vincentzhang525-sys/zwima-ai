@@ -1,8 +1,10 @@
 import { prisma } from "../prisma";
 import type { TransactionType, UserTier, Prisma } from "@prisma/client";
+import { Prisma as PrismaNS } from "@prisma/client";
 import { calculateUsageCredits, countMessageTokens, estimateRequestCredits } from "./pricing-engine";
 import { createInvoice, type InvoiceLineItem } from "./invoice-engine";
 import type { MarginContext } from "./margin-engine";
+import { atomicDebitAvailableCredits } from "./atomic-debit";
 
 export type WalletSnapshot = {
   credits: number;
@@ -179,33 +181,44 @@ export async function chargeForUsage(params: {
       update: {},
     });
 
-    const balance = await tx.creditBalance.findUnique({ where: { userId: params.userId } });
-    const available = (balance?.credits ?? 0) - (balance?.frozenCredits ?? 0);
-    if (available < customerCredits) throw new Error("Insufficient credits");
+    const debited = await atomicDebitAvailableCredits(tx, params.userId, customerCredits);
+    if (!debited) throw new Error("Insufficient credits");
 
-    await tx.creditBalance.update({
-      where: { userId: params.userId },
-      data: {
-        credits: { decrement: customerCredits },
-        lifetimeSpend: { increment: customerCredits },
-      },
-    });
-
-    const usageLog = await tx.usageLog.create({
-      data: {
-        userId: params.userId,
-        apiKeyId: params.apiKeyId,
-        providerId: params.providerId,
-        model: params.model,
-        inputTokens: params.inputTokens,
-        outputTokens: params.outputTokens,
-        costCredits: customerCredits,
-        providerCost,
-        requestId: params.requestId,
-        latencyMs: params.latencyMs,
-        success: true,
-      },
-    });
+    let usageLog;
+    try {
+      usageLog = await tx.usageLog.create({
+        data: {
+          userId: params.userId,
+          apiKeyId: params.apiKeyId,
+          providerId: params.providerId,
+          model: params.model,
+          inputTokens: params.inputTokens,
+          outputTokens: params.outputTokens,
+          costCredits: customerCredits,
+          providerCost,
+          requestId: params.requestId,
+          latencyMs: params.latencyMs,
+          success: true,
+        },
+      });
+    } catch (err) {
+      // Concurrent identical requestId: unique constraint → fail-closed replay (no second charge).
+      if (
+        params.requestId &&
+        err instanceof PrismaNS.PrismaClientKnownRequestError &&
+        err.code === "P2002"
+      ) {
+        const existing = await tx.usageLog.findFirst({
+          where: { requestId: params.requestId },
+        });
+        if (existing) {
+          // Roll back this transaction's debit by throwing — outer caller must not commit a
+          // double-charge. Interactive transaction abort discards the conditional UPDATE.
+          throw new IdempotentUsageConflictError(existing.id, existing.costCredits, Number(existing.providerCost ?? providerCost));
+        }
+      }
+      throw err;
+    }
 
     await tx.transaction.create({
       data: {
@@ -233,7 +246,32 @@ export async function chargeForUsage(params: {
     });
 
     return { costCredits: customerCredits, usageLogId: usageLog.id, providerCost };
+  }).catch(async (err) => {
+    if (err instanceof IdempotentUsageConflictError) {
+      return {
+        costCredits: err.costCredits,
+        usageLogId: err.usageLogId,
+        providerCost: err.providerCost,
+        replayed: true,
+      };
+    }
+    throw err;
   });
+}
+
+/** Internal: concurrent requestId collision after a lost debit race — abort tx, surface replay. */
+export class IdempotentUsageConflictError extends Error {
+  readonly usageLogId: string;
+  readonly costCredits: number;
+  readonly providerCost: number;
+
+  constructor(usageLogId: string, costCredits: number, providerCost: number) {
+    super("IDEMPOTENT_USAGE_CONFLICT");
+    this.name = "IdempotentUsageConflictError";
+    this.usageLogId = usageLogId;
+    this.costCredits = costCredits;
+    this.providerCost = providerCost;
+  }
 }
 
 export async function processRefund(userId: string, credits: number, amountEur: number, reason: string) {

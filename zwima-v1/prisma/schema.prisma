@@ -2032,7 +2032,7 @@ model UsageLog {
   latencyMs      Int?
   success        Boolean  @default(true)
   errorMessage   String?
-  requestId      String?
+  requestId      String?  @unique
   createdAt      DateTime @default(now())
   /// M4 FX — immutable snapshot tied to this usage (never overwrite with latest FX)
   providerCurrency        String?
@@ -2065,7 +2065,6 @@ model UsageLog {
   @@index([providerId, createdAt])
   @@index([model, createdAt])
   @@index([apiKeyId, createdAt])
-  @@index([requestId])
   @@index([costProfileId])
   @@index([fxRateSnapshotId])
   @@index([fxRateStatus, createdAt])

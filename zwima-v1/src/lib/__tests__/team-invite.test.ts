@@ -97,7 +97,7 @@ vi.mock("@/lib/prisma", () => ({
                 (c) => (c.userId && c.userId === m.userId) || (c.invitedEmail && c.invitedEmail === m.invitedEmail),
               );
             }
-            return true;
+            return Boolean(userId || orgId || orClause);
           });
 
           // When only userId+role for invite-capable lookup without orgId
@@ -105,7 +105,9 @@ vi.mock("@/lib/prisma", () => ({
             hit = members.find((m) => m.userId === userId && roleIn.includes(m.role) && (accepted === undefined || m.accepted === accepted));
           }
           if (!hit && userId && accepted !== undefined && !orgId && !roleIn && !orClause) {
-            hit = members.find((m) => m.userId === userId && m.accepted === accepted);
+            hit = members
+              .filter((m) => m.userId === userId && m.accepted === accepted)
+              .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
           }
 
           if (!hit) return null;
@@ -270,6 +272,36 @@ describe("inviteTeamMember", () => {
     });
     expect(result.alreadyMember).toBe(false);
     expect(result.organizationId).toBe("org1");
+  });
+
+  it("ordinary Member cannot invite into primary membership org even if they own another org", async () => {
+    const owner = makeUser({ id: "owner1", email: "owner@example.com", clerkId: "clerk_owner" });
+    const member = makeUser({ id: "member1", email: "member@example.com", clerkId: "clerk_member" });
+    makeOrg({ id: "org1", name: "Primary", ownerId: owner.id });
+    makeOrg({ id: "org_personal", name: "Personal", ownerId: member.id });
+    // Primary membership created first (workspace primary)
+    members.push({
+      id: "m_member_primary",
+      organizationId: "org1",
+      userId: member.id,
+      role: "DEVELOPER",
+      invitedEmail: null,
+      accepted: true,
+      createdAt: new Date("2026-01-01"),
+    });
+    members.push({
+      id: "m_member_personal",
+      organizationId: "org_personal",
+      userId: member.id,
+      role: "OWNER",
+      invitedEmail: null,
+      accepted: true,
+      createdAt: new Date("2026-06-01"),
+    });
+
+    await expect(
+      inviteTeamMember({ actor: member, email: "x@example.com", role: "DEVELOPER" }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN", status: 403 });
   });
 
   it("ordinary Member cannot invite", async () => {

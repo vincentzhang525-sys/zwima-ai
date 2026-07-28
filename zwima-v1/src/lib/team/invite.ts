@@ -102,10 +102,29 @@ function pendingClerkIdForEmail(email: string): string {
   return `pending_invite_${hash}`;
 }
 
+async function assertInviteCapability(
+  actorId: string,
+  organization: Organization,
+): Promise<{ organization: Organization; role: OrgRole } | null> {
+  if (organization.ownerId === actorId) {
+    return { organization, role: "OWNER" };
+  }
+  const membership = await prisma.organizationMember.findFirst({
+    where: {
+      organizationId: organization.id,
+      userId: actorId,
+      accepted: true,
+      role: { in: INVITE_ADMIN_ROLES },
+    },
+  });
+  if (!membership) return null;
+  return { organization, role: membership.role };
+}
+
 /**
- * Resolve an organization the actor may invite into:
- * - Organization.ownerId === actor.id, OR
- * - OrganizationMember with OWNER/ADMIN role
+ * Resolve an organization the actor may invite into.
+ * Uses workspace-aligned org selection (membership first), then requires
+ * Organization.ownerId === actor.id OR OWNER/ADMIN membership — never Clerk ids.
  */
 export async function resolveInviteCapableOrganization(
   actorId: string,
@@ -114,36 +133,25 @@ export async function resolveInviteCapableOrganization(
   if (organizationId) {
     const org = await prisma.organization.findUnique({ where: { id: organizationId } });
     if (!org) return null;
-    if (org.ownerId === actorId) return { organization: org, role: "OWNER" };
-    const membership = await prisma.organizationMember.findFirst({
-      where: {
-        organizationId,
-        userId: actorId,
-        accepted: true,
-        role: { in: INVITE_ADMIN_ROLES },
-      },
-    });
-    if (!membership) return null;
-    return { organization: org, role: membership.role };
+    return assertInviteCapability(actorId, org);
+  }
+
+  // Prefer the actor's primary accepted membership (same ordering as workspace-context).
+  const primaryMembership = await prisma.organizationMember.findFirst({
+    where: { userId: actorId, accepted: true },
+    include: { organization: true },
+    orderBy: { createdAt: "asc" },
+  });
+  if (primaryMembership) {
+    return assertInviteCapability(actorId, primaryMembership.organization);
   }
 
   const owned = await prisma.organization.findFirst({
     where: { ownerId: actorId },
     orderBy: { createdAt: "asc" },
   });
-  if (owned) return { organization: owned, role: "OWNER" };
-
-  const membership = await prisma.organizationMember.findFirst({
-    where: {
-      userId: actorId,
-      accepted: true,
-      role: { in: INVITE_ADMIN_ROLES },
-    },
-    include: { organization: true },
-    orderBy: { createdAt: "asc" },
-  });
-  if (!membership) return null;
-  return { organization: membership.organization, role: membership.role };
+  if (!owned) return null;
+  return assertInviteCapability(actorId, owned);
 }
 
 async function findOrCreateInviteeUser(email: string): Promise<User> {

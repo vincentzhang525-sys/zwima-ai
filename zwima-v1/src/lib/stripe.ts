@@ -1,11 +1,13 @@
 import Stripe from "stripe";
 import { prisma } from "./prisma";
 import { assertStripePaymentsAllowed } from "./stripe-preview-guard";
+import { assertStripeTestModeForClosedBeta } from "./stripe-mode-gate";
 
 let stripeClient: Stripe | null = null;
 
 export function getStripe(): Stripe {
   if (!stripeClient) {
+    assertStripeTestModeForClosedBeta();
     const key = process.env.STRIPE_SECRET_KEY;
     if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
     stripeClient = new Stripe(key, { apiVersion: "2026-06-24.dahlia" });
@@ -31,6 +33,7 @@ export async function createCheckoutSession(params: {
   couponCode?: string;
 }) {
   assertStripePaymentsAllowed();
+  assertStripeTestModeForClosedBeta();
 
   const pkg = await getCreditPackage(params.packageId);
   if (!pkg) throw new Error("Invalid package");

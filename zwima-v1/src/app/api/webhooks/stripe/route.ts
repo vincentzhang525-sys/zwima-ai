@@ -6,10 +6,27 @@ import { handleSubscriptionRenewal } from "@/lib/billing/subscription-engine";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { isStripePreviewDisabled, stripePreviewDisabledPayload } from "@/lib/stripe-preview-guard";
+import {
+  assertStripeTestModeForClosedBeta,
+  StripeModeMismatchError,
+  STRIPE_MODE_MISMATCH,
+} from "@/lib/stripe-mode-gate";
 
 export async function POST(req: Request) {
   if (isStripePreviewDisabled()) {
     return NextResponse.json(stripePreviewDisabledPayload(), { status: 403 });
+  }
+
+  try {
+    assertStripeTestModeForClosedBeta();
+  } catch (err) {
+    if (err instanceof StripeModeMismatchError) {
+      return NextResponse.json(
+        { error: { code: STRIPE_MODE_MISMATCH, message: err.message } },
+        { status: 403 },
+      );
+    }
+    throw err;
   }
 
   const body = await req.text();

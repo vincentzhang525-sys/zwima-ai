@@ -102,7 +102,7 @@ function buildCheckoutCompletedEvent(params: {
         },
         mode: "payment",
         status: "complete",
-      } as Stripe.Checkout.Session,
+      } as unknown as Stripe.Checkout.Session,
     },
   } as Stripe.Event;
 }

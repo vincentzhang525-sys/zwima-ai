@@ -2,7 +2,7 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `TBD_GAP015`  
+**HEAD:** `629af84`  
 **LAST_CLOSEOUT:** 2026-07-29 — GAP-015 Multi-Provider Readiness Gate PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
@@ -309,7 +309,7 @@
 | GAP_015_STATUS | PASS_LOCKED |
 | DUPLICATE_EXECUTION_FORBIDDEN | YES |
 | 完成日期 | 2026-07-29 |
-| Git commit | (this closeout commit) |
+| Git commit | `629af84` |
 | Deployment ID/URL | N/A (readiness gate only; no new live Provider calls) |
 | Database migration | NONE |
 | OPENAI | PASS — contract + compliance + historical GAP-001 live evidence (no re-spend) |

@@ -58,6 +58,11 @@ export async function getCurrentDbUser() {
         country: existingByEmail.country ?? (clerkUser.unsafeMetadata?.country as string) ?? null,
       },
     });
+    // Accept pending invites on first successful Clerk link (GAP-012 Viewer path).
+    await prisma.organizationMember.updateMany({
+      where: { userId: user.id, accepted: false },
+      data: { accepted: true },
+    });
     await ensureCreditBalance(user.id);
     return user;
   }

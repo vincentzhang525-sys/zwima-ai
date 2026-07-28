@@ -9,6 +9,8 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(_req: Request, { params }: Params) {
   try {
     const ctx = await requireWorkspaceContext();
+    const { assertCanAccess } = await import("@/lib/rbac");
+    assertCanAccess(ctx.role, "api_keys");
     const { id } = await params;
     const data = await rotateWorkspaceApiKey(ctx.user.id, ctx.user.email, id);
     return NextResponse.json(data);

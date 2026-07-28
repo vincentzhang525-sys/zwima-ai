@@ -10,6 +10,8 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(req: Request, { params }: Params) {
   try {
     const ctx = await requireWorkspaceContext();
+    const { assertCanAccess } = await import("@/lib/rbac");
+    assertCanAccess(ctx.role, "api_keys");
     const { id } = await params;
     const body = parseBody(revokeApiKeySchema, await req.json());
     await revokeWorkspaceApiKey(ctx.user.id, ctx.user.email, id, body.reason ?? "Revoked by user");

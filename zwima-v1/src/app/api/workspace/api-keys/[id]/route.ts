@@ -10,6 +10,8 @@ type Params = { params: Promise<{ id: string }> };
 export async function PATCH(req: Request, { params }: Params) {
   try {
     const ctx = await requireWorkspaceContext();
+    const { assertCanAccess } = await import("@/lib/rbac");
+    assertCanAccess(ctx.role, "api_keys");
     const { id } = await params;
     const body = parseBody(updateApiKeySchema, await req.json());
     const key = await updateWorkspaceApiKey(ctx.user.id, ctx.user.email, id, body);

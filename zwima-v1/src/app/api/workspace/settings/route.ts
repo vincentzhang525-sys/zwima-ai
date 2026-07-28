@@ -20,6 +20,8 @@ export async function GET() {
 export async function PATCH(req: Request) {
   try {
     const ctx = await requireWorkspaceContext();
+    const { assertCanManageOrg } = await import("@/lib/rbac");
+    assertCanManageOrg(ctx.role);
     const body = parseBody(settingsPatchSchema, await req.json());
     const settings = await settingsService.update(ctx.organizationId, body as Partial<import("@/lib/workspace/settings-service").WorkspaceSettings>);
     await writeAudit({

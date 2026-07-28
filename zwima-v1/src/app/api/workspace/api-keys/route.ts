@@ -11,6 +11,8 @@ import { ApiError } from "@/lib/api-errors";
 export async function GET() {
   try {
     const ctx = await requireWorkspaceContext();
+    const { assertCanAccess } = await import("@/lib/rbac");
+    assertCanAccess(ctx.role, "api_keys");
     const data = await listWorkspaceApiKeys(ctx.user.id, ctx.user.email);
     return NextResponse.json(data);
   } catch (err) {
@@ -22,6 +24,8 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const ctx = await requireWorkspaceContext();
+    const { assertCanAccess } = await import("@/lib/rbac");
+    assertCanAccess(ctx.role, "api_keys");
     const body = parseBody(createApiKeySchema, await req.json());
     const data = await createWorkspaceApiKey(ctx.user.id, ctx.user.email, body);
     return NextResponse.json(data);

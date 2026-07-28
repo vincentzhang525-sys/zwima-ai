@@ -110,14 +110,15 @@ Priority legend: **P0** block any customer use · **P1** before Closed Beta · *
 - **MODULE:** M7
 - **PRIORITY:** P1
 - **ISSUE:** Viewer permission E2E NOT_TESTED; RBAC matrix incomplete
-- **CURRENT_STATE:** Owner/Admin + Member only in Primary org tests
-- **EVIDENCE:** Phase 2B E2E `VIEWER_PERMISSION = NOT_TESTED`
-- **CUSTOMER_IMPACT:** Privilege bugs
-- **SECURITY_OR_FINANCIAL_RISK:** Authorization bypass risk
-- **REQUIRED_FIX:** Provision Viewer test identity + denial tests
-- **DEPENDENCIES:** Clerk Dev user
+- **CURRENT_STATE:** **PASS (LOCKED)** — Viewer fail-closed workspace gates + Preview E2E
+- **EVIDENCE:** Completion Ledger GAP-012; commit `e7bc671`; Preview `zwima-jypwtah8x`
+- **CUSTOMER_IMPACT:** Privilege bugs mitigated for Closed Beta Viewer path
+- **SECURITY_OR_FINANCIAL_RISK:** Residual: Member personal-org OWNER edge case remains for settings self-org
+- **REQUIRED_FIX:** ~~Provision Viewer + denial tests~~ Done
+- **DEPENDENCIES:** Existing M8 Owner/Member A
 - **ESTIMATED_COMPLEXITY:** S
 - **LAUNCH_GATE:** CLOSED_BETA
+- **STATUS:** PASS (Preview)
 
 ### GAP-013
 - **MODULE:** M11

@@ -196,6 +196,24 @@
 
 ---
 
+### GAP-012
+
+| Field | Value |
+|--------|--------|
+| ID | GAP-012 |
+| 模块 | M7 Viewer RBAC E2E |
+| 完成状态 | PASS (LOCKED) |
+| 完成日期 | 2026-07-28 |
+| Git commit | `e7bc671` |
+| Deployment ID/URL | Preview `https://zwima-jypwtah8x-zwima.vercel.app` |
+| Database migration | N/A (no schema change; invite accept-on-login + RBAC gates) |
+| Test result | Unit `gap012-rbac` PASS; Authenticated Preview E2E PASS — Owner admin OK; Member invite-to-Primary denied; Viewer read agents OK; Viewer agent write/admin/API key/billing/settings/invite denied 403; cross-org 403/404; unauth → login; reused Owner/Member A; created one Viewer `m8-viewer+clerk_test@…` only because none existed |
+| Evidence | `assertCanAccess` / `assertCanManageOrg`; pending invite accept on Clerk link; this ledger |
+| Retest trigger | RBAC matrix change; new org roles; Clerk E2E identity reset |
+| DO_NOT_REPEAT | Recreate Viewer if present; change Owner/Member roles; re-run full RBAC E2E without trigger |
+
+---
+
 ## Explicitly frozen bans (global)
 
 | Ban ID | DO_NOT_REPEAT |
@@ -218,7 +236,6 @@ These remain **incomplete** relative to Closed Beta / Public launch (from audit 
 |----|------|------|--------|
 | GAP-010 | M5 Deprecation/Migration wiring | OPEN (P1) | Status gate exists; policy engines not fully wired |
 | GAP-016 | M4 FX on chat hot path | OPEN (P1) | Engines exist; not on `/api/v1/chat` billing path |
-| GAP-012 | M7 Viewer RBAC E2E | OPEN (P1) | Viewer NOT_TESTED |
 | GAP-013 | M11 CI | OPEN (P1) | No `.github/workflows` evidence |
 | GAP-014 | M11 Backup/DR | OPEN (P1) | Weak evidence |
 | GAP-015 | Multi-provider live retest | OPEN (P1) | P0 only required one provider (done) |
@@ -241,6 +258,7 @@ Tasks that would map to ledger PASS and must return `ALREADY_COMPLETED` unless a
 - “Another OpenAI live smoke for proof”
 - “Re-build GAP-011 consent / legal pages / Preview consent migration”
 - “Re-run GAP-011 authenticated Preview consent E2E / recreate Playwright storageState”
+- “Re-provision GAP-012 Viewer / re-run Viewer RBAC E2E without trigger”
 
 ---
 

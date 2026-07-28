@@ -1,7 +1,11 @@
 import { prisma } from "../prisma";
 import { parseProviderConfig } from "../providers/provider-admin-config";
 import { estimateCost } from "../pricing/pricing-service";
-import { isRoutableStatus } from "../model-lifecycle/lifecycle-service";
+import { loadLifecyclePolicyIndex } from "../model-lifecycle/policy-loader";
+import {
+  lookupPolicies,
+  resolveLifecycleRoutingDecision,
+} from "../model-lifecycle/policy-wiring";
 import type { MarginContext } from "../billing/margin-engine";
 import type { ProviderCandidate, RoutingRequestContext } from "./routing-types";
 
@@ -33,11 +37,13 @@ export async function buildProviderCandidates(
 ): Promise<{ eligible: ProviderCandidate[]; rejected: ProviderCandidate[] }> {
   const now = new Date();
   const normalizedModel = context.requestedModel.toLowerCase();
+  const policyIndex = await loadLifecyclePolicyIndex();
   const providers = await prisma.provider.findMany({
     include: {
       health: true,
       models: {
         include: {
+          replacementModel: { select: { modelCode: true, displayName: true } },
           pricing: {
             where: {
               pricingStatus: "VERIFIED",
@@ -124,10 +130,26 @@ export async function buildProviderCandidates(
         pushRejected("Provider health DOWN");
         continue;
       }
-      if (!isRoutableStatus(m.status, process.env.VERCEL_ENV)) {
-        pushRejected(`Model status ${m.status} not routable`);
+
+      const { deprecationPolicy, migrationPolicy } = lookupPolicies(policyIndex, p.slug, m.modelCode);
+      const lifecycle = resolveLifecycleRoutingDecision({
+        modelStatus: m.status,
+        modelCode: m.modelCode,
+        vercelEnv: process.env.VERCEL_ENV,
+        now,
+        modelDeprecationDate: m.deprecationDate,
+        modelReplacementCode: m.replacementModel?.modelCode ?? null,
+        deprecationPolicy,
+        migrationPolicy,
+      });
+      if (!lifecycle.routable) {
+        pushRejected(lifecycle.exclusionReason ?? `Model status ${m.status} not routable`);
         continue;
       }
+      if (lifecycle.migrationApplied && lifecycle.effectiveModelCode) {
+        c.modelId = lifecycle.effectiveModelCode;
+      }
+
       if (m.modelCode.toLowerCase() !== normalizedModel && !context.requestedModel.includes("*")) {
         pushRejected("Model mismatch");
         continue;

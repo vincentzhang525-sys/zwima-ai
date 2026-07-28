@@ -70,14 +70,15 @@ Priority legend: **P0** block any customer use · **P1** before Closed Beta · *
 - **MODULE:** M5
 - **PRIORITY:** P1
 - **ISSUE:** `ProviderModel.status` is gated via `isRoutableStatus`, but DeprecationPolicy/MigrationPolicy engines are not wired; auto-migrate / customer notification incomplete
-- **CURRENT_STATE:** Status fail-closed on candidate builder; policy tables schema-first
-- **EVIDENCE:** `lifecycle-service.ts` `isRoutableStatus`; `provider-candidate-builder.ts`; no `modelDeprecationPolicy` service usage ([Audit M5-M8](454d20aa-769f-428e-9d4f-f2b028386717))
-- **CUSTOMER_IMPACT:** Sunset/migration workflows incomplete even when status blocks routing
-- **SECURITY_OR_FINANCIAL_RISK:** Compliance / support cost
-- **REQUIRED_FIX:** Wire deprecation/migration policy services + notifications; keep status gate
-- **DEPENDENCIES:** M5 catalog accuracy
+- **CURRENT_STATE:** **PASS_LOCKED** — status gate preserved; deprecation/migration engines + candidate-builder wiring; IN_APP notification planning only (EMAIL forbidden)
+- **EVIDENCE:** `deprecation-policy-engine.ts`; `migration-policy-engine.ts`; `policy-wiring.ts`; `provider-candidate-builder.ts`; `gap010-lifecycle-policies.test.ts`; Completion Ledger GAP-010
+- **CUSTOMER_IMPACT:** Sunset/migration policies can exclude or rewrite routable candidates without silent routing to retired models
+- **SECURITY_OR_FINANCIAL_RISK:** Residual: EMAIL notifications still out of scope by design; registry policy rows must be curated in admin/ops
+- **REQUIRED_FIX:** DONE for Closed Beta minimum (engines + routing wire + IN_APP-only notifications)
+- **DEPENDENCIES:** M5 catalog / ModelRegistryEntry policy rows (optional; fail-soft empty index)
 - **ESTIMATED_COMPLEXITY:** M
 - **LAUNCH_GATE:** CLOSED_BETA
+- **STATUS:** PASS_LOCKED
 
 ### GAP-016
 - **MODULE:** M4

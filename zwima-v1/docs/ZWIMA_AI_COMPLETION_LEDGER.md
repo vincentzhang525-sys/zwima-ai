@@ -2,8 +2,8 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `629af84`  
-**LAST_CLOSEOUT:** 2026-07-29 — GAP-015 Multi-Provider Readiness Gate PASS_LOCKED  
+**HEAD:** `TBD_GAP010`  
+**LAST_CLOSEOUT:** 2026-07-29 — GAP-010 Deprecation/Migration policy wiring PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -327,6 +327,30 @@
 
 ---
 
+### GAP-010
+
+| Field | Value |
+|--------|--------|
+| ID | GAP-010 |
+| 模块 | M5 Deprecation / Migration policy wiring |
+| 完成状态 | PASS_LOCKED |
+| GAP_010_STATUS | PASS_LOCKED |
+| DUPLICATE_EXECUTION_FORBIDDEN | YES |
+| 完成日期 | 2026-07-29 |
+| Git commit | (this closeout commit) |
+| Database migration | NONE — reused existing `ModelDeprecationPolicy` / `ModelMigrationPolicy` schema |
+| STATUS_GATE | `isRoutableStatus` preserved (ACTIVE / Preview-only PREVIEW) |
+| DEPRECATION_ENGINE | `deprecation-policy-engine.ts` — DISABLED/RETIRED/DEPRECATED/past sunset fail-closed |
+| MIGRATION_ENGINE | `migration-policy-engine.ts` — autoMigrate rewrite; human-approval blocks auto |
+| ROUTING_WIRE | `provider-candidate-builder.ts` loads policy index + `resolveLifecycleRoutingDecision` |
+| NOTIFICATIONS | IN_APP plan/dispatch only; EMAIL fail-closed (no Resend) |
+| Test result | `gap010-lifecycle-policies` PASS; full suite PASS; typecheck/lint PASS; no email/Provider/Stripe |
+| Evidence | Engines + loader + candidate wiring + unit tests; this ledger |
+| Retest trigger | `related_code_changed` on lifecycle policy engines / candidate builder |
+| DO_NOT_REPEAT | Send deprecation EMAIL; live Provider calls; rewrite M2 scoring; start M8-2C/M9 |
+
+---
+
 ## Explicitly frozen bans (global)
 
 | Ban ID | DO_NOT_REPEAT |
@@ -347,11 +371,10 @@ These remain **incomplete** relative to Closed Beta / Public launch (from audit 
 
 | ID | 模块 | 状态 | Notes |
 |----|------|------|--------|
-| GAP-010 | M5 Deprecation/Migration wiring | OPEN (P1) | Status gate exists; policy engines not fully wired |
 | M9 | Workflow Automation | EXCLUDED / not started | Frozen: do not start without auth |
 | M8-2C | Workspace Memory | DEFERRED | Explicitly frozen |
-| PUBLIC_PRODUCTION_READY | Launch gate | NO | Platform ~48% at audit; P0 commercial loop closed, P1 remain |
-| CLOSED_BETA_READY | Launch gate | CONDITIONAL | P0 loop PASS; P1 still open — product decision |
+| PUBLIC_PRODUCTION_READY | Launch gate | NO | Platform ~48% at audit; P0 commercial loop closed; P1 Closed Beta gaps locked |
+| CLOSED_BETA_READY | Launch gate | CONDITIONAL | P0+P1 Closed Beta gaps PASS_LOCKED; product/counsel decision remains |
 
 ---
 
@@ -372,6 +395,7 @@ Tasks that would map to ledger PASS and must return `ALREADY_COMPLETED` unless a
 - “Re-build GAP-013 CI from deleted recovery drafts / add Production migrate or live spend jobs”
 - “Live-restore Production DB / dump Vercel env values / re-apply locked migrations to prove GAP-014”
 - “Re-run multi-provider live smoke / buy vendor quota / enable LIVE_PROVIDER_CALLS for GAP-015 proof”
+- “Re-wire GAP-010 deprecation EMAIL / re-implement migration engines without trigger”
 
 ---
 

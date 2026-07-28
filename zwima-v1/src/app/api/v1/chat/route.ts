@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     const lockedProvider = providerLock();
     const result = await gatewayChat(
       {
-        model: body.model ? String(body.model) : "gpt-5-nano",
+        model: body.model ? String(body.model) : "gpt-5-mini",
         provider: lockedProvider
           ? (lockedProvider as "openai")
           : body.provider,

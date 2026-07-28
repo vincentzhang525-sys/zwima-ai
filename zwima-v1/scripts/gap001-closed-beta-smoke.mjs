@@ -64,6 +64,7 @@ async function main() {
     outputTokens: body?.usage?.outputTokens ?? null,
     costCredits: body?.usage?.costCredits ?? null,
     errorCode: body?.error?.code ?? null,
+    errorMessage: body?.error?.message ? redact(String(body.error.message)).slice(0, 300) : null,
   };
 
   console.log(redact(JSON.stringify(report, null, 2)));

@@ -69,31 +69,43 @@
 
 ---
 
-## D. Remaining Manual Actions (not re-opened GAPs)
+## D. Remaining Manual Actions (deduped 2026-07-29)
 
-### USER_MANUAL_ACTION
-1. Confirm Production domain / Vercel alias for Closed Beta (`zwima-group.info` or chosen alias).  
-2. Confirm Production env **names** present (values never dumped): Clerk live, Stripe live, DB URLs, OpenAI, flags.  
-3. Confirm Stripe webhook endpoint reachable for Production (no new payment).  
-4. Authorize IONOS SMTP / email send policy (keep banned or test mailbox only until authorized).  
-5. Finalize first Closed Beta invitee list + manual credit grants.  
-6. Explicit authorize **merge to `main`** (not performed).  
-7. Explicit authorize **Production deploy** (not performed).
+> Engineering P0/P1 remain PASS_LOCKED. Items auto-verified in  
+> `docs/ZWIMA_AI_CLOSED_BETA_MANUAL_RELEASE_CHECKLIST.md` are **not** repeated as open todos.
+
+### ALREADY_COMPLETED (do not re-do)
+- Production domain DNS/HTTPS for `zwima-group.info`
+- Vercel domain registration for `zwima-group.info`
+- Production env **names** present (Clerk/Stripe/DB/OpenAI/live flags/SMTP/Resend)
+- Stripe webhook route + `STRIPE_WEBHOOK_SECRET` name + historical GAP-002/Phase7 evidence
+- P0/P1 engineering readiness (`PASS_CONDITIONAL` audit)
+
+### Still USER_MUST_CONFIRM
+1. Canonical Closed Beta domain product confirm → reply `CANONICAL_DOMAIN_CONFIRMED = YES`  
+2. Stripe Dashboard webhook URL eye-check (no payment) → `STRIPE_WEBHOOK_URL_CONFIRMED = YES`  
+3. IONOS/SMTP policy remain banned or test-mailbox only → `IONOS_SMTP_POLICY = BANNED|TEST_MAILBOX_ONLY`  
+4. Accept draft legal for Closed Beta or wait counsel → `LEGAL_DRAFT_ACCEPTED_FOR_CLOSED_BETA = YES` | `LEGAL_WAIT_COUNSEL = YES`
+
+### Still USER_MUST_PROVIDE
+5. Invitee list or `CLOSED_BETA_COHORT = INTERNAL_ONLY`  
+6. Manual credits plan → `MANUAL_CREDITS_PLAN = READY`
+
+### FINAL_RELEASE_AUTHORIZATION (not performed)
+7. `AUTHORIZE_MAIN_MERGE = YES` (explicit; no auto-merge)  
+8. `AUTHORIZE_PRODUCTION_DEPLOY = YES` (explicit; no auto-deploy)
 
 ### CODE_BLOCKER
-- **NONE** for Closed Beta P0/P1 engineering set.
+- **NONE**
 
 ### CONFIG_BLOCKER
-- Production env presence must be operator-confirmed (read-only checklist) — not a code defect.  
-- Non-OpenAI providers remain CONFIG_PENDING until keys added under separate auth (optional for Closed Beta minimum).
+- None blocking Closed Beta minimum beyond USER confirms above (optional non-OpenAI keys remain CONFIG_PENDING by design).
 
 ### DEPLOYMENT_BLOCKER
-- Final Production deploy not authorized in this session.  
-- `main` not merged.
+- Pending explicit D1/D2 authorization only.
 
 ### BUSINESS_OPERATION_BLOCKER
-- Closed Beta cohort ops (invites, credits, support mailbox).  
-- Legal counsel sign-off on draft legal text (GAP-011 residual) — product decision.
+- Cohort + credits + legal acceptance (B4/C1/C2).
 
 ---
 
@@ -107,7 +119,7 @@ Reason: All Closed Beta **P0+P1 engineering GAPs** are PASS_LOCKED and local zer
 
 **FINAL_AUDIT_RESULT = PASS_CONDITIONAL**
 
-**BLOCKERS = USER_MANUAL_ACTION + BUSINESS_OPERATION_BLOCKER + DEPLOYMENT_BLOCKER (authorization only); CODE_BLOCKERS=NONE**
+**BLOCKERS = USER_MUST_CONFIRM + USER_MUST_PROVIDE + FINAL_RELEASE_AUTHORIZATION; CODE_BLOCKERS=NONE; see `docs/ZWIMA_AI_CLOSED_BETA_MANUAL_RELEASE_CHECKLIST.md`**
 
 ---
 

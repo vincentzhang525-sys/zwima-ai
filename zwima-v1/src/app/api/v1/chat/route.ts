@@ -9,6 +9,12 @@ import {
   LiveProviderCallsDisabledError,
   PROVIDER_LIVE_CALLS_DISABLED,
 } from "@/lib/providers/live-provider-gate";
+import {
+  ClosedBetaLiveBudgetError,
+  CLOSED_BETA_LIVE_BUDGET_EXCEEDED,
+  clampMaxTokensForClosedBeta,
+  providerLock,
+} from "@/lib/providers/closed-beta-live-budget";
 
 export async function POST(req: Request) {
   const requestId = req.headers.get("x-request-id") ?? generateRequestId();
@@ -24,12 +30,15 @@ export async function POST(req: Request) {
       : [{ role: "user" as const, content: String(body.prompt || "") }];
 
     // No DB auto-migration / model-lifecycle side effects on the request path.
+    const lockedProvider = providerLock();
     const result = await gatewayChat(
       {
-        model: body.model ? String(body.model) : undefined,
-        provider: body.provider,
+        model: body.model ? String(body.model) : "gpt-5-nano",
+        provider: lockedProvider
+          ? (lockedProvider as "openai")
+          : body.provider,
         messages,
-        maxTokens: body.maxTokens ?? body.max_tokens,
+        maxTokens: clampMaxTokensForClosedBeta(body.maxTokens ?? body.max_tokens),
         temperature: body.temperature,
         region: body.region,
         requireEuCompliance: body.requireEuCompliance ?? body.eu,
@@ -101,6 +110,18 @@ export async function POST(req: Request) {
         {
           error: {
             code: PROVIDER_LIVE_CALLS_DISABLED,
+            message: err.message,
+            requestId,
+          },
+        },
+        { status: 403 },
+      );
+    }
+    if (err instanceof ClosedBetaLiveBudgetError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: CLOSED_BETA_LIVE_BUDGET_EXCEEDED,
             message: err.message,
             requestId,
           },

@@ -1,6 +1,10 @@
 import { estimateCredits } from "./pricing";
 import { extractSystemMessage, openAiCompatibleChat, parseOpenAiResponse } from "./http";
 import type { ChatRequest, ChatResult, HealthResult, ModelInfo, ProviderAdapter } from "./types";
+import {
+  assertClosedBetaLiveChatAllowed,
+  clampMaxTokensForClosedBeta,
+} from "./closed-beta-live-budget";
 
 const MODELS: ModelInfo[] = [
   { id: "gpt-5", provider: "openai", name: "GPT-5" },
@@ -62,6 +66,13 @@ export const openaiAdapter: ProviderAdapter = {
     if (!key) throw new Error("OPENAI_API_KEY not configured");
 
     const publicModel = MODELS.find((m) => m.id === request.model)?.id ?? request.model;
+    const maxTokens = clampMaxTokensForClosedBeta(request.maxTokens);
+    assertClosedBetaLiveChatAllowed({
+      providerSlug: "openai",
+      model: publicModel,
+      maxTokens,
+    });
+
     const apiModel = resolveApiModel(publicModel);
     const { system, chatMessages } = extractSystemMessage(request.messages);
     const messages = [
@@ -72,7 +83,7 @@ export const openaiAdapter: ProviderAdapter = {
     const { data, latencyMs, status } = await openAiCompatibleChat(BASE_URL, key, {
       model: apiModel,
       messages,
-      max_tokens: request.maxTokens ?? 2048,
+      max_tokens: maxTokens,
       temperature: request.temperature ?? 0.7,
     });
 

@@ -186,7 +186,7 @@
 | 模块 | M6 Closed Beta Compliance Gate |
 | 完成状态 | PASS |
 | 完成日期 | 2026-07-28 |
-| Git commit | *(filled after push)* |
+| Git commit | `bb4846b` |
 | Deployment ID/URL | Preview Git Integration (branch `v1-p0-commercial-loop`) |
 | Database migration | `20260728220000_gap011_legal_consent` — **Preview only** (`PREVIEW_DB_MIGRATE_AUTHORIZED`); additive `LegalConsentAcceptance` + `AccountDeletionRequest` |
 | Test result | Unit: `gap011-legal-consent` + `gap011-sanitize`; typecheck PASS; lint PASS; Preview E2E `gap011-compliance` |

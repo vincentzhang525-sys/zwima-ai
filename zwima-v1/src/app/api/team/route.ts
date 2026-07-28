@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
-import { requireDbUser } from "@/lib/auth";
+import { auth } from "@clerk/nextjs/server";
+import { getCurrentDbUser, requireDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAudit } from "@/lib/audit";
 import type { OrgRole } from "@prisma/client";
+import {
+  inviteTeamMember,
+  resolveAuthenticatedPrismaUser,
+  TeamInviteError,
+} from "@/lib/team/invite";
 
 export async function GET() {
   try {
@@ -22,7 +28,24 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const user = await requireDbUser();
+    const { userId: clerkUserId } = await auth();
+    if (!clerkUserId) {
+      return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } }, { status: 401 });
+    }
+
+    const sessionUser = await getCurrentDbUser();
+    const user =
+      sessionUser ??
+      (await resolveAuthenticatedPrismaUser({
+        clerkUserId,
+        email: null,
+        internalUserId: null,
+      }));
+
+    if (!user) {
+      return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } }, { status: 401 });
+    }
+
     const body = await req.json();
 
     if (body.action === "create") {
@@ -43,37 +66,55 @@ export async function POST(req: Request) {
     }
 
     if (body.action === "invite") {
-      const org = await prisma.organization.findFirst({ where: { ownerId: user.id } });
-      if (!org) return NextResponse.json({ error: "No organization" }, { status: 404 });
+      // Resolve Prisma actor again with explicit clerk/email priority — never compare Clerk id to ownerId.
+      const actor =
+        (await resolveAuthenticatedPrismaUser({
+          clerkUserId,
+          email: user.email,
+          internalUserId: user.id,
+        })) ?? user;
 
-      const email = String(body.email || "").toLowerCase();
-      const role = (body.role || "DEVELOPER") as OrgRole;
-      const invitee = await prisma.user.findUnique({ where: { email } });
+      const result = await inviteTeamMember({
+        actor,
+        email: String(body.email || ""),
+        role: body.role as OrgRole | string | undefined,
+        organizationId: body.organizationId ? String(body.organizationId) : undefined,
+      });
 
-      const member = await prisma.organizationMember.create({
-        data: {
-          organizationId: org.id,
-          userId: invitee?.id ?? user.id,
-          role,
-          invitedEmail: invitee ? null : email,
-          accepted: !!invitee,
+      if (!result.alreadyMember) {
+        await writeAudit({
+          userId: actor.id,
+          action: `Invited ${String(body.email || "").toLowerCase()} as ${result.member.role}`,
+          category: "TEAM",
+          detail: { memberId: result.member.id, organizationId: result.organizationId },
+        });
+      }
+
+      return NextResponse.json(
+        {
+          member: result.member,
+          alreadyMember: result.alreadyMember,
+          organizationId: result.organizationId,
         },
-        include: { user: { select: { email: true } } },
-      });
-
-      await writeAudit({
-        userId: user.id,
-        action: `Invited ${email} as ${role}`,
-        category: "TEAM",
-        detail: { memberId: member.id },
-      });
-
-      return NextResponse.json({ member });
+        { status: 200 },
+      );
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 500 });
+    if (err instanceof TeamInviteError) {
+      return NextResponse.json(
+        { error: { code: err.code, message: err.message }, alreadyMember: err.code === "MEMBER_ALREADY_EXISTS" },
+        { status: err.status },
+      );
+    }
+    if (err instanceof Error && err.message === "Unauthorized") {
+      return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "Authentication required" } }, { status: 401 });
+    }
+    return NextResponse.json(
+      { error: { code: "INTERNAL_ERROR", message: err instanceof Error ? err.message : "Failed" } },
+      { status: 500 },
+    );
   }
 }
 

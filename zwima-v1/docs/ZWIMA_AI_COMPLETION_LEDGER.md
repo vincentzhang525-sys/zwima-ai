@@ -2,7 +2,7 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `TBD_GAP013`  
+**HEAD:** `503e428`  
 **LAST_CLOSEOUT:** 2026-07-29 — GAP-013 CI launch gate PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
@@ -258,7 +258,7 @@
 | GAP_013_STATUS | PASS_LOCKED |
 | DUPLICATE_EXECUTION_FORBIDDEN | YES |
 | 完成日期 | 2026-07-29 |
-| Git commit | (this closeout commit) |
+| Git commit | `503e428` |
 | Deployment ID/URL | N/A (GitHub Actions workflow only; no Production deploy) |
 | Database migration | NONE — CI runs `prisma validate` only; migrate deploy forbidden |
 | CI_WORKFLOW | `.github/workflows/gap013-ci.yml` — push `v1-p0-commercial-loop` + PRs touching `zwima-v1/**` |

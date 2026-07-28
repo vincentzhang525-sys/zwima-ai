@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 /**
- * Invoke Production GAP-002 acceptance + commercial loop gate.
- * Loads Production SMOKE_TEST_API_KEY via vercel env pull (never printed).
+ * GAP-002 read-only Live ledger + E2E commercial loop gate (no new charges).
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const outFile = join(tmpdir(), `zwima-gap002-run-${Date.now()}.env`);
+const outFile = join(tmpdir(), `zwima-gap002-ro-${Date.now()}.env`);
 const baseUrl = (process.env.SMOKE_BASE_URL || "https://zwima-group.info").replace(/\/$/, "");
 
 function parseEnv(text) {
@@ -25,7 +24,12 @@ function parseEnv(text) {
 }
 
 function redact(s) {
-  return String(s).replace(/sk_[a-zA-Z0-9_-]+/g, "[REDACTED]").replace(/whsec_[a-zA-Z0-9]+/g, "[REDACTED]");
+  return String(s)
+    .replace(/sk_[a-zA-Z0-9_-]+/g, "[REDACTED]")
+    .replace(/whsec_[a-zA-Z0-9]+/g, "[REDACTED]")
+    .replace(/pi_[a-zA-Z0-9]+/g, "pi_[REDACTED]")
+    .replace(/cs_[a-zA-Z0-9_]+/g, "cs_[REDACTED]")
+    .replace(/evt_[a-zA-Z0-9_]+/g, "evt_[REDACTED]");
 }
 
 const pull = spawnSync(
@@ -61,33 +65,36 @@ try {
   const providersBody = await providersRes.json().catch(() => ({}));
   const openai = (providersBody.providers || []).find((p) => p.id === "openai");
 
+  const loginRes = await fetch(`${baseUrl}/login`);
+  const loginHtml = await loginRes.text();
+  const clerkLive = /pk_live_/.test(loginHtml) && !/pk_test_/.test(loginHtml);
+
+  const gap002Ok = Boolean(acceptBody?.ok);
+  const e2e = {
+    clerkProductionPublishable: clerkLive,
+    openaiProviderOnline: openai?.status === "ONLINE",
+    gap002ReadOnlyOk: gap002Ok,
+    stripeMode: acceptBody?.stripeMode ?? modeBody?.stripe?.secretKind ?? null,
+    noNewCharge: acceptBody?.newChargeAttempted === false,
+    commercialLoopPass: false,
+  };
+  e2e.commercialLoopPass =
+    e2e.clerkProductionPublishable &&
+    e2e.openaiProviderOnline &&
+    e2e.gap002ReadOnlyOk &&
+    e2e.noNewCharge;
+
   const report = {
     modeStatus: modeRes.status,
     modeOk: Boolean(modeBody?.ok),
     stripeDiag: modeBody?.stripe ?? null,
-    gap002: {
-      httpStatus: acceptRes.status,
-      ...acceptBody,
-    },
-    e2e: {
-      openaiProviderOnline: openai?.status === "ONLINE",
-      openaiLiveMessage: openai?.health?.message ?? null,
-      gap002Ok: Boolean(acceptBody?.ok),
-      stripeTestMode: acceptBody?.stripeMode === "TEST" || modeBody?.stripe?.secretKind === "test",
-    },
+    gap002: { httpStatus: acceptRes.status, ...acceptBody },
+    e2e,
   };
 
-  report.e2e.commercialLoopPass =
-    report.e2e.gap002Ok &&
-    report.e2e.openaiProviderOnline &&
-    report.gap002?.checkoutStatus === "PASS" &&
-    report.gap002?.webhookSignatureStatus === "PASS" &&
-    report.gap002?.creditBalanceStatus === "PASS";
-
-  const outPath = join(process.cwd(), ".tmp_gap002_acceptance.json");
-  writeFileSync(outPath, redact(JSON.stringify(report, null, 2)));
+  writeFileSync(join(process.cwd(), ".tmp_gap002_acceptance.json"), redact(JSON.stringify(report, null, 2)));
   console.log(redact(JSON.stringify(report, null, 2)));
-  process.exit(report.e2e.commercialLoopPass ? 0 : 1);
+  process.exit(e2e.commercialLoopPass ? 0 : 1);
 } finally {
   try {
     if (existsSync(outFile)) unlinkSync(outFile);

@@ -4,12 +4,10 @@ import { createCheckoutSession } from "@/lib/stripe";
 import { BillingEngine } from "@/lib/billing";
 import { prisma } from "@/lib/prisma";
 import { StripePreviewDisabledError, assertStripePaymentsAllowed, stripePreviewDisabledPayload } from "@/lib/stripe-preview-guard";
-import { StripeModeMismatchError, STRIPE_MODE_MISMATCH, assertStripeTestModeForClosedBeta } from "@/lib/stripe-mode-gate";
 
 export async function POST(req: Request) {
   try {
     assertStripePaymentsAllowed();
-    assertStripeTestModeForClosedBeta();
     const user = await requireDbUser();
     const body = await req.json();
     const packageId = String(body.packageId || "");
@@ -70,12 +68,6 @@ export async function POST(req: Request) {
   } catch (err) {
     if (err instanceof StripePreviewDisabledError) {
       return NextResponse.json(stripePreviewDisabledPayload(), { status: 403 });
-    }
-    if (err instanceof StripeModeMismatchError) {
-      return NextResponse.json(
-        { error: { code: STRIPE_MODE_MISMATCH, message: err.message } },
-        { status: 403 },
-      );
     }
     console.error("[billing/checkout]", err);
     return NextResponse.json({ error: err instanceof Error ? err.message : "Checkout failed" }, { status: 500 });

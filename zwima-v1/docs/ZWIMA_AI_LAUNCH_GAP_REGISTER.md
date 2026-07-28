@@ -83,14 +83,15 @@ Priority legend: **P0** block any customer use · **P1** before Closed Beta · *
 - **MODULE:** M4
 - **PRIORITY:** P1
 - **ISSUE:** M4 FX / EUR margin snapshot engines exist but are not invoked on `/api/v1/chat` billing hot path
-- **CURRENT_STATE:** `chargeForUsage` writes credits/`providerCost`; FX builders unused outside `src/lib/fx`
-- **EVIDENCE:** [Audit M1-M4](a84ca3e1-b51f-497e-85d5-06eaf6d9ae83) — `buildUsageFxCost` / `computeUsageFxCost` no external call sites
-- **CUSTOMER_IMPACT:** Incomplete cost/FX audit trail on customer usage
-- **SECURITY_OR_FINANCIAL_RISK:** Financial / margin opacity
-- **REQUIRED_FIX:** Persist FX snapshot fields on each successful billed call (or explicitly defer FX to admin-only)
-- **DEPENDENCIES:** FX rate provider
+- **CURRENT_STATE:** **PASS_LOCKED** — `chargeForUsage` resolves FX fail-closed via `buildUsageFxCost` + `PrismaFxRateProvider` before debit; UsageLog FX snapshot + Transaction metadata; requestId idempotent; no new migration
+- **EVIDENCE:** Completion Ledger GAP-016; `src/lib/__tests__/gap016-fx-billing-hot-path.test.ts`
+- **CUSTOMER_IMPACT:** Usage rows carry provider currency + FX audit trail in customer billing currency (EUR)
+- **SECURITY_OR_FINANCIAL_RISK:** Residual: non-EUR providers require live `FxRateSnapshot` rows or billing fails closed
+- **REQUIRED_FIX:** ~~Wire FX snapshot on billed chat path~~ Done
+- **DEPENDENCIES:** FX rate provider / snapshots for non-EUR
 - **ESTIMATED_COMPLEXITY:** M
 - **LAUNCH_GATE:** CLOSED_BETA
+- **STATUS:** PASS_LOCKED
 
 ### GAP-011
 - **MODULE:** M6

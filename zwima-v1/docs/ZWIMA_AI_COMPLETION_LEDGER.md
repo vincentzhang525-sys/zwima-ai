@@ -222,6 +222,30 @@
 
 ---
 
+### GAP-016
+
+| Field | Value |
+|--------|--------|
+| ID | GAP-016 |
+| 模块 | M4 FX Billing Hot Path |
+| 完成状态 | PASS_LOCKED |
+| GAP_016_STATUS | PASS_LOCKED |
+| DUPLICATE_EXECUTION_FORBIDDEN | YES |
+| 完成日期 | 2026-07-28 |
+| Git commit | (this closeout commit on `v1-p0-commercial-loop`) |
+| Database migration | NONE (reused `20260728170000_m4_fx_usage_log_additive` schema fields) |
+| FX_HOT_PATH_CONNECTED | YES — `chargeForUsage` → `buildUsageFxCost` + `PrismaFxRateProvider` before debit |
+| FX_FAIL_CLOSED | YES — MISSING/STALE → `FX_RATE_UNAVAILABLE` (503); no invented rates; no debit |
+| FX_IDEMPOTENCY | YES — `requestId` replay before FX; unique conflict → no double charge / no re-FX |
+| FX_LEDGER_CONSISTENCY | YES — UsageLog FX snapshot + Transaction metadata/`amountEur` + CreditBalance debit aligned |
+| FX_TEST_STATUS | PASS — `gap016-fx-billing-hot-path` + `v1-chat-usage-persistence` |
+| Test result | Unit PASS; typecheck PASS; eslint on touched files PASS; no real Provider/Stripe/email |
+| Evidence | Wire-only into M3 `chargeForUsage`; existing FX engine + UsageLog columns; this ledger |
+| Retest trigger | `related_code_changed` on `chargeForUsage` / FX fail-closed policy; billing currency change |
+| DO_NOT_REPEAT | Re-wire FX hot path; add migration for existing FX columns; invent default FX rates |
+
+---
+
 ## Explicitly frozen bans (global)
 
 | Ban ID | DO_NOT_REPEAT |
@@ -243,7 +267,6 @@ These remain **incomplete** relative to Closed Beta / Public launch (from audit 
 | ID | 模块 | 状态 | Notes |
 |----|------|------|--------|
 | GAP-010 | M5 Deprecation/Migration wiring | OPEN (P1) | Status gate exists; policy engines not fully wired |
-| GAP-016 | M4 FX on chat hot path | OPEN (P1) | Engines exist; not on `/api/v1/chat` billing path |
 | GAP-013 | M11 CI | OPEN (P1) | No `.github/workflows` evidence |
 | GAP-014 | M11 Backup/DR | OPEN (P1) | Weak evidence |
 | GAP-015 | Multi-provider live retest | OPEN (P1) | P0 only required one provider (done) |
@@ -267,6 +290,7 @@ Tasks that would map to ledger PASS and must return `ALREADY_COMPLETED` unless a
 - “Re-build GAP-011 consent / legal pages / Preview consent migration”
 - “Re-run GAP-011 authenticated Preview consent E2E / recreate Playwright storageState”
 - “Re-provision GAP-012 Viewer / re-run Viewer RBAC E2E without trigger”
+- “Re-wire GAP-016 FX into chargeForUsage / invent FX rates / re-add FX migration”
 
 ---
 

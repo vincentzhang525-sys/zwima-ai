@@ -177,6 +177,29 @@ export function missingLookup(base: string, quote = "EUR") {
   };
 }
 
+/** Billing hot path: refuse MISSING or STALE rates (no invented FX). */
+export function assertFxRateBillable(
+  status: FxRateStatus | "MISSING",
+): void {
+  if (status === "MISSING" || status === "STALE") {
+    throw new FxRateUnavailableError(
+      status,
+      `FX rate status ${status}: billing fail-closed (no invented rates)`,
+    );
+  }
+}
+
+export class FxRateUnavailableError extends Error {
+  readonly code = "FX_RATE_UNAVAILABLE";
+  readonly status: FxRateStatus | "MISSING";
+
+  constructor(status: FxRateStatus | "MISSING", message: string) {
+    super(message);
+    this.name = "FxRateUnavailableError";
+    this.status = status;
+  }
+}
+
 /** Helper for tests: build LIVE lookup */
 export function liveLookup(base: string, rate: string, quote = "EUR"): FxRateLookupResult {
   const now = new Date();
@@ -192,4 +215,88 @@ export function liveLookup(base: string, rate: string, quote = "EUR"): FxRateLoo
     isFallback: false,
     pair: fxRatePair(base, quote),
   };
+}
+
+type FxSnapshotRow = {
+  id: string;
+  rate: { toString(): string } | string | number;
+  source: string;
+  effectiveAt: Date;
+  rateDate: Date;
+  fetchedAt: Date;
+  status: FxRateStatus;
+  isFallback: boolean;
+};
+
+type PrismaFxClient = {
+  fxRateSnapshot: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    findFirst: (args?: any) => Promise<FxSnapshotRow | null>;
+  };
+};
+
+/**
+ * DB-backed FxRateProvider over FxRateSnapshot (GAP-016 hot path).
+ * Never invents rates; returns null when no snapshot exists.
+ */
+export class PrismaFxRateProvider implements FxRateProvider {
+  constructor(private db: PrismaFxClient) {}
+
+  async getLatestRate(baseCurrency: string, quoteCurrency = "EUR"): Promise<FxRateLookupResult | null> {
+    const identity = resolveEurIdentity(baseCurrency, quoteCurrency);
+    if (identity) return identity;
+
+    const b = baseCurrency.toUpperCase();
+    const q = quoteCurrency.toUpperCase();
+    const hit = await this.db.fxRateSnapshot.findFirst({
+      where: { baseCurrency: b, quoteCurrency: q },
+      orderBy: [{ effectiveAt: "desc" }, { fetchedAt: "desc" }],
+    });
+    if (!hit) return null;
+    return this.toLookup(hit, b, q);
+  }
+
+  async getRateForDate(
+    baseCurrency: string,
+    quoteCurrency: string,
+    date: Date,
+  ): Promise<FxRateLookupResult | null> {
+    const identity = resolveEurIdentity(baseCurrency, quoteCurrency);
+    if (identity) return identity;
+
+    const b = baseCurrency.toUpperCase();
+    const q = quoteCurrency.toUpperCase();
+    const dayEnd = new Date(startOfUtcDay(date).getTime() + 24 * 60 * 60 * 1000 - 1);
+    const hit = await this.db.fxRateSnapshot.findFirst({
+      where: {
+        baseCurrency: b,
+        quoteCurrency: q,
+        effectiveAt: { lte: dayEnd },
+      },
+      orderBy: [{ effectiveAt: "desc" }, { fetchedAt: "desc" }],
+    });
+    if (!hit) return null;
+    return this.toLookup(hit, b, q);
+  }
+
+  private toLookup(hit: FxSnapshotRow, b: string, q: string): FxRateLookupResult {
+    const isFallback = hit.isFallback || hit.source.startsWith("fallback");
+    const status =
+      hit.status === "STALE" || hit.status === "MISSING"
+        ? hit.status
+        : ageStatus(hit.fetchedAt, isFallback);
+    return {
+      rate: D(String(hit.rate)),
+      baseCurrency: b,
+      quoteCurrency: q,
+      source: hit.source,
+      effectiveAt: hit.effectiveAt,
+      rateDate: hit.rateDate,
+      fetchedAt: hit.fetchedAt,
+      status,
+      isFallback,
+      pair: fxRatePair(b, q),
+      snapshotId: hit.id,
+    };
+  }
 }

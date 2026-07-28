@@ -4,6 +4,7 @@
 import { computeUsageFxCost } from "./usage-cost";
 import { resolveFxBufferRate, type FxBufferPolicyRow } from "./fx-buffer-policy";
 import {
+  assertFxRateBillable,
   isMissingRate,
   resolveRateForUsage,
   type FxRateProvider,
@@ -18,7 +19,9 @@ export async function buildUsageFxCost(params: {
   policies: FxBufferPolicyRow[];
   rateProvider: FxRateProvider;
   at?: Date;
-}): Promise<UsageFxCostResult> {
+  /** When true (billing hot path), MISSING/STALE throw — never invent rates. */
+  failClosed?: boolean;
+}): Promise<UsageFxCostResult & { fxRateSnapshotId?: string | null }> {
   const at = params.at ?? new Date();
   const currency = params.providerCurrency.toUpperCase();
   const { bufferRate } = resolveFxBufferRate({
@@ -31,27 +34,40 @@ export async function buildUsageFxCost(params: {
   const rate = await resolveRateForUsage(params.rateProvider, currency, "EUR", at);
 
   if (isMissingRate(rate)) {
-    return computeUsageFxCost({
+    if (params.failClosed) {
+      assertFxRateBillable("MISSING");
+    }
+    return {
+      ...computeUsageFxCost({
+        providerCurrency: currency,
+        costInProviderCurrency: params.costInProviderCurrency,
+        revenueEur: params.revenueEur,
+        fxBufferRate: bufferRate,
+        fxRateAtUsage: null,
+        fxRateStatus: "MISSING",
+        fxRatePair: rate.pair,
+      }),
+      fxRateSnapshotId: null,
+    };
+  }
+
+  if (params.failClosed) {
+    assertFxRateBillable(rate.status);
+  }
+
+  return {
+    ...computeUsageFxCost({
       providerCurrency: currency,
       costInProviderCurrency: params.costInProviderCurrency,
       revenueEur: params.revenueEur,
       fxBufferRate: bufferRate,
-      fxRateAtUsage: null,
-      fxRateStatus: "MISSING",
+      fxRateAtUsage: rate.rate,
+      fxRateStatus: rate.status,
+      fxRateSource: rate.source,
+      fxRateTimestamp: rate.fetchedAt,
+      fxRateDate: rate.rateDate,
       fxRatePair: rate.pair,
-    });
-  }
-
-  return computeUsageFxCost({
-    providerCurrency: currency,
-    costInProviderCurrency: params.costInProviderCurrency,
-    revenueEur: params.revenueEur,
-    fxBufferRate: bufferRate,
-    fxRateAtUsage: rate.rate,
-    fxRateStatus: rate.status,
-    fxRateSource: rate.source,
-    fxRateTimestamp: rate.fetchedAt,
-    fxRateDate: rate.rateDate,
-    fxRatePair: rate.pair,
-  });
+    }),
+    fxRateSnapshotId: rate.snapshotId ?? null,
+  };
 }

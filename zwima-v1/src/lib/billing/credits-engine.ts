@@ -5,7 +5,18 @@ import { calculateUsageCredits, countMessageTokens, estimateRequestCredits } fro
 import { createInvoice, type InvoiceLineItem } from "./invoice-engine";
 import type { MarginContext } from "./margin-engine";
 import { atomicDebitAvailableCredits } from "./atomic-debit";
+import { ApiError } from "../api-errors";
+import {
+  PrismaFxRateProvider,
+  FxRateUnavailableError,
+  buildUsageFxCost,
+  type FxRateProvider,
+} from "../fx";
 
+/** Credits → EUR revenue convention used on M4 margin snapshots (1000 credits = €1). */
+export function creditsToRevenueEur(costCredits: number): string {
+  return (costCredits / 1000).toFixed(8);
+}
 export type WalletSnapshot = {
   credits: number;
   frozenCredits: number;
@@ -139,6 +150,8 @@ export async function chargeForUsage(params: {
   usageSource?: "provider" | "estimated";
   organizationId?: string;
   workspaceId?: string | null;
+  /** Test injection — defaults to PrismaFxRateProvider */
+  fxRateProvider?: FxRateProvider;
 }): Promise<{
   costCredits: number;
   usageLogId: string;
@@ -159,6 +172,64 @@ export async function chargeForUsage(params: {
     outputTokens: params.outputTokens,
     marginCtx,
   });
+
+  // Idempotent replay before FX — same requestId must not re-convert or re-debit.
+  if (params.requestId) {
+    const existing = await prisma.usageLog.findFirst({
+      where: { requestId: params.requestId },
+    });
+    if (existing) {
+      return {
+        costCredits: existing.costCredits,
+        usageLogId: existing.id,
+        providerCost: Number(existing.providerCost ?? providerCost),
+        replayed: true,
+      };
+    }
+  }
+
+  // FX resolve BEFORE debit — fail-closed without charging when rate missing/stale.
+  const providerRow = await prisma.provider.findUnique({
+    where: { id: params.providerId },
+    select: { id: true, providerCurrency: true },
+  });
+  const providerCurrency = (providerRow?.providerCurrency || "USD").toUpperCase();
+  const policies = await prisma.fxBufferPolicy.findMany({
+    where: { enabled: true },
+    select: {
+      providerId: true,
+      currency: true,
+      bufferRate: true,
+      minimumBufferRate: true,
+      maximumBufferRate: true,
+      enabled: true,
+      effectiveFrom: true,
+      effectiveTo: true,
+    },
+  });
+  const rateProvider = params.fxRateProvider ?? new PrismaFxRateProvider(prisma);
+  let fxSnapshot: Awaited<ReturnType<typeof buildUsageFxCost>>;
+  try {
+    fxSnapshot = await buildUsageFxCost({
+      providerCurrency,
+      costInProviderCurrency: String(providerCost),
+      revenueEur: creditsToRevenueEur(customerCredits),
+      providerId: params.providerId,
+      policies,
+      rateProvider,
+      failClosed: true,
+    });
+  } catch (err) {
+    if (err instanceof FxRateUnavailableError) {
+      throw new ApiError(
+        "FX_RATE_UNAVAILABLE",
+        err.message,
+        503,
+        params.requestId,
+      );
+    }
+    throw err;
+  }
 
   return prisma.$transaction(async (tx) => {
     if (params.requestId) {
@@ -199,6 +270,24 @@ export async function chargeForUsage(params: {
           requestId: params.requestId,
           latencyMs: params.latencyMs,
           success: true,
+          organizationId: params.organizationId,
+          // GAP-016 FX snapshot (immutable per usage row)
+          providerCurrency: fxSnapshot.providerCurrency,
+          fxRateAtUsage: fxSnapshot.fxRateAtUsage,
+          costInProviderCurrency: fxSnapshot.costInProviderCurrency,
+          costInEur: fxSnapshot.costInEur,
+          fxBufferRate: fxSnapshot.fxBufferRate,
+          fxBuffer: fxSnapshot.fxBuffer,
+          bufferedCostEur: fxSnapshot.bufferedCostEur,
+          revenueEur: fxSnapshot.revenueEur,
+          grossMarginEur: fxSnapshot.grossMarginEur,
+          grossMarginRate: fxSnapshot.grossMarginRate,
+          fxRateSource: fxSnapshot.fxRateSource,
+          fxRateTimestamp: fxSnapshot.fxRateTimestamp,
+          fxRateDate: fxSnapshot.fxRateDate,
+          fxRatePair: fxSnapshot.fxRatePair,
+          fxRateStatus: fxSnapshot.fxRateStatus,
+          fxRateSnapshotId: fxSnapshot.fxRateSnapshotId ?? undefined,
         },
       });
     } catch (err) {
@@ -212,8 +301,6 @@ export async function chargeForUsage(params: {
           where: { requestId: params.requestId },
         });
         if (existing) {
-          // Roll back this transaction's debit by throwing — outer caller must not commit a
-          // double-charge. Interactive transaction abort discards the conditional UPDATE.
           throw new IdempotentUsageConflictError(existing.id, existing.costCredits, Number(existing.providerCost ?? providerCost));
         }
       }
@@ -225,6 +312,7 @@ export async function chargeForUsage(params: {
         userId: params.userId,
         type: "USAGE",
         amount: customerCredits,
+        amountEur: Number(fxSnapshot.revenueEur.toFixed(2)),
         description: `${params.providerSlug}/${params.model}`,
         metadata: {
           usageLogId: usageLog.id,
@@ -232,6 +320,12 @@ export async function chargeForUsage(params: {
           usageSource: params.usageSource ?? "provider",
           totalTokens: params.inputTokens + params.outputTokens,
           currency: "CREDITS",
+          billingCurrency: "EUR",
+          providerCurrency: fxSnapshot.providerCurrency,
+          fxRateAtUsage: fxSnapshot.fxRateAtUsage?.toString() ?? null,
+          fxRateStatus: fxSnapshot.fxRateStatus,
+          fxRatePair: fxSnapshot.fxRatePair,
+          costInEur: fxSnapshot.costInEur?.toString() ?? null,
           requestId: params.requestId,
           organizationId: params.organizationId,
           workspaceId: params.workspaceId ?? null,

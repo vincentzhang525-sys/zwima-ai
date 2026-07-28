@@ -27,6 +27,8 @@ export type FxRateLookupResult = {
   status: FxRateStatus;
   isFallback: boolean;
   pair: string;
+  /** Optional FxRateSnapshot.id when loaded from DB */
+  snapshotId?: string;
 };
 
 export type UsageFxCostInput = {

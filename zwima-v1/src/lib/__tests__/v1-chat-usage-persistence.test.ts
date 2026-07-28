@@ -9,12 +9,14 @@ const executeRaw = vi.fn();
 const transactionCreate = vi.fn();
 const apiKeyUpdate = vi.fn();
 const providerFindUnique = vi.fn();
+const fxBufferPolicyFindMany = vi.fn();
 const auditLogCreate = vi.fn();
 const prismaTransaction = vi.fn();
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     provider: { findUnique: (...args: unknown[]) => providerFindUnique(...args) },
+    fxBufferPolicy: { findMany: (...args: unknown[]) => fxBufferPolicyFindMany(...args) },
     auditLog: { create: (...args: unknown[]) => auditLogCreate(...args) },
     usageLog: {
       findFirst: (...args: unknown[]) => usageLogFindFirst(...args),
@@ -56,7 +58,8 @@ import { ApiError } from "@/lib/api-errors";
 describe("v1 chat usage persistence", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    providerFindUnique.mockResolvedValue({ id: "prov_openai" });
+    providerFindUnique.mockResolvedValue({ id: "prov_openai", providerCurrency: "EUR" });
+    fxBufferPolicyFindMany.mockResolvedValue([]);
     auditLogCreate.mockResolvedValue({ id: "audit_1" });
     creditBalanceUpsert.mockResolvedValue({});
     creditBalanceFindUnique.mockResolvedValue({ credits: 1000, frozenCredits: 0 });

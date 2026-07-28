@@ -202,12 +202,20 @@
 |--------|--------|
 | ID | GAP-012 |
 | 模块 | M7 Viewer RBAC E2E |
-| 完成状态 | PASS (LOCKED) |
+| 完成状态 | PASS_LOCKED |
+| DUPLICATE_EXECUTION_FORBIDDEN | YES |
 | 完成日期 | 2026-07-28 |
-| Git commit | `e7bc671` |
+| Git commit | `e7bc671` (impl); closeout `chore(gap-012): finalize viewer permission gate` |
 | Deployment ID/URL | Preview `https://zwima-jypwtah8x-zwima.vercel.app` |
 | Database migration | N/A (no schema change; invite accept-on-login + RBAC gates) |
-| Test result | Unit `gap012-rbac` PASS; Authenticated Preview E2E PASS — Owner admin OK; Member invite-to-Primary denied; Viewer read agents OK; Viewer agent write/admin/API key/billing/settings/invite denied 403; cross-org 403/404; unauth → login; reused Owner/Member A; created one Viewer `m8-viewer+clerk_test@…` only because none existed |
+| OWNER_PERMISSION_E2E | PASS |
+| MEMBER_PERMISSION_E2E | PASS |
+| VIEWER_READ_PERMISSION_E2E | PASS |
+| VIEWER_WRITE_DENIAL_E2E | PASS |
+| VIEWER_ADMIN_DENIAL_E2E | PASS |
+| CROSS_ORG_ISOLATION_E2E | PASS |
+| UNAUTHENTICATED_REDIRECT_E2E | PASS |
+| Test result | Unit `gap012-rbac` PASS; Authenticated Preview E2E PASS — Owner admin OK; Member invite-to-Primary denied; Viewer read agents OK; Viewer agent write/admin/API key/billing/settings/invite denied 403; cross-org 403/404; unauth → login; reused Owner/Member A; created one Viewer only because none existed |
 | Evidence | `assertCanAccess` / `assertCanManageOrg`; pending invite accept on Clerk link; this ledger |
 | Retest trigger | RBAC matrix change; new org roles; Clerk E2E identity reset |
 | DO_NOT_REPEAT | Recreate Viewer if present; change Owner/Member roles; re-run full RBAC E2E without trigger |

@@ -2,8 +2,8 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `a7b4907`  
-**LAST_CLOSEOUT:** 2026-07-29 — GAP-014 Backup & Recovery gate PASS_LOCKED  
+**HEAD:** `TBD_GAP015`  
+**LAST_CLOSEOUT:** 2026-07-29 — GAP-015 Multi-Provider Readiness Gate PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -299,6 +299,34 @@
 
 ---
 
+### GAP-015
+
+| Field | Value |
+|--------|--------|
+| ID | GAP-015 |
+| 模块 | M1/M2 Multi-Provider Production Readiness Gate |
+| 完成状态 | PASS_LOCKED |
+| GAP_015_STATUS | PASS_LOCKED |
+| DUPLICATE_EXECUTION_FORBIDDEN | YES |
+| 完成日期 | 2026-07-29 |
+| Git commit | (this closeout commit) |
+| Deployment ID/URL | N/A (readiness gate only; no new live Provider calls) |
+| Database migration | NONE |
+| OPENAI | PASS — contract + compliance + historical GAP-001 live evidence (no re-spend) |
+| GEMINI / CLAUDE / DEEPSEEK / QWEN | PASS_OR_CONFIG_PENDING — contracts/fail-closed/compliance PASS; keys optional |
+| REGISTRY | Five adapters in `src/lib/providers/registry.ts` (+ core foundation registry) |
+| CONTRACTS | `provider-readiness.assertAdapterContract` + existing `ProviderAdapter` |
+| FAIL_CLOSED | missing key / DISABLED / UNAVAILABLE / NO_ROUTABLE_PROVIDER |
+| BILLING | `chargeForUsage` preserved; FX hot path reused (GAP-016) |
+| DOCS | `docs/ZWIMA_AI_PROVIDER_READINESS_MATRIX.md`; `docs/ZWIMA_AI_PROVIDER_ACTIVATION_RUNBOOK.md` |
+| TESTS | `tests/providers/gap015-provider-readiness.test.ts` |
+| Test result | Unit PASS; typecheck PASS; lint PASS; secret scan PASS; NEW_REAL_PROVIDER_CALLS=NO |
+| Evidence | Readiness module + matrix/runbook; reused adapters; this ledger |
+| Retest trigger | `related_code_changed` on provider adapters/readiness; new focus provider added |
+| DO_NOT_REPEAT | Re-run OpenAI live smoke for proof; force user to buy vendor quota; enable live providers in CI; rewrite FX/routing formulas |
+
+---
+
 ## Explicitly frozen bans (global)
 
 | Ban ID | DO_NOT_REPEAT |
@@ -320,7 +348,6 @@ These remain **incomplete** relative to Closed Beta / Public launch (from audit 
 | ID | 模块 | 状态 | Notes |
 |----|------|------|--------|
 | GAP-010 | M5 Deprecation/Migration wiring | OPEN (P1) | Status gate exists; policy engines not fully wired |
-| GAP-015 | Multi-provider live retest | OPEN (P1) | P0 only required one provider (done) |
 | M9 | Workflow Automation | EXCLUDED / not started | Frozen: do not start without auth |
 | M8-2C | Workspace Memory | DEFERRED | Explicitly frozen |
 | PUBLIC_PRODUCTION_READY | Launch gate | NO | Platform ~48% at audit; P0 commercial loop closed, P1 remain |
@@ -344,6 +371,7 @@ Tasks that would map to ledger PASS and must return `ALREADY_COMPLETED` unless a
 - “Re-wire GAP-016 FX into chargeForUsage / invent FX rates / re-add FX migration”
 - “Re-build GAP-013 CI from deleted recovery drafts / add Production migrate or live spend jobs”
 - “Live-restore Production DB / dump Vercel env values / re-apply locked migrations to prove GAP-014”
+- “Re-run multi-provider live smoke / buy vendor quota / enable LIVE_PROVIDER_CALLS for GAP-015 proof”
 
 ---
 

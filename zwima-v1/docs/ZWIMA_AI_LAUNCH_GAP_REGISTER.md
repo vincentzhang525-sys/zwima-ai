@@ -152,15 +152,16 @@ Priority legend: **P0** block any customer use · **P1** before Closed Beta · *
 ### GAP-015
 - **MODULE:** M1/M2
 - **PRIORITY:** P1
-- **ISSUE:** Production provider smoke is dated (2026-07-12); not re-run in this audit
-- **CURRENT_STATE:** Report PASS 5/5 historically
-- **EVIDENCE:** `docs/PHASE6_PROVIDER_FINAL_REPORT.md`
-- **CUSTOMER_IMPACT:** Silent provider breakages
-- **SECURITY_OR_FINANCIAL_RISK:** Availability
-- **REQUIRED_FIX:** Scheduled Production smoke (read-only/cheap models) under approval
-- **DEPENDENCIES:** Live gate, keys
+- **ISSUE:** Multi-provider production readiness not gated beyond OpenAI historical smoke
+- **CURRENT_STATE:** Five adapters registered; readiness gate + fail-closed routing filter + compliance metadata
+- **EVIDENCE:** `src/lib/providers/provider-readiness.ts`; `tests/providers/gap015-provider-readiness.test.ts`; matrix/runbook docs; Completion Ledger GAP-015 PASS_LOCKED
+- **CUSTOMER_IMPACT:** Non-OpenAI providers remain CONFIG_PENDING until keys present; no silent fake success
+- **SECURITY_OR_FINANCIAL_RISK:** Residual: live multi-provider enablement still requires separate Production authorization
+- **REQUIRED_FIX:** DONE — registry/contract/fail-closed/usage+error normalization/billing+FX reuse/compliance metadata (no new live spend)
+- **DEPENDENCIES:** Existing adapters; GAP-001 historical OpenAI evidence; GAP-016 FX
 - **ESTIMATED_COMPLEXITY:** S
 - **LAUNCH_GATE:** CLOSED_BETA
+- **STATUS:** PASS_LOCKED
 
 ---
 

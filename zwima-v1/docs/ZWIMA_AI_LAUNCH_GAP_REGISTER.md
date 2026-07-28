@@ -125,14 +125,15 @@ Priority legend: **P0** block any customer use · **P1** before Closed Beta · *
 - **MODULE:** M11
 - **PRIORITY:** P1
 - **ISSUE:** No GitHub Actions CI workflows in worktree
-- **CURRENT_STATE:** Local vitest/playwright; no `.github/workflows`
-- **EVIDENCE:** glob zero workflows
-- **CUSTOMER_IMPACT:** Regression risk on every push
-- **SECURITY_OR_FINANCIAL_RISK:** Medium
-- **REQUIRED_FIX:** CI for unit + lint + typecheck (+ gated e2e)
+- **CURRENT_STATE:** Minimal GAP-013 CI on feature branch + PRs
+- **EVIDENCE:** `.github/workflows/gap013-ci.yml`; `zwima-v1/scripts/ci/gap013-*.mjs`; Completion Ledger GAP-013 PASS_LOCKED
+- **CUSTOMER_IMPACT:** Regression risk reduced on zwima-v1 changes
+- **SECURITY_OR_FINANCIAL_RISK:** Medium residual if Actions secrets later mis-wired for live jobs (current workflow forbids migrate/live spend)
+- **REQUIRED_FIX:** DONE — unit + lint + typecheck + prisma validate + secret/safety gates
 - **DEPENDENCIES:** GitHub
 - **ESTIMATED_COMPLEXITY:** M
 - **LAUNCH_GATE:** CLOSED_BETA
+- **STATUS:** PASS_LOCKED
 
 ### GAP-014
 - **MODULE:** M11

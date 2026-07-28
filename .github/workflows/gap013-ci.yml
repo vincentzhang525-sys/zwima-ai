@@ -1,0 +1,85 @@
+# GAP-013 — Minimal CI launch gate for zwima-v1 (feature branch + PRs).
+# Forbidden in this workflow: Production migrate, live Provider calls, live Stripe charges, real email, deploy-to-Production.
+name: GAP-013 CI
+
+on:
+  push:
+    branches:
+      - v1-p0-commercial-loop
+    paths:
+      - "zwima-v1/**"
+      - ".github/workflows/gap013-ci.yml"
+  pull_request:
+    paths:
+      - "zwima-v1/**"
+      - ".github/workflows/gap013-ci.yml"
+
+concurrency:
+  group: gap013-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: zwima-v1
+
+jobs:
+  gate:
+    name: zwima-v1 CI gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CI: "true"
+      PROVIDER_LIVE_CALLS_DISABLED: "true"
+      # Explicitly unset / refuse spend & migrate authorizations
+      DB_MIGRATION_AUTHORIZED: "false"
+      PREVIEW_DB_MIGRATE_AUTHORIZED: "false"
+      PROVIDER_LIVE_CALLS_ENABLED: "false"
+      STRIPE_LIVE_CHARGE_AUTHORIZED: "false"
+      SEND_REAL_EMAIL: "false"
+      RESEND_LIVE_SEND_AUTHORIZED: "false"
+      # Prisma validate placeholder only (no Production host)
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci_validate_only
+      DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ci_validate_only
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: zwima-v1/package-lock.json
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
+
+      - name: CI safety gate
+        run: node scripts/ci/gap013-ci-safety-gate.mjs
+
+      - name: Secret scan
+        run: node scripts/ci/gap013-secret-scan.mjs
+
+      - name: Prisma schema validate
+        run: node scripts/ci/gap013-prisma-validate.mjs
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: CI summary
+        if: always()
+        run: |
+          echo "GAP_013_CI_JOB=${{ job.status }}"
+          echo "PRODUCTION_MODIFIED=NO"
+          echo "MAIN_MERGED=NO"
+          echo "LIVE_PROVIDER_CALLS=NO"
+          echo "LIVE_STRIPE_CHARGE=NO"
+          echo "REAL_EMAIL=NO"
+          echo "PRODUCTION_DB_MIGRATE=NO"

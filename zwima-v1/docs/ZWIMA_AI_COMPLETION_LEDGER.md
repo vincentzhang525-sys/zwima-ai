@@ -2,8 +2,8 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `3f1df6e`  
-**LAST_CLOSEOUT:** 2026-07-29 — Worktree recovery verify; GAP-016 remains PASS_LOCKED; no re-implement  
+**HEAD:** `TBD_GAP013`  
+**LAST_CLOSEOUT:** 2026-07-29 — GAP-013 CI launch gate PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -248,6 +248,30 @@
 
 ---
 
+### GAP-013
+
+| Field | Value |
+|--------|--------|
+| ID | GAP-013 |
+| 模块 | M11 CI launch gate |
+| 完成状态 | PASS_LOCKED |
+| GAP_013_STATUS | PASS_LOCKED |
+| DUPLICATE_EXECUTION_FORBIDDEN | YES |
+| 完成日期 | 2026-07-29 |
+| Git commit | (this closeout commit) |
+| Deployment ID/URL | N/A (GitHub Actions workflow only; no Production deploy) |
+| Database migration | NONE — CI runs `prisma validate` only; migrate deploy forbidden |
+| CI_WORKFLOW | `.github/workflows/gap013-ci.yml` — push `v1-p0-commercial-loop` + PRs touching `zwima-v1/**` |
+| CI_STEPS | `npm ci` → safety gate → secret scan → prisma validate → lint → typecheck → unit tests |
+| CI_SCRIPTS | `scripts/ci/gap013-ci-safety-gate.mjs`; `gap013-secret-scan.mjs`; `gap013-prisma-validate.mjs` (redesigned; prior recovery drafts not restored) |
+| BANS_ENFORCED | No Production migrate; no live Provider; no live Stripe charge; no real email; no tracked `.env`/key artifacts |
+| Test result | Local `npm run ci` PASS — unit 385/385; typecheck PASS; lint `src` PASS; prisma validate PASS; secret scan PASS; safety PASS |
+| Evidence | Workflow + scripts + `package.json` `ci*` scripts; this ledger |
+| Retest trigger | `related_code_changed` on CI workflow/gates; GitHub Actions runner/policy change |
+| DO_NOT_REPEAT | Re-invent CI from deleted recovery drafts; enable Production migrate in Actions; add live Provider/Stripe/email jobs |
+
+---
+
 ## Explicitly frozen bans (global)
 
 | Ban ID | DO_NOT_REPEAT |
@@ -269,7 +293,6 @@ These remain **incomplete** relative to Closed Beta / Public launch (from audit 
 | ID | 模块 | 状态 | Notes |
 |----|------|------|--------|
 | GAP-010 | M5 Deprecation/Migration wiring | OPEN (P1) | Status gate exists; policy engines not fully wired |
-| GAP-013 | M11 CI | OPEN (P1) | No `.github/workflows` evidence |
 | GAP-014 | M11 Backup/DR | OPEN (P1) | Weak evidence |
 | GAP-015 | Multi-provider live retest | OPEN (P1) | P0 only required one provider (done) |
 | M9 | Workflow Automation | EXCLUDED / not started | Frozen: do not start without auth |
@@ -293,6 +316,7 @@ Tasks that would map to ledger PASS and must return `ALREADY_COMPLETED` unless a
 - “Re-run GAP-011 authenticated Preview consent E2E / recreate Playwright storageState”
 - “Re-provision GAP-012 Viewer / re-run Viewer RBAC E2E without trigger”
 - “Re-wire GAP-016 FX into chargeForUsage / invent FX rates / re-add FX migration”
+- “Re-build GAP-013 CI from deleted recovery drafts / add Production migrate or live spend jobs”
 
 ---
 

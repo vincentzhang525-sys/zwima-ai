@@ -20,7 +20,7 @@ function getMetrics(provider: ProviderId) {
   return metricsStore.get(provider) ?? { successes: 0, failures: 0, rateLimitRemaining: null };
 }
 
-export function recordSuccess(provider: ProviderId, latencyMs: number): void {
+export function recordSuccess(provider: ProviderId, _latencyMs: number): void {
   const m = getMetrics(provider);
   m.successes += 1;
   metricsStore.set(provider, m);

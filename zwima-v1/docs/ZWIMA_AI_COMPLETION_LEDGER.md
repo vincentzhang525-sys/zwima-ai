@@ -2,7 +2,7 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `TBD_GAP010`  
+**HEAD:** `3c15727`  
 **LAST_CLOSEOUT:** 2026-07-29 — GAP-010 Deprecation/Migration policy wiring PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
@@ -337,7 +337,7 @@
 | GAP_010_STATUS | PASS_LOCKED |
 | DUPLICATE_EXECUTION_FORBIDDEN | YES |
 | 完成日期 | 2026-07-29 |
-| Git commit | (this closeout commit) |
+| Git commit | `3c15727` |
 | Database migration | NONE — reused existing `ModelDeprecationPolicy` / `ModelMigrationPolicy` schema |
 | STATUS_GATE | `isRoutableStatus` preserved (ACTIVE / Preview-only PREVIEW) |
 | DEPRECATION_ENGINE | `deprecation-policy-engine.ts` — DISABLED/RETIRED/DEPRECATED/past sunset fail-closed |

@@ -139,14 +139,15 @@ Priority legend: **P0** block any customer use · **P1** before Closed Beta · *
 - **MODULE:** M11
 - **PRIORITY:** P1
 - **ISSUE:** Backup/restore, monitoring, incident runbooks not evidenced
-- **CURRENT_STATE:** Supabase/Vercel used; DR drills undocumented here
-- **EVIDENCE:** absence of ops runbook proofs in repo
-- **CUSTOMER_IMPACT:** Outage recovery unknown
-- **SECURITY_OR_FINANCIAL_RISK:** High availability risk
-- **REQUIRED_FIX:** Backup schedule + restore test record + alerting
-- **DEPENDENCIES:** Supabase/Vercel plans
+- **CURRENT_STATE:** Minimal Backup & Recovery gate (manifest + runbook + dry-run drills)
+- **EVIDENCE:** `docs/ZWIMA_AI_BACKUP_MANIFEST.md`; `docs/ZWIMA_AI_BACKUP_RECOVERY_RUNBOOK.md`; `scripts/backup|recovery/gap014-*`; `tests/backup-recovery`; Completion Ledger GAP-014 PASS_LOCKED
+- **CUSTOMER_IMPACT:** Documented RPO path; Production restore remains operator break-glass (fail-closed in-repo)
+- **SECURITY_OR_FINANCIAL_RISK:** Residual: physical Supabase restore still requires separate authorization outside scripts
+- **REQUIRED_FIX:** DONE — capability check + dry-run recovery + env name/scope manifest + Preview rollback docs + git recovery point verify
+- **DEPENDENCIES:** Supabase/Vercel plans (platform backups/PITR)
 - **ESTIMATED_COMPLEXITY:** M
 - **LAUNCH_GATE:** CLOSED_BETA
+- **STATUS:** PASS_LOCKED
 
 ### GAP-015
 - **MODULE:** M1/M2

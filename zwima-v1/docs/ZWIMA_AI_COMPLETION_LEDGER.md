@@ -2,8 +2,8 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `503e428`  
-**LAST_CLOSEOUT:** 2026-07-29 — GAP-013 CI launch gate PASS_LOCKED  
+**HEAD:** `TBD_GAP014`  
+**LAST_CLOSEOUT:** 2026-07-29 — GAP-014 Backup & Recovery gate PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -272,6 +272,33 @@
 
 ---
 
+### GAP-014
+
+| Field | Value |
+|--------|--------|
+| ID | GAP-014 |
+| 模块 | M11 Backup & Recovery Gate |
+| 完成状态 | PASS_LOCKED |
+| GAP_014_STATUS | PASS_LOCKED |
+| DUPLICATE_EXECUTION_FORBIDDEN | YES |
+| 完成日期 | 2026-07-29 |
+| Git commit | (this closeout commit) |
+| Deployment ID/URL | N/A (docs + dry-run gates only; no Production restore) |
+| Database migration | NONE — no migrate; no Production DB touch |
+| BACKUP_MANIFEST | `docs/ZWIMA_AI_BACKUP_MANIFEST.md` |
+| RECOVERY_RUNBOOK | `docs/ZWIMA_AI_BACKUP_RECOVERY_RUNBOOK.md` |
+| SCRIPTS | `scripts/backup/gap014-backup-capability-check.ts`; `scripts/recovery/gap014-recovery-drill.ts` |
+| LOGIC | `src/lib/ops/gap014-backup-recovery.ts` (redaction + fail-closed Production restore) |
+| TESTS | `tests/backup-recovery/gap014-backup-recovery.test.ts` |
+| DEFAULT_MODE | dry-run |
+| PRODUCTION_RESTORE | fail-closed (in-repo scripts always refuse) |
+| Test result | backup:check PASS; recovery:drill dry-run PASS; `--target production` refuses; unit + typecheck + lint PASS; no real payment/email/provider |
+| Evidence | Manifest + runbook + automated gates; CI steps wired into GAP-013 workflow |
+| Retest trigger | `related_code_changed` on backup/recovery gates; Supabase plan/PITR policy change |
+| DO_NOT_REPEAT | Live Production DB restore via repo scripts; dump env values; re-run locked migrations as DR proof; start GAP-015 |
+
+---
+
 ## Explicitly frozen bans (global)
 
 | Ban ID | DO_NOT_REPEAT |
@@ -293,7 +320,6 @@ These remain **incomplete** relative to Closed Beta / Public launch (from audit 
 | ID | 模块 | 状态 | Notes |
 |----|------|------|--------|
 | GAP-010 | M5 Deprecation/Migration wiring | OPEN (P1) | Status gate exists; policy engines not fully wired |
-| GAP-014 | M11 Backup/DR | OPEN (P1) | Weak evidence |
 | GAP-015 | Multi-provider live retest | OPEN (P1) | P0 only required one provider (done) |
 | M9 | Workflow Automation | EXCLUDED / not started | Frozen: do not start without auth |
 | M8-2C | Workspace Memory | DEFERRED | Explicitly frozen |
@@ -317,6 +343,7 @@ Tasks that would map to ledger PASS and must return `ALREADY_COMPLETED` unless a
 - “Re-provision GAP-012 Viewer / re-run Viewer RBAC E2E without trigger”
 - “Re-wire GAP-016 FX into chargeForUsage / invent FX rates / re-add FX migration”
 - “Re-build GAP-013 CI from deleted recovery drafts / add Production migrate or live spend jobs”
+- “Live-restore Production DB / dump Vercel env values / re-apply locked migrations to prove GAP-014”
 
 ---
 

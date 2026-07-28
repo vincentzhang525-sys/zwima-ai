@@ -64,6 +64,12 @@ jobs:
       - name: Prisma schema validate
         run: node scripts/ci/gap013-prisma-validate.mjs
 
+      - name: Backup capability check (GAP-014)
+        run: npm run backup:check
+
+      - name: Recovery dry-run drill (GAP-014)
+        run: npm run recovery:drill
+
       - name: Lint
         run: npm run lint
 

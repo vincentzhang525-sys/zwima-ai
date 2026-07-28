@@ -82,16 +82,12 @@
 - P0/P1 engineering readiness (`PASS_CONDITIONAL` audit)
 
 ### Still USER_MUST_CONFIRM
-1. Canonical Closed Beta domain product confirm → reply `CANONICAL_DOMAIN_CONFIRMED = YES`  
-2. Stripe Dashboard webhook URL eye-check (no payment) → `STRIPE_WEBHOOK_URL_CONFIRMED = YES`  
-3. IONOS/SMTP policy remain banned or test-mailbox only → `IONOS_SMTP_POLICY = BANNED|TEST_MAILBOX_ONLY`  
-4. Accept draft legal for Closed Beta or wait counsel → `LEGAL_DRAFT_ACCEPTED_FOR_CLOSED_BETA = YES` | `LEGAL_WAIT_COUNSEL = YES`
+- **CLEARED** — user decisions recorded 2026-07-29 (domain, Stripe reuse, SMTP policy, legal draft).
 
 ### Still USER_MUST_PROVIDE
-5. Invitee list or `CLOSED_BETA_COHORT = INTERNAL_ONLY`  
-6. Manual credits plan → `MANUAL_CREDITS_PLAN = READY`
+- **CLEARED** — `OWNER_ONLY_INITIAL_SMOKE_TEST` + `OWNER_ACCOUNT_1000_CREDITS` plan recorded (credit grant remains manual ops, not a code blocker).
 
-### FINAL_RELEASE_AUTHORIZATION (not performed)
+### FINAL_RELEASE_AUTHORIZATION (not performed — waiting)
 7. `AUTHORIZE_MAIN_MERGE = YES` (explicit; no auto-merge)  
 8. `AUTHORIZE_PRODUCTION_DEPLOY = YES` (explicit; no auto-deploy)
 
@@ -99,13 +95,13 @@
 - **NONE**
 
 ### CONFIG_BLOCKER
-- None blocking Closed Beta minimum beyond USER confirms above (optional non-OpenAI keys remain CONFIG_PENDING by design).
+- **NONE** for Closed Beta minimum after user decision batch.
 
 ### DEPLOYMENT_BLOCKER
-- Pending explicit D1/D2 authorization only.
+- Pending explicit D1/D2 authorization passphrases only.
 
 ### BUSINESS_OPERATION_BLOCKER
-- Cohort + credits + legal acceptance (B4/C1/C2).
+- Optional manual grant of owner 1000 credits when smoke begins (plan confirmed; not auto-executed).
 
 ---
 
@@ -119,7 +115,8 @@ Reason: All Closed Beta **P0+P1 engineering GAPs** are PASS_LOCKED and local zer
 
 **FINAL_AUDIT_RESULT = PASS_CONDITIONAL**
 
-**BLOCKERS = USER_MUST_CONFIRM + USER_MUST_PROVIDE + FINAL_RELEASE_AUTHORIZATION; CODE_BLOCKERS=NONE; see `docs/ZWIMA_AI_CLOSED_BETA_MANUAL_RELEASE_CHECKLIST.md`**
+**BLOCKERS = WAITING_FOR `AUTHORIZE_MAIN_MERGE` AND/OR `AUTHORIZE_PRODUCTION_DEPLOY`; CODE_BLOCKERS=NONE**  
+**USER_DECISIONS_LOCKED = YES** — see `docs/ZWIMA_AI_CLOSED_BETA_FINAL_AUTHORIZATION_SUMMARY.md`
 
 ---
 

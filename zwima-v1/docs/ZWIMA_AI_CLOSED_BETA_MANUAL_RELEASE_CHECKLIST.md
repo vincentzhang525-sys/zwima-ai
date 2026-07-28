@@ -16,9 +16,24 @@
 | Domain `zwima-group.info` | DNS A present; HTTPS `200`; Vercel team domain listed |
 | Production env **names** | Present for Clerk/Stripe/DB/OpenAI/live flags/SMTP/Resend (see §A) |
 | Stripe webhook | Route + `STRIPE_WEBHOOK_SECRET` name on Production; Phase7/GAP-002 historical evidence |
-| IONOS/SMTP | `SMTP_*` + `EMAIL_PROVIDER` **names** exist — ban/enable policy still USER confirm |
-| Cohort / credits / counsel | Not auto-verifiable |
-| main merge / Production deploy | Not authorized |
+| IONOS/SMTP | Policy **CONFIRMED:** `SYSTEM_EMAILS_ONLY_NO_MARKETING` |
+| Cohort / credits / counsel | **CONFIRMED:** owner-only smoke; owner 1000 credits plan; legal draft accepted for Closed Beta |
+| main merge / Production deploy | **WAITING** explicit passphrases |
+
+---
+
+## User decisions locked (2026-07-29)
+
+| Key | Value | Status |
+|-----|--------|--------|
+| CANONICAL_DOMAIN_CONFIRMED | `zwima-group.info` | DONE |
+| STRIPE_WEBHOOK_URL_CONFIRMED | `USE_EXISTING_ALREADY_COMPLETED_CONFIGURATION` | DONE |
+| IONOS_SMTP_POLICY | `SYSTEM_EMAILS_ONLY_NO_MARKETING` | DONE |
+| LEGAL_MANUAL_SIGNOFF | `LEGAL_DRAFT_ACCEPTED_FOR_CLOSED_BETA` | DONE |
+| CLOSED_BETA_COHORT | `OWNER_ONLY_INITIAL_SMOKE_TEST` | DONE |
+| MANUAL_CREDITS_PLAN | `OWNER_ACCOUNT_1000_CREDITS` | DONE (plan; grant not auto-run) |
+
+See also: `docs/ZWIMA_AI_CLOSED_BETA_FINAL_AUTHORIZATION_SUMMARY.md`
 
 ---
 

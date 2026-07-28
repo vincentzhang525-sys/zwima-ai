@@ -50,6 +50,14 @@ function shouldEnableFrontendApiProxy(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.trim()) || pk.startsWith("pk_live_");
 }
 
+function nextWithPathname(req: NextRequest) {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-zwima-pathname", req.nextUrl.pathname);
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+}
+
 const withClerk = clerkMiddleware(
   async (auth, req) => {
     const session = await auth();
@@ -62,6 +70,8 @@ const withClerk = clerkMiddleware(
       const signInUrl = new URL("/login", req.url).toString();
       await auth.protect({ unauthenticatedUrl: signInUrl });
     }
+
+    return nextWithPathname(req);
   },
   {
     frontendApiProxy: {
@@ -74,7 +84,7 @@ function withoutClerk(req: NextRequest) {
   if (!isPublicRoute(req)) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
-  return NextResponse.next();
+  return nextWithPathname(req);
 }
 
 export default clerkConfigured() ? withClerk : withoutClerk;

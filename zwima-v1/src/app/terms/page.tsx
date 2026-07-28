@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LegalDraftNotice } from "@/components/legal-draft-notice";
+import { LegalVersionBadge } from "@/components/legal-version-badge";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
@@ -18,6 +19,7 @@ export default function TermsPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
         <LegalDraftNotice />
+        <LegalVersionBadge doc="terms" />
         <p className="mt-2 text-xs text-slate-500">
           This page is a V1 launch-preparation draft. It is <strong>not</strong> final counsel-approved text and is{" "}
           <strong>not</strong> claimed to be fully in force as a signed legal instrument.

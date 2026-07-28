@@ -40,6 +40,8 @@ model User {
   dashboardExports     DashboardExport[] @relation("DashboardExportRequester")
   dashboardWidgetPreferences DashboardWidgetPreference[]
   dashboardAlertPreferences  DashboardAlertPreference[]
+  legalConsentAcceptances LegalConsentAcceptance[]
+  accountDeletionRequests AccountDeletionRequest[]
 }
 
 model Organization {
@@ -7144,4 +7146,40 @@ model ProviderSecretReference {
   @@unique([environmentId, provider, secretReference])
   @@index([environmentId, status])
   @@index([organizationId, provider])
+}
+
+// ─── GAP-011 Closed Beta legal consent + deletion request (additive) ─────────
+
+model LegalConsentAcceptance {
+  id           String   @id @default(cuid())
+  userId       String
+  /// Bundle version covering terms + privacy + dpa + provider disclosure
+  bundleVersion String
+  termsVersion  String
+  privacyVersion String
+  dpaVersion     String
+  providerDisclosureVersion String
+  acceptedAt   DateTime @default(now())
+  ipHash       String?
+  userAgent    String?
+  source       String   @default("dashboard")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bundleVersion])
+  @@index([userId, acceptedAt])
+}
+
+model AccountDeletionRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  reason    String?
+  status    String   @default("PENDING_MANUAL_REVIEW")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }

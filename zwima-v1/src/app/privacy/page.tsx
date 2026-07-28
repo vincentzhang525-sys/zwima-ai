@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LegalDraftNotice } from "@/components/legal-draft-notice";
+import { LegalVersionBadge } from "@/components/legal-version-badge";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
@@ -17,6 +18,7 @@ export default function PrivacyPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
         <LegalDraftNotice />
+        <LegalVersionBadge doc="privacy" />
         <p className="mt-2 text-xs text-slate-500">
           This page is a transparency draft for V1 launch preparation. It is <strong>not</strong> a final effective legal
           text and has <strong>not</strong> been signed off by counsel.

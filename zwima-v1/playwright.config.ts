@@ -79,5 +79,12 @@ export default defineConfig({
         storageState: authFile,
       },
     },
+    {
+      name: "gap011-compliance",
+      testMatch: /gap011-compliance\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
+      },
+    },
   ],
 });

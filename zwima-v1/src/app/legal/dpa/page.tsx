@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LegalDraftNotice } from "@/components/legal-draft-notice";
+import { LegalVersionBadge } from "@/components/legal-version-badge";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default function DpaPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
         <LegalDraftNotice />
+        <LegalVersionBadge doc="dpa" />
 
         <h1 className="mt-6 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
           Data Processing Agreement

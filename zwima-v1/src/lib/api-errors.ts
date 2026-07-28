@@ -1,3 +1,5 @@
+import { sanitizeForLog } from "@/lib/logging/sanitize";
+
 export type ApiErrorCode =
   | "INVALID_API_KEY"
   | "API_KEY_EXPIRED"
@@ -17,6 +19,7 @@ export type ApiErrorCode =
   | "VALIDATION_ERROR"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
+  | "TERMS_NOT_ACCEPTED"
   | "BILLING_PERSISTENCE_FAILED"
   | "INTERNAL_ERROR";
 
@@ -47,11 +50,12 @@ export function errorResponse(err: ApiError | Error, requestId?: string) {
   if (err instanceof ApiError) {
     return Response.json(err.toJSON(), { status: err.status });
   }
+  const raw = err instanceof Error ? err.message : "Request failed";
   return Response.json(
     {
       error: {
         code: "INTERNAL_ERROR",
-        message: err instanceof Error ? err.message : "Request failed",
+        message: sanitizeForLog(raw),
         requestId,
       },
     },

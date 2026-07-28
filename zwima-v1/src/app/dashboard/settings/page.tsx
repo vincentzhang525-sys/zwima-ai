@@ -1,3 +1,4 @@
+import { AccountDeletionRequestCard } from "@/components/account-deletion-request-card";
 import { WorkspaceSettingsClient } from "@/components/workspace-settings-client";
 import { getCurrentDbUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -13,6 +14,7 @@ export default async function SettingsPage() {
         <p className="text-sm text-slate-500">Organization, billing, routing, and alert preferences</p>
       </div>
       <WorkspaceSettingsClient />
+      <AccountDeletionRequestCard />
     </div>
   );
 }

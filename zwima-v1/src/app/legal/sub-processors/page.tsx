@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LegalDraftNotice } from "@/components/legal-draft-notice";
+import { LegalVersionBadge } from "@/components/legal-version-badge";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 
 export const metadata = {
@@ -88,6 +89,7 @@ export default function SubProcessorsPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 sm:px-6">
         <LegalDraftNotice />
+        <LegalVersionBadge doc="provider" />
         <p className="mt-2 text-xs text-slate-500">
           This page discloses third parties that may process personal data to operate ZWIMA AI. It does{" "}
           <strong>not</strong> claim that DPAs, SCCs, or counsel sign-off are complete, and it is{" "}

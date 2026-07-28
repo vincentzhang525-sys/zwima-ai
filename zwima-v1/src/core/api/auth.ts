@@ -30,6 +30,9 @@ export async function validateV1ApiKey(
 
   validateApiKeyState(key, requestId);
 
+  const { assertCommercialApiConsent } = await import("@/lib/compliance/legal-consent");
+  await assertCommercialApiConsent(key.userId, requestId);
+
   return {
     userId: key.userId,
     apiKeyId: key.id,

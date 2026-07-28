@@ -2,7 +2,7 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `f2d6118`  
+**HEAD:** `585d1e0`  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -232,7 +232,7 @@
 | GAP_016_STATUS | PASS_LOCKED |
 | DUPLICATE_EXECUTION_FORBIDDEN | YES |
 | 完成日期 | 2026-07-28 |
-| Git commit | (this closeout commit on `v1-p0-commercial-loop`) |
+| Git commit | `585d1e0` |
 | Database migration | NONE (reused `20260728170000_m4_fx_usage_log_additive` schema fields) |
 | FX_HOT_PATH_CONNECTED | YES — `chargeForUsage` → `buildUsageFxCost` + `PrismaFxRateProvider` before debit |
 | FX_FAIL_CLOSED | YES — MISSING/STALE → `FX_RATE_UNAVAILABLE` (503); no invented rates; no debit |

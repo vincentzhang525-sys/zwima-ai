@@ -40,6 +40,8 @@ git-status-out.txt
 *.key
 *.p12
 *.pfx
+.tmp_*
+.tmp_pull_*.env
 
 # debug
 npm-debug.log*

@@ -1,3 +1,8 @@
+import {
+  assertClerkInstanceIsolated,
+  clerkInstanceIsolationViolation,
+} from "@/lib/auth/clerk-instance-gate";
+
 type EnvCheck = { key: string; required: boolean; secret?: boolean };
 
 const CHECKS: EnvCheck[] = [
@@ -56,9 +61,18 @@ export function validateEnvAtStartup(): void {
     throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
   }
 
-  // Warn on placeholder Clerk in production (non-fatal for API-only paths)
-  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
-  if (isProd && pk.includes("placeholder")) {
-    console.warn("[env] Clerk placeholder keys detected in production");
+  // GAP-003: fail-closed Clerk instance isolation on Vercel production/preview.
+  const vercelEnv = (process.env.VERCEL_ENV ?? "").toLowerCase();
+  if (vercelEnv === "production" || vercelEnv === "preview") {
+    assertClerkInstanceIsolated(process.env);
+  } else if (isProd) {
+    // Non-Vercel production-like hosts: keep legacy placeholder warning.
+    const violation = clerkInstanceIsolationViolation({
+      ...process.env,
+      VERCEL_ENV: "production",
+    });
+    if (violation) {
+      console.warn(`[env] Clerk instance isolation warning: ${violation}`);
+    }
   }
 }

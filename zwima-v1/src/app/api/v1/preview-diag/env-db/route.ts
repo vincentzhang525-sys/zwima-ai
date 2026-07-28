@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clerkInstanceDiagnostic } from "@/lib/auth/clerk-instance-gate";
 
 function redactConnection(raw: string | undefined) {
   const value = raw ?? "";
@@ -83,10 +84,10 @@ export async function GET() {
     deploymentId: process.env.VERCEL_DEPLOYMENT_ID ?? null,
     routingEngine: process.env.ROUTING_ENGINE ?? "legacy",
     stripePreviewDisabled: process.env.STRIPE_PREVIEW_DISABLED === "true",
-    clerkConfigured:
-      (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "").startsWith("pk_") &&
-      (process.env.CLERK_SECRET_KEY ?? "").startsWith("sk_") &&
-      !(process.env.CLERK_SECRET_KEY ?? "").includes("placeholder"),
+    ...(() => {
+      const clerk = clerkInstanceDiagnostic(process.env);
+      return { clerk, clerkConfigured: clerk.clerkConfigured };
+    })(),
     databaseUrl: {
       ...analyzeConnectionString(process.env.DATABASE_URL),
       ...redactConnection(process.env.DATABASE_URL),

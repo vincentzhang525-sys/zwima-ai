@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { classifyClerkInstance, isClerkInstanceIsolated } from "@/lib/auth/clerk-instance-gate";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -26,9 +27,13 @@ const isPublicRoute = createRouteMatcher([
 const isAuthEntryRoute = createRouteMatcher(["/login(.*)", "/signup(.*)", "/forgot-password(.*)"]);
 
 function clerkConfigured(): boolean {
-  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
-  const sk = process.env.CLERK_SECRET_KEY ?? "";
-  return pk.startsWith("pk_") && sk.startsWith("sk_") && !sk.includes("placeholder") && !pk.includes("placeholder");
+  const vercelEnv = (process.env.VERCEL_ENV ?? "").toLowerCase();
+  // On Vercel production/preview, refuse mismatched Clerk instances (GAP-003).
+  if ((vercelEnv === "production" || vercelEnv === "preview") && !isClerkInstanceIsolated()) {
+    return false;
+  }
+  const { configured, instanceType } = classifyClerkInstance();
+  return configured && instanceType !== "placeholder" && instanceType !== "mismatch";
 }
 
 /**

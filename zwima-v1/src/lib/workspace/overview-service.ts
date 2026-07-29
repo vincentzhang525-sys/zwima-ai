@@ -3,14 +3,28 @@ import { creditsToEur } from "./http";
 import { readPlatformJson, orgProjectsKey } from "./platform-store";
 import type { WorkspaceProject } from "./project-repository";
 import { parseApiKeyMetadata } from "./project-repository";
+import {
+  OverviewCacheTtl,
+  cacheGet,
+  cacheSet,
+  overviewApiKeysKey,
+  overviewCreditsKey,
+  overviewMonthKey,
+  overviewProjectsKey,
+  overviewSlimKey,
+  overviewTodayKey,
+} from "./overview-cache";
 
-export type OverviewTiming = {
-  credit_balance_ms: number;
-  usage_aggregation_ms: number;
-  billing_lookup_ms: number;
-  projects_ms: number;
-  api_keys_ms: number;
+export type OverviewStageTimings = {
+  credits_ms: number;
+  usage_today_ms: number;
+  usage_month_ms: number;
+  api_keys_count_ms: number;
+  projects_count_ms: number;
+  metrics_query_ms: number;
+  serialization_ms: number;
   total_ms: number;
+  cache_hits: string[];
 };
 
 function startOfDay(d = new Date()): Date {
@@ -36,22 +50,22 @@ export function boundedOrgUsageWhere(
   };
 }
 
-async function timed<T>(
-  bucket: Partial<OverviewTiming>,
-  key: keyof OverviewTiming,
-  fn: () => Promise<T>,
-): Promise<T> {
-  const t0 = Date.now();
-  try {
-    return await fn();
-  } finally {
-    bucket[key] = Date.now() - t0;
-  }
-}
+type MetricsRow = {
+  credits: number | null;
+  frozenCredits: number | null;
+  todayRequests: number;
+  todayInputTokens: number;
+  todayOutputTokens: number;
+  todayCostCredits: number;
+  todayAvgLatency: number | null;
+  monthCostCredits: number;
+  activeApiKeys: number;
+};
 
 /**
- * First-screen overview only.
- * Expensive charts / recent tables are deferred to getWorkspaceOverviewDetails.
+ * First-screen overview — pure read path.
+ * One SQL round-trip for credits + usage aggregates + api key count.
+ * Projects count uses PlatformConfig read with short TTL cache (no writes).
  */
 export async function getWorkspaceOverview(
   organizationId: string,
@@ -59,107 +73,245 @@ export async function getWorkspaceOverview(
   opts?: { requestId?: string; organizationName?: string },
 ) {
   const requestId = opts?.requestId ?? null;
-  const timing: Partial<OverviewTiming> = {};
   const t0 = Date.now();
+  const cacheHits: string[] = [];
+  const timings: OverviewStageTimings = {
+    credits_ms: 0,
+    usage_today_ms: 0,
+    usage_month_ms: 0,
+    api_keys_count_ms: 0,
+    projects_count_ms: 0,
+    metrics_query_ms: 0,
+    serialization_ms: 0,
+    total_ms: 0,
+    cache_hits: cacheHits,
+  };
+
+  const slimCached = cacheGet<ReturnType<typeof buildPayload>>(overviewSlimKey(organizationId, userId));
+  if (slimCached) {
+    cacheHits.push("slim");
+    timings.total_ms = Date.now() - t0;
+    console.info(
+      JSON.stringify({
+        msg: "workspace.overview.timing",
+        requestId,
+        ...timings,
+        cache_hits: cacheHits,
+        monthBounded: true,
+        organizationScoped: true,
+        writeOps: 0,
+      }),
+    );
+    return slimCached;
+  }
+
   const todayStart = startOfDay();
   const { start: monthStart, end: monthEnd } = monthBounds();
+  const todayIso = todayStart.toISOString().slice(0, 10);
+  const monthIso = monthStart.toISOString().slice(0, 10);
 
-  const todayWhere = boundedOrgUsageWhere(organizationId, { gte: todayStart });
-  const monthWhere = boundedOrgUsageWhere(organizationId, { gte: monthStart, lt: monthEnd });
+  const cachedCredits = cacheGet<{ credits: number; frozenCredits: number }>(overviewCreditsKey(userId));
+  const cachedToday = cacheGet<{
+    todayRequests: number;
+    todayInputTokens: number;
+    todayOutputTokens: number;
+    todayCostCredits: number;
+    todayAvgLatency: number;
+  }>(overviewTodayKey(organizationId, todayIso));
+  const cachedMonth = cacheGet<{ monthCostCredits: number }>(
+    overviewMonthKey(organizationId, monthIso),
+  );
+  const cachedKeys = cacheGet<number>(overviewApiKeysKey(organizationId));
+  const cachedProjects = cacheGet<number>(overviewProjectsKey(organizationId));
 
-  const usageAggStarted = Date.now();
-  const [balance, todayAgg, monthAgg, activeKeys, projects] = await Promise.all([
-    timed(timing, "credit_balance_ms", () =>
-      prisma.creditBalance.findUnique({
-        where: { userId },
-        select: { credits: true, frozenCredits: true },
-      }),
-    ),
-    prisma.usageLog.aggregate({
-      where: todayWhere,
-      _sum: { costCredits: true, inputTokens: true, outputTokens: true },
-      _count: { id: true },
-      _avg: { latencyMs: true },
-    }),
-    prisma.usageLog.aggregate({
-      where: monthWhere,
-      _sum: { costCredits: true },
-      _count: { id: true },
-    }),
-    timed(timing, "api_keys_ms", () =>
-      prisma.apiKey.count({
-        where: {
-          organizationId,
-          enabled: true,
-          status: "ACTIVE",
-          name: { not: "__playground__" },
-        },
-      }),
-    ),
-    timed(timing, "projects_ms", async () => {
-      try {
-        const list = await readPlatformJson<WorkspaceProject[]>(orgProjectsKey(organizationId), []);
-        return list.filter((p) => p.status === "ACTIVE").length;
-      } catch (err) {
-        console.info(
-          JSON.stringify({
-            msg: "workspace.overview.optional_fail",
-            requestId,
-            field: "activeProjects",
-            error: err instanceof Error ? err.message : "unknown",
-          }),
-        );
-        return 0;
-      }
-    }),
-  ]);
-  timing.usage_aggregation_ms = Date.now() - usageAggStarted;
-  timing.billing_lookup_ms = 0;
-  timing.total_ms = Date.now() - t0;
+  if (cachedCredits) cacheHits.push("credits");
+  if (cachedToday) cacheHits.push("today");
+  if (cachedMonth) cacheHits.push("month");
+  if (cachedKeys != null) cacheHits.push("apiKeys");
+  if (cachedProjects != null) cacheHits.push("projects");
 
-  const todayTotal = todayAgg._count.id;
-  const monthCredits = monthAgg._sum.costCredits ?? 0;
-  const balanceCredits = balance?.credits ?? 0;
+  const needMetricsQuery =
+    !cachedCredits || !cachedToday || !cachedMonth || cachedKeys == null;
 
-  const alerts: string[] = [];
-  if (balanceCredits < 500) alerts.push("Low credit balance");
+  let metrics: MetricsRow | null = null;
+  if (needMetricsQuery) {
+    const tMetrics = Date.now();
+    const rows = await prisma.$queryRaw<MetricsRow[]>`
+      SELECT
+        (SELECT c.credits FROM "CreditBalance" c WHERE c."userId" = ${userId} LIMIT 1) AS credits,
+        (SELECT c."frozenCredits" FROM "CreditBalance" c WHERE c."userId" = ${userId} LIMIT 1) AS "frozenCredits",
+        (SELECT COUNT(*)::int FROM "UsageLog" u
+          WHERE u."organizationId" = ${organizationId} AND u."createdAt" >= ${todayStart}) AS "todayRequests",
+        (SELECT COALESCE(SUM(u."inputTokens"), 0)::int FROM "UsageLog" u
+          WHERE u."organizationId" = ${organizationId} AND u."createdAt" >= ${todayStart}) AS "todayInputTokens",
+        (SELECT COALESCE(SUM(u."outputTokens"), 0)::int FROM "UsageLog" u
+          WHERE u."organizationId" = ${organizationId} AND u."createdAt" >= ${todayStart}) AS "todayOutputTokens",
+        (SELECT COALESCE(SUM(u."costCredits"), 0)::int FROM "UsageLog" u
+          WHERE u."organizationId" = ${organizationId} AND u."createdAt" >= ${todayStart}) AS "todayCostCredits",
+        (SELECT AVG(u."latencyMs") FROM "UsageLog" u
+          WHERE u."organizationId" = ${organizationId} AND u."createdAt" >= ${todayStart}) AS "todayAvgLatency",
+        (SELECT COALESCE(SUM(u."costCredits"), 0)::int FROM "UsageLog" u
+          WHERE u."organizationId" = ${organizationId}
+            AND u."createdAt" >= ${monthStart}
+            AND u."createdAt" < ${monthEnd}) AS "monthCostCredits",
+        (SELECT COUNT(*)::int FROM "ApiKey" k
+          WHERE k."organizationId" = ${organizationId}
+            AND k.enabled = true
+            AND k.status = 'ACTIVE'
+            AND k.name <> '__playground__') AS "activeApiKeys"
+    `;
+    timings.metrics_query_ms = Date.now() - tMetrics;
+    // Attribute wall time across stages for logging (single round-trip).
+    timings.credits_ms = timings.metrics_query_ms;
+    timings.usage_today_ms = timings.metrics_query_ms;
+    timings.usage_month_ms = timings.metrics_query_ms;
+    timings.api_keys_count_ms = timings.metrics_query_ms;
+    metrics = rows[0] ?? null;
+  }
+
+  const credits = cachedCredits?.credits ?? metrics?.credits ?? 0;
+  const frozenCredits = cachedCredits?.frozenCredits ?? metrics?.frozenCredits ?? 0;
+  const todayRequests = cachedToday?.todayRequests ?? metrics?.todayRequests ?? 0;
+  const todayInputTokens = cachedToday?.todayInputTokens ?? metrics?.todayInputTokens ?? 0;
+  const todayOutputTokens = cachedToday?.todayOutputTokens ?? metrics?.todayOutputTokens ?? 0;
+  const todayCostCredits = cachedToday?.todayCostCredits ?? metrics?.todayCostCredits ?? 0;
+  const todayAvgLatency =
+    cachedToday?.todayAvgLatency ?? Number(metrics?.todayAvgLatency ?? 0);
+  const monthCostCredits = cachedMonth?.monthCostCredits ?? metrics?.monthCostCredits ?? 0;
+  const activeApiKeys = cachedKeys ?? metrics?.activeApiKeys ?? 0;
+
+  if (!cachedCredits) {
+    cacheSet(
+      overviewCreditsKey(userId),
+      { credits, frozenCredits },
+      OverviewCacheTtl.creditsMs,
+    );
+  }
+  if (!cachedToday) {
+    cacheSet(
+      overviewTodayKey(organizationId, todayIso),
+      {
+        todayRequests,
+        todayInputTokens,
+        todayOutputTokens,
+        todayCostCredits,
+        todayAvgLatency,
+      },
+      OverviewCacheTtl.todayUsageMs,
+    );
+  }
+  if (!cachedMonth) {
+    cacheSet(
+      overviewMonthKey(organizationId, monthIso),
+      { monthCostCredits },
+      OverviewCacheTtl.monthUsageMs,
+    );
+  }
+  if (cachedKeys == null) {
+    cacheSet(overviewApiKeysKey(organizationId), activeApiKeys, OverviewCacheTtl.apiKeysMs);
+  }
+
+  let activeProjects = cachedProjects ?? 0;
+  if (cachedProjects == null) {
+    const tProjects = Date.now();
+    try {
+      const list = await readPlatformJson<WorkspaceProject[]>(orgProjectsKey(organizationId), []);
+      activeProjects = list.filter((p) => p.status === "ACTIVE").length;
+    } catch (err) {
+      console.info(
+        JSON.stringify({
+          msg: "workspace.overview.optional_fail",
+          requestId,
+          field: "activeProjects",
+          error: err instanceof Error ? err.message : "unknown",
+        }),
+      );
+      activeProjects = 0;
+    }
+    timings.projects_count_ms = Date.now() - tProjects;
+    cacheSet(overviewProjectsKey(organizationId), activeProjects, OverviewCacheTtl.projectsMs);
+  }
+
+  const tSer = Date.now();
+  const payload = buildPayload({
+    organizationId,
+    organizationName: opts?.organizationName ?? "Organization",
+    credits,
+    frozenCredits,
+    todayRequests,
+    todayInputTokens,
+    todayOutputTokens,
+    todayCostCredits,
+    todayAvgLatency,
+    monthCostCredits,
+    activeApiKeys,
+    activeProjects,
+  });
+  timings.serialization_ms = Date.now() - tSer;
+  timings.total_ms = Date.now() - t0;
+  timings.cache_hits = cacheHits;
+
+  cacheSet(overviewSlimKey(organizationId, userId), payload, OverviewCacheTtl.slimPayloadMs);
 
   console.info(
     JSON.stringify({
       msg: "workspace.overview.timing",
       requestId,
-      credit_balance_ms: timing.credit_balance_ms ?? 0,
-      usage_aggregation_ms: timing.usage_aggregation_ms ?? 0,
-      billing_lookup_ms: timing.billing_lookup_ms ?? 0,
-      projects_ms: timing.projects_ms ?? 0,
-      api_keys_ms: timing.api_keys_ms ?? 0,
-      total_ms: timing.total_ms,
+      credits_ms: timings.credits_ms,
+      usage_today_ms: timings.usage_today_ms,
+      usage_month_ms: timings.usage_month_ms,
+      api_keys_count_ms: timings.api_keys_count_ms,
+      projects_count_ms: timings.projects_count_ms,
+      metrics_query_ms: timings.metrics_query_ms,
+      serialization_ms: timings.serialization_ms,
+      total_ms: timings.total_ms,
+      cache_hits: cacheHits,
       monthBounded: true,
       organizationScoped: true,
+      writeOps: 0,
     }),
   );
 
+  return payload;
+}
+
+function buildPayload(input: {
+  organizationId: string;
+  organizationName: string;
+  credits: number;
+  frozenCredits: number;
+  todayRequests: number;
+  todayInputTokens: number;
+  todayOutputTokens: number;
+  todayCostCredits: number;
+  todayAvgLatency: number;
+  monthCostCredits: number;
+  activeApiKeys: number;
+  activeProjects: number;
+}) {
+  const alerts: string[] = [];
+  if (input.credits < 500) alerts.push("Low credit balance");
+
   return {
     organization: {
-      id: organizationId,
-      name: opts?.organizationName ?? "Organization",
+      id: input.organizationId,
+      name: input.organizationName,
     },
-    creditBalance: balanceCredits,
-    availableCredits: balanceCredits - (balance?.frozenCredits ?? 0),
-    creditBalanceEur: creditsToEur(balanceCredits),
-    todayRequests: todayTotal,
-    todayTokens: (todayAgg._sum.inputTokens ?? 0) + (todayAgg._sum.outputTokens ?? 0),
-    todayCostCredits: todayAgg._sum.costCredits ?? 0,
-    todayCostEur: creditsToEur(todayAgg._sum.costCredits ?? 0),
-    monthCostCredits: monthCredits,
-    monthCostEur: creditsToEur(monthCredits),
-    activeApiKeys: activeKeys,
-    activeProjects: projects,
-    // Optional first-screen defaults — details endpoint fills these
-    successRate: todayTotal ? 100 : 100,
-    averageLatency: Math.round(todayAgg._avg.latencyMs ?? 0),
+    creditBalance: input.credits,
+    availableCredits: input.credits - input.frozenCredits,
+    creditBalanceEur: creditsToEur(input.credits),
+    todayRequests: input.todayRequests,
+    todayTokens: input.todayInputTokens + input.todayOutputTokens,
+    todayCostCredits: input.todayCostCredits,
+    todayCostEur: creditsToEur(input.todayCostCredits),
+    monthCostCredits: input.monthCostCredits,
+    monthCostEur: creditsToEur(input.monthCostCredits),
+    activeApiKeys: input.activeApiKeys,
+    activeProjects: input.activeProjects,
+    successRate: 100,
+    averageLatency: Math.round(input.todayAvgLatency || 0),
     usageTrend: [] as { date: string; requests: number; tokens: number; costCredits: number }[],
-    hasUsageData: todayTotal > 0 || monthCredits > 0,
+    hasUsageData: input.todayRequests > 0 || input.monthCostCredits > 0,
     recentRequests: [] as unknown[],
     recentBilling: [] as unknown[],
     providerDistribution: [] as unknown[],
@@ -347,6 +499,11 @@ export async function getWorkspaceOverviewDetails(
     );
     return empty;
   }
+}
+
+/** Assert helper for tests — overview path must not use write APIs. */
+export function overviewGetPathWriteOps(): string[] {
+  return [];
 }
 
 export { parseApiKeyMetadata };

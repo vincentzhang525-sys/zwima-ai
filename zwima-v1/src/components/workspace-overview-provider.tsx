@@ -27,28 +27,39 @@ type WorkspaceOverviewContextValue = {
 
 const WorkspaceOverviewContext = createContext<WorkspaceOverviewContextValue | null>(null);
 
-async function loadOverviewDetails(
-  generation: number,
-  generationRef: { current: number },
-  base: OverviewResponse,
-  setData: (data: OverviewResponse) => void,
-) {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15_000);
-    const res = await fetch("/api/workspace/overview/details", {
-      credentials: "same-origin",
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!res.ok) return;
-    const details = (await res.json()) as Record<string, unknown>;
-    if (generation !== generationRef.current) return;
-    setData({ ...base, ...details, detailsDeferred: false });
-  } catch {
-    // Optional details — keep first-screen data
+/** Module-level dedupe so React Strict Mode remount does not double-fetch details. */
+let detailsInflight: Promise<Record<string, unknown> | null> | null = null;
+let detailsAt = 0;
+const DETAILS_DEDUP_MS = 2_000;
+
+async function fetchOverviewDetailsOnce(): Promise<Record<string, unknown> | null> {
+  const now = Date.now();
+  if (detailsInflight && now - detailsAt < DETAILS_DEDUP_MS) {
+    return detailsInflight;
   }
+  detailsAt = now;
+  detailsInflight = (async () => {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15_000);
+      const res = await fetch("/api/workspace/overview/details", {
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok) return null;
+      return (await res.json()) as Record<string, unknown>;
+    } catch {
+      return null;
+    } finally {
+      // Keep promise briefly for Strict Mode twin; clear after window.
+      setTimeout(() => {
+        detailsInflight = null;
+      }, DETAILS_DEDUP_MS);
+    }
+  })();
+  return detailsInflight;
 }
 
 export function WorkspaceOverviewProvider({ children }: { children: ReactNode }) {
@@ -75,7 +86,11 @@ export function WorkspaceOverviewProvider({ children }: { children: ReactNode })
       }
       setData(result.data);
       setError("");
-      void loadOverviewDetails(generation, generationRef, result.data, setData);
+      // Deferred details — failure must not re-enter skeleton
+      void fetchOverviewDetailsOnce().then((details) => {
+        if (!details || generation !== generationRef.current) return;
+        setData((prev) => ({ ...(prev ?? result.data!), ...details, detailsDeferred: false }));
+      });
     } catch (err) {
       if (generation !== generationRef.current) return;
       setData(null);
@@ -90,6 +105,7 @@ export function WorkspaceOverviewProvider({ children }: { children: ReactNode })
   }, []);
 
   useEffect(() => {
+    // overview-fetch + detailsInflight module dedupe absorb Strict Mode twin mounts.
     void refresh(false);
   }, [refresh]);
 

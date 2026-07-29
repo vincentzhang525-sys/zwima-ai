@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { requireWorkspaceContext } from "@/lib/workspace/workspace-context";
+import { requireOverviewIdentity } from "@/lib/workspace/overview-identity";
 import { getWorkspaceOverview } from "@/lib/workspace/overview-service";
 import { errorResponse, validationError } from "@/lib/workspace/http";
 import { ApiError } from "@/lib/api-errors";
@@ -16,55 +15,43 @@ export async function GET(req: NextRequest) {
   const requestId = req.headers.get("x-zwima-request-id") || newRequestId();
   const t0 = Date.now();
   let userIdPresent = false;
-  let auth_ms = 0;
-  let user_lookup_ms = 0;
-  let organization_lookup_ms = 0;
-  let membership_lookup_ms = 0;
 
   try {
-    const tAuth = Date.now();
-    const session = await auth();
-    auth_ms = Date.now() - tAuth;
-
-    const tCtx = Date.now();
-    const ctx = await requireWorkspaceContext();
-    const ctxMs = Date.now() - tCtx;
-    // Approximate splits: membership+org resolved inside context after user lookup
-    user_lookup_ms = ctxMs;
-    membership_lookup_ms = ctxMs;
-    organization_lookup_ms = 0;
-    userIdPresent = Boolean(ctx.user?.id) || Boolean(session.userId);
+    const { identity, timings: idTimings, cacheHit } = await requireOverviewIdentity();
+    userIdPresent = true;
 
     const tOverview = Date.now();
-    const data = await getWorkspaceOverview(ctx.organizationId, ctx.user.id, {
+    const data = await getWorkspaceOverview(identity.organizationId, identity.userId, {
       requestId,
-      organizationName: ctx.organization.name,
+      organizationName: identity.organizationName,
     });
     const overviewMs = Date.now() - tOverview;
-
+    const serialization_ms = 0;
     const total_ms = Date.now() - t0;
+
     console.info(
       JSON.stringify({
         msg: "workspace.overview",
         requestId,
         userIdPresent,
         httpStatus: 200,
-        auth_ms,
-        user_lookup_ms,
-        organization_lookup_ms,
-        membership_lookup_ms,
-        credit_balance_ms: null,
-        usage_aggregation_ms: null,
-        billing_lookup_ms: 0,
+        auth_ms: idTimings.auth_ms,
+        user_lookup_ms: idTimings.user_lookup_ms,
+        membership_lookup_ms: idTimings.membership_lookup_ms,
+        organization_ms: idTimings.organization_ms,
+        identity_cache_hit: cacheHit,
         overviewMs,
+        serialization_ms,
         total_ms,
+        writeOps: 0,
       }),
     );
 
     return NextResponse.json(data, {
       headers: {
         "x-zwima-request-id": requestId,
-        "server-timing": `auth;dur=${auth_ms},ctx;dur=${ctxMs},overview;dur=${overviewMs},total;dur=${total_ms}`,
+        "server-timing": `auth;dur=${idTimings.auth_ms},user;dur=${idTimings.user_lookup_ms},overview;dur=${overviewMs},total;dur=${total_ms}`,
+        "cache-control": "private, max-age=0, must-revalidate",
       },
     });
   } catch (err) {
@@ -76,8 +63,8 @@ export async function GET(req: NextRequest) {
           userIdPresent,
           httpStatus: err.status,
           errorCode: err.code,
-          auth_ms,
           total_ms: Date.now() - t0,
+          writeOps: 0,
         }),
       );
       return errorResponse(err);
@@ -90,6 +77,7 @@ export async function GET(req: NextRequest) {
         httpStatus: 400,
         errorCode: "VALIDATION",
         total_ms: Date.now() - t0,
+        writeOps: 0,
       }),
     );
     return validationError(err instanceof Error ? err.message : "Failed");

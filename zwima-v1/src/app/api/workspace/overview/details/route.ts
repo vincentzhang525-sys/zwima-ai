@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireWorkspaceContext } from "@/lib/workspace/workspace-context";
+import { requireOverviewIdentity } from "@/lib/workspace/overview-identity";
 import { getWorkspaceOverviewDetails } from "@/lib/workspace/overview-service";
 import { errorResponse, validationError } from "@/lib/workspace/http";
 import { ApiError } from "@/lib/api-errors";
@@ -16,8 +16,10 @@ export async function GET(req: NextRequest) {
   const requestId = req.headers.get("x-zwima-request-id") || newRequestId();
   const t0 = Date.now();
   try {
-    const ctx = await requireWorkspaceContext();
-    const data = await getWorkspaceOverviewDetails(ctx.organizationId, ctx.user.id, { requestId });
+    const { identity } = await requireOverviewIdentity();
+    const data = await getWorkspaceOverviewDetails(identity.organizationId, identity.userId, {
+      requestId,
+    });
     console.info(
       JSON.stringify({
         msg: "workspace.overview.details",
@@ -25,6 +27,7 @@ export async function GET(req: NextRequest) {
         userIdPresent: true,
         httpStatus: 200,
         total_ms: Date.now() - t0,
+        writeOps: 0,
       }),
     );
     return NextResponse.json(data, {
@@ -39,6 +42,7 @@ export async function GET(req: NextRequest) {
           httpStatus: err.status,
           errorCode: err.code,
           total_ms: Date.now() - t0,
+          writeOps: 0,
         }),
       );
       return errorResponse(err);

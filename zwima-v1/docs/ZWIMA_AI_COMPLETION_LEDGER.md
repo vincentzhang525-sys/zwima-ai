@@ -2,8 +2,8 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `7ae7f37`  
-**LAST_CLOSEOUT:** 2026-07-29 — GAP-011 Production physical audit PASS_LOCKED (no re-migrate)  
+**HEAD:** `b30b5fb`  
+**LAST_CLOSEOUT:** 2026-07-29 — Emergency Preview Deployment and GAP-013 CI Repair PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -272,6 +272,29 @@
 
 ---
 
+### CI-PREVIEW-REPAIR-001
+
+| Field | Value |
+|--------|--------|
+| ID | CI-PREVIEW-REPAIR-001 |
+| 模块 | Emergency Preview Deployment + GAP-013 CI Repair |
+| 完成状态 | PASS_LOCKED |
+| DUPLICATE_EXECUTION_FORBIDDEN | YES |
+| 完成日期 | 2026-07-29 |
+| Git commit | `b30b5fb` (repair chain: `1cb3c98`, `b30b5fb`) |
+| Deployment ID/URL | Preview `https://zwima-4obmmi089-zwima.vercel.app` (`dpl_8adSrjHvpSpfbf5NJQQahkBDmbzL`); alias `https://zwima-ai-git-v1-p0-commercial-loop-zwima.vercel.app` |
+| GitHub CI | Run `30449090266` — **success** on `b30b5fb` |
+| Database migration | **NONE on Production** — Preview-only P3009 recovery path in `scripts/db-migrate-authorized.mjs`; Production DB untouched |
+| GAP-011 | **NOT re-executed** — Production physical audit remains PASS_LOCKED |
+| Root cause A (GitHub CI) | `dc23266`: `scripts/gap011-production-readonly-audit.ts` included in `tsc --noEmit` without `@types/pg` → TS7016/TS7006 Typecheck exit 2. Fixed in `1fe77c8` + excluded from tsconfig in `1cb3c98`. |
+| Root cause B (Vercel Preview) | Independent: Prisma **P3009** failed migration `20260722100000_m8_m11_rls_security_gap_fix` on Preview DB blocked `vercel-preview-build.mjs`; recovery initially failed because `prisma db execute` lacked `--schema`. Fixed P3009 recovery + `--schema prisma/schema.prisma` in `1cb3c98` / `b30b5fb`. |
+| Test result | Local: npm ci PASS; unit 425/425; typecheck PASS; lint PASS; prisma validate PASS; build PASS. Remote: GAP-013 CI success; Vercel Preview **Ready**. |
+| Evidence | GitHub Actions run 30449090266; Vercel deployment Ready on `b30b5fb`; commits `1cb3c98`, `b30b5fb`; this ledger |
+| Retest trigger | `related_code_changed` on gap013-ci.yml, vercel-preview-build, db-migrate-authorized; Preview DB new failed migration; gap011 audit script re-added to tsconfig |
+| DO_NOT_REPEAT | Re-debug as single root cause; re-run GAP-011 on Production; modify Production DB; merge main without authorize; trigger Production deployment; batch migrate resolve on Production |
+
+---
+
 ### GAP-014
 
 | Field | Value |
@@ -393,6 +416,7 @@ Tasks that would map to ledger PASS and must return `ALREADY_COMPLETED` unless a
 - “Re-provision GAP-012 Viewer / re-run Viewer RBAC E2E without trigger”
 - “Re-wire GAP-016 FX into chargeForUsage / invent FX rates / re-add FX migration”
 - “Re-build GAP-013 CI from deleted recovery drafts / add Production migrate or live spend jobs”
+- “Re-run Emergency Preview Deployment + GAP-013 CI repair (typecheck gap011 / Preview P3009 recovery)”
 - “Live-restore Production DB / dump Vercel env values / re-apply locked migrations to prove GAP-014”
 - “Re-run multi-provider live smoke / buy vendor quota / enable LIVE_PROVIDER_CALLS for GAP-015 proof”
 - “Re-wire GAP-010 deprecation EMAIL / re-implement migration engines without trigger”

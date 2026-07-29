@@ -3,7 +3,7 @@
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
 **HEAD:** `7ae7f37`  
-**LAST_CLOSEOUT:** 2026-07-29 — P1 Final Readiness Audit PASS_CONDITIONAL (no GAP re-implement)  
+**LAST_CLOSEOUT:** 2026-07-29 — GAP-011 Production physical audit PASS_LOCKED (no re-migrate)  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -185,15 +185,15 @@
 |--------|--------|
 | ID | GAP-011 |
 | 模块 | M6 Closed Beta Compliance Gate |
-| 完成状态 | PASS (LOCKED) |
-| 完成日期 | 2026-07-28 |
-| Git commit | `bb4846b` (+ ledger `e405d13`) |
-| Deployment ID/URL | Preview `https://zwima-k41pkqnlo-zwima.vercel.app` (`dpl_4ikSrkGkVFAsg69sKCsr9TtUPTnD`); alias `https://zwima-ai-git-v1-p0-commercial-loop-zwima.vercel.app` |
-| Database migration | `20260728220000_gap011_legal_consent` applied on **Preview only** (`PREVIEW_DB_MIGRATE_AUTHORIZED=true`; build log: All migrations successfully applied) |
-| Test result | Unit PASS; typecheck/lint PASS; public E2E 4/4 PASS; **Authenticated Preview E2E PASS** via existing M8 Member A + Clerk `testing_token`/`sign_in_token` (no new Clerk users): fail-closed `403 TERMS_NOT_ACCEPTED` → accept bundle → post-consent API `PROVIDER_LIVE_CALLS_DISABLED` (no live cost) → deletion request `PENDING_MANUAL_REVIEW`; temp auth artifacts deleted |
-| Evidence | Legal pages + version badges; dashboard accept-terms gate; API fail-closed; Settings deletion entry/API; `docs/ZWIMA_AI_CLOSED_BETA_DATA_FLOW.md`; this ledger |
-| Retest trigger | Legal bundle version bump; counsel replaces draft legal text; Production consent migrate authorized separately |
-| DO_NOT_REPEAT | Re-implement consent ledger / re-migrate Preview; create Clerk users; send real email for deletion; Production migrate without auth; re-run authenticated consent E2E without retest trigger |
+| 完成状态 | PASS (LOCKED) — Preview + **Production physical audit PASS_LOCKED** |
+| 完成日期 | 2026-07-28 (Preview); 2026-07-29 (Production physical audit closeout) |
+| Git commit | `bb4846b` (+ ledger `e405d13`); Production closeout on `v1-p0-commercial-loop` |
+| Deployment ID/URL | Preview `https://zwima-k41pkqnlo-zwima.vercel.app` (`dpl_4ikSrkGkVFAsg69sKCsr9TtUPTnD`); Production `https://zwima-group.info` |
+| Database migration | `20260728220000_gap011_legal_consent` applied on **Preview** (`PREVIEW_DB_MIGRATE_AUTHORIZED=true`) and **Production** (`LegalConsentAcceptance` + `AccountDeletionRequest` confirmed via read-only physical audit; `_prisma_migrations` status APPLIED) |
+| Test result | Preview: Unit PASS; typecheck/lint PASS; public E2E 4/4 PASS; Authenticated Preview E2E PASS. Production: read-only physical audit PASS (`PHYSICAL_SCHEMA_MATCH=YES`; tables + migration record confirmed; P1014 was verify-script false positive) |
+| Evidence | Legal pages + version badges; dashboard accept-terms gate; API fail-closed; Settings deletion entry/API; `docs/ZWIMA_AI_CLOSED_BETA_DATA_FLOW.md`; `docs/ZWIMA_AI_PRODUCTION_MIGRATION_RECONCILIATION_AUDIT.md`; `scripts/gap011-production-readonly-audit.ts` |
+| Retest trigger | Legal bundle version bump; counsel replaces draft legal text; Production schema drift detected |
+| DO_NOT_REPEAT | Re-implement consent ledger; re-apply gap011 migration on Production; re-migrate Preview; create Clerk users; send real email for deletion; re-run physical audit without drift trigger; re-run authenticated consent E2E without retest trigger |
 
 ---
 

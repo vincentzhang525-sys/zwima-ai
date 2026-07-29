@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { DonutChart } from "@/components/ui/chart";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { SkeletonCard, SkeletonTable } from "@/components/ui/skeleton";
+import { useWorkspaceOverview } from "@/components/workspace-overview-provider";
 import { formatCost } from "@/lib/utils";
-import { fetchWorkspaceOverview } from "@/lib/workspace/overview-fetch";
 
 type Overview = {
   creditBalance: number;
@@ -44,33 +43,12 @@ type Overview = {
 };
 
 export function WorkspaceOverviewClient() {
-  const [data, setData] = useState<Overview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const load = useCallback(async (force = false) => {
-    setLoading(true);
-    setError("");
-    try {
-      const result = await fetchWorkspaceOverview({ force });
-      if (!result.ok || !result.data) {
-        setData(null);
-        setError(result.message || "Failed to load dashboard data.");
-        return;
-      }
-      setData(result.data as Overview);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load(false);
-  }, [load]);
+  const { data: raw, loading, error, refresh } = useWorkspaceOverview();
+  const data = raw as Overview | null;
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="overview-skeleton">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <SkeletonCard key={i} />
@@ -81,8 +59,8 @@ export function WorkspaceOverviewClient() {
     );
   }
 
-  if (error) return <ErrorState message={error} onRetry={() => void load(true)} />;
-  if (!data) return <ErrorState message="Failed to load dashboard data." onRetry={() => void load(true)} />;
+  if (error) return <ErrorState message={error} onRetry={() => void refresh()} />;
+  if (!data) return <ErrorState message="Failed to load dashboard data." onRetry={() => void refresh()} />;
 
   return (
     <div className="space-y-6">

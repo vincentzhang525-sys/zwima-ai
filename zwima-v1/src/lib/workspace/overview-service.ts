@@ -14,11 +14,32 @@ function daysAgo(n: number): Date {
   return new Date(Date.now() - n * 86400000);
 }
 
-export async function getWorkspaceOverview(organizationId: string, userId: string) {
-  await projectRepository.ensureDefault(organizationId);
-  const settings = await settingsService.get(organizationId, userId);
+export async function getWorkspaceOverview(
+  organizationId: string,
+  userId: string,
+  opts?: { requestId?: string },
+) {
+  const requestId = opts?.requestId;
+  const stage = async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
+    const t0 = Date.now();
+    try {
+      return await fn();
+    } finally {
+      console.info(
+        JSON.stringify({
+          msg: "workspace.overview.stage",
+          requestId: requestId ?? null,
+          stage: name,
+          ms: Date.now() - t0,
+        }),
+      );
+    }
+  };
 
-  const usageWhere = await buildOrgUsageWhere(organizationId);
+  await stage("ensureDefaultProject", () => projectRepository.ensureDefault(organizationId));
+  const settings = await stage("settings", () => settingsService.get(organizationId, userId));
+
+  const usageWhere = await stage("buildOrgUsageWhere", () => buildOrgUsageWhere(organizationId));
   const todayStart = startOfDay();
   const monthStart = new Date();
   monthStart.setDate(1);
@@ -37,53 +58,55 @@ export async function getWorkspaceOverview(organizationId: string, userId: strin
     providerDist,
     modelDist,
     org,
-  ] = await Promise.all([
-    prisma.creditBalance.findUnique({ where: { userId } }),
-    prisma.usageLog.aggregate({
-      where: { ...usageWhere, createdAt: { gte: todayStart } },
-      _sum: { costCredits: true, inputTokens: true, outputTokens: true },
-      _count: { id: true },
-      _avg: { latencyMs: true },
-    }),
-    prisma.usageLog.aggregate({
-      where: { ...usageWhere, createdAt: { gte: monthStart } },
-      _sum: { costCredits: true },
-      _count: { id: true },
-    }),
-    prisma.apiKey.count({
-      where: { organizationId, enabled: true, status: "ACTIVE", name: { not: "__playground__" } },
-    }),
-    projectRepository.list(organizationId).then((p) => p.filter((x) => x.status === "ACTIVE").length),
-    prisma.usageLog.findMany({
-      where: { ...usageWhere, createdAt: { gte: weekStart } },
-      select: { createdAt: true, costCredits: true, inputTokens: true, outputTokens: true, success: true },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.usageLog.findMany({
-      where: usageWhere,
-      include: { provider: true, apiKey: { select: { name: true, prefix: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-    }),
-    prisma.transaction.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-    prisma.usageLog.groupBy({
-      by: ["providerId"],
-      where: { ...usageWhere, createdAt: { gte: monthStart } },
-      _sum: { costCredits: true },
-      _count: { id: true },
-    }),
-    prisma.usageLog.groupBy({
-      by: ["model"],
-      where: { ...usageWhere, createdAt: { gte: monthStart } },
-      _sum: { costCredits: true },
-      _count: { id: true },
-    }),
-    prisma.organization.findUnique({ where: { id: organizationId } }),
-  ]);
+  ] = await stage("parallelAggregates", () =>
+    Promise.all([
+      prisma.creditBalance.findUnique({ where: { userId } }),
+      prisma.usageLog.aggregate({
+        where: { ...usageWhere, createdAt: { gte: todayStart } },
+        _sum: { costCredits: true, inputTokens: true, outputTokens: true },
+        _count: { id: true },
+        _avg: { latencyMs: true },
+      }),
+      prisma.usageLog.aggregate({
+        where: { ...usageWhere, createdAt: { gte: monthStart } },
+        _sum: { costCredits: true },
+        _count: { id: true },
+      }),
+      prisma.apiKey.count({
+        where: { organizationId, enabled: true, status: "ACTIVE", name: { not: "__playground__" } },
+      }),
+      projectRepository.list(organizationId).then((p) => p.filter((x) => x.status === "ACTIVE").length),
+      prisma.usageLog.findMany({
+        where: { ...usageWhere, createdAt: { gte: weekStart } },
+        select: { createdAt: true, costCredits: true, inputTokens: true, outputTokens: true, success: true },
+        orderBy: { createdAt: "asc" },
+      }),
+      prisma.usageLog.findMany({
+        where: usageWhere,
+        include: { provider: true, apiKey: { select: { name: true, prefix: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      }),
+      prisma.transaction.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 8,
+      }),
+      prisma.usageLog.groupBy({
+        by: ["providerId"],
+        where: { ...usageWhere, createdAt: { gte: monthStart } },
+        _sum: { costCredits: true },
+        _count: { id: true },
+      }),
+      prisma.usageLog.groupBy({
+        by: ["model"],
+        where: { ...usageWhere, createdAt: { gte: monthStart } },
+        _sum: { costCredits: true },
+        _count: { id: true },
+      }),
+      prisma.organization.findUnique({ where: { id: organizationId } }),
+    ]),
+  );
 
   const todaySuccess = await prisma.usageLog.count({
     where: { ...usageWhere, createdAt: { gte: todayStart }, success: true },

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   BarChart3,
   CreditCard,
@@ -11,17 +12,20 @@ import {
   ScrollText,
   Settings,
   Shield,
+  Menu,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  WorkspaceOverviewProvider,
+  useWorkspaceOverview,
+} from "@/components/workspace-overview-provider";
 import { cn, formatCost } from "@/lib/utils";
-import { fetchWorkspaceOverview } from "@/lib/workspace/overview-fetch";
 
 const CUSTOMER_NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -40,13 +44,7 @@ const ADMIN_NAV = [
   { href: "/dashboard/admin/audit", label: "AI Audit", icon: Shield },
 ];
 
-type HeaderStats = {
-  organization: { name: string };
-  creditBalance: number;
-  monthCostEur: number;
-};
-
-export function DashboardShell({
+function DashboardShellInner({
   children,
   isAdmin = false,
 }: {
@@ -55,32 +53,15 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [header, setHeader] = useState<HeaderStats | null>(null);
-  const [headerError, setHeaderError] = useState("");
+  const { data, loading, error, refresh } = useWorkspaceOverview();
 
-  const loadHeader = useCallback(async (force = false) => {
-    setHeaderError("");
-    try {
-      const result = await fetchWorkspaceOverview({ force });
-      if (!result.ok || !result.data?.organization) {
-        setHeader(null);
-        setHeaderError(result.message || "Unable to load workspace summary.");
-        return;
-      }
-      setHeader({
-        organization: result.data.organization as { name: string },
-        creditBalance: Number(result.data.creditBalance ?? 0),
-        monthCostEur: Number(result.data.monthCostEur ?? 0),
-      });
-    } catch {
-      setHeader(null);
-      setHeaderError("Unable to load workspace summary.");
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadHeader(false);
-  }, [loadHeader]);
+  const organizationName =
+    data?.organization && typeof data.organization === "object" && "name" in data.organization
+      ? String((data.organization as { name: string }).name)
+      : null;
+  const creditBalance = typeof data?.creditBalance === "number" ? data.creditBalance : null;
+  const monthCostEur = typeof data?.monthCostEur === "number" ? data.monthCostEur : null;
+  const headerReady = Boolean(organizationName);
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
@@ -149,20 +130,34 @@ export function DashboardShell({
             <div className="flex flex-1 flex-wrap items-center gap-4 text-sm">
               <div>
                 <p className="text-xs text-slate-500">Organization</p>
-                <p className="font-medium">{header?.organization.name ?? "—"}</p>
+                <p className="font-medium">
+                  {loading && !headerReady ? "…" : organizationName ?? "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">Credits</p>
-                <p className="font-medium">{header ? formatCost(header.creditBalance) : "—"}</p>
+                <p className="font-medium">
+                  {loading && !headerReady
+                    ? "…"
+                    : creditBalance != null
+                      ? formatCost(creditBalance)
+                      : "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">This month</p>
-                <p className="font-medium">{header ? `€${header.monthCostEur.toFixed(4)}` : "—"}</p>
+                <p className="font-medium">
+                  {loading && !headerReady
+                    ? "…"
+                    : monthCostEur != null
+                      ? `€${monthCostEur.toFixed(4)}`
+                      : "—"}
+                </p>
               </div>
-              {headerError && (
+              {!loading && error && (
                 <div className="text-xs text-red-600 dark:text-red-400">
-                  {headerError}{" "}
-                  <button type="button" className="underline" onClick={() => void loadHeader(true)}>
+                  {error}{" "}
+                  <button type="button" className="underline" onClick={() => void refresh()}>
                     Retry
                   </button>
                 </div>
@@ -178,5 +173,19 @@ export function DashboardShell({
         </div>
       </div>
     </div>
+  );
+}
+
+export function DashboardShell({
+  children,
+  isAdmin = false,
+}: {
+  children: React.ReactNode;
+  isAdmin?: boolean;
+}) {
+  return (
+    <WorkspaceOverviewProvider>
+      <DashboardShellInner isAdmin={isAdmin}>{children}</DashboardShellInner>
+    </WorkspaceOverviewProvider>
   );
 }

@@ -3,6 +3,12 @@
  * GAP-011 Production read-only physical state audit.
  * SELECT-only. Never prints connection strings, passwords, or secrets.
  *
+ * Manual operator tool only:
+ * - Not imported by Next.js app code
+ * - Excluded from tsconfig typecheck / Next production bundle
+ * - Must NOT run during Vercel build
+ * - Must NOT be pointed at Production unless operator sets DIRECT_URL in a local shell
+ *
  * Run in a shell where DIRECT_URL (or DATABASE_URL) is already set:
  *   npx tsx scripts/gap011-production-readonly-audit.ts
  */

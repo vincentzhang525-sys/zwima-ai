@@ -90,7 +90,7 @@ function summarizeMigrationRecord(rows: Row[]) {
 
 function tableNamesFromPgTables(rows: Row[]): string[] {
   return rows
-    .map((r) => String(r.tablename ?? ""))
+    .map((r: Row) => String(r.tablename ?? ""))
     .filter(Boolean)
     .sort();
 }
@@ -202,7 +202,7 @@ async function main() {
     printRows("B_INFO_TABLE", infoTables.rows);
 
     const relatedNames = infoTables.rows
-      .map((r) => String(r.table_name ?? ""))
+      .map((r: Row) => String(r.table_name ?? ""))
       .filter(Boolean);
 
     section("C_INFORMATION_SCHEMA_COLUMNS");

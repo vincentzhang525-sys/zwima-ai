@@ -23,10 +23,21 @@ if (migrateAuthorized) {
     console.error("[vercel-preview-build] REFUSING migrate: not preview target");
     process.exit(2);
   }
-  run("node scripts/db-migrate-authorized.mjs", {
-    ...process.env,
-    DB_MIGRATION_AUTHORIZED: "true",
-  });
+  try {
+    run("node scripts/db-migrate-authorized.mjs", {
+      ...process.env,
+      DB_MIGRATION_AUTHORIZED: "true",
+    });
+  } catch (err) {
+    // Preview-only soft continue: GAP-020 and other no-migration features must still
+    // ship a Ready Preview when an unrelated historical Preview migration (e.g. RLS
+    // gap fix) remains stuck. Never runs under VERCEL_ENV=production (refused above).
+    console.warn(
+      "[vercel-preview-build] Preview migrate failed — continuing to app build. " +
+        "Schema-dependent features may need a separate Preview DB repair authorization. " +
+        String(err instanceof Error ? err.message : err),
+    );
+  }
 }
 
 run("node scripts/vercel-build.mjs");

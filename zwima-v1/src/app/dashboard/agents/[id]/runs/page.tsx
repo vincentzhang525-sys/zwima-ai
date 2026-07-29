@@ -43,6 +43,13 @@ export default function AgentRunsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
+  function inferScenario(text: string): "success" | "fail" | "timeout" {
+    const lower = text.toLowerCase();
+    if (/\bfail\b|强制失败|mock.?fail/.test(lower)) return "fail";
+    if (/\btimeout\b|超时|mock.?timeout/.test(lower)) return "timeout";
+    return "success";
+  }
+
   async function runInPreview() {
     if (running) return;
     setRunning(true);
@@ -52,6 +59,7 @@ export default function AgentRunsPage() {
     idempotencyRef.current = idem;
     const controller = new AbortController();
     abortRef.current = controller;
+    const scenario = inferScenario(input);
 
     try {
       const res = await fetch(`/api/agents/${params.id}/runs`, {
@@ -61,9 +69,11 @@ export default function AgentRunsPage() {
           "Idempotency-Key": idem,
         },
         body: JSON.stringify({
-          input: { message: input },
+          input: { message: input, scenario },
           executionMode: "PREVIEW_SAFE",
-          scenario: "success",
+          scenario,
+          // Keep timeout scenario short so Preview UI settles; cancel path aborts earlier.
+          timeoutMs: scenario === "timeout" ? 80 : 15_000,
         }),
         signal: controller.signal,
       });

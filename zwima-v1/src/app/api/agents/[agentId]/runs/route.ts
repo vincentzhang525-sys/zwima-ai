@@ -58,35 +58,31 @@ export async function POST(
       );
     }
 
-    const controller = new AbortController();
     const timeoutMs = body.timeoutMs ?? 15_000;
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-    let result: AgentRuntimeResult;
-    try {
-      result = await runAgent({
-        agentId,
-        workspaceId: body.workspaceId ?? agent.workspaceId ?? null,
-        userId: ctx.user.id,
-        input: {
-          ...body.input,
-          ...(body.scenario ? { scenario: body.scenario } : {}),
-        },
-        executionMode: body.executionMode,
-        agentEnabled: agent.status === "ACTIVE",
-        agentOrganizationId: agent.organizationId,
-        agentWorkspaceId: agent.workspaceId,
-        callerOrganizationId: ctx.organizationId,
-        idempotencyKey,
-        requestId,
-        signal: controller.signal,
-        timeoutMs,
-        scenario: body.scenario,
-        liveProviderAllowed: false,
-      });
-    } finally {
-      clearTimeout(timer);
-    }
+    // Client disconnect cancels via req.signal. Wall-clock timeout is owned by
+    // the mock executor (timeoutMs) — do not share one AbortController for both,
+    // or TIMED_OUT is misclassified as CANCELLED.
+    const result = await runAgent({
+      agentId,
+      workspaceId: body.workspaceId ?? agent.workspaceId ?? null,
+      userId: ctx.user.id,
+      input: {
+        ...body.input,
+        ...(body.scenario ? { scenario: body.scenario } : {}),
+      },
+      executionMode: body.executionMode,
+      agentEnabled: agent.status === "ACTIVE",
+      agentOrganizationId: agent.organizationId,
+      agentWorkspaceId: agent.workspaceId,
+      callerOrganizationId: ctx.organizationId,
+      idempotencyKey,
+      requestId,
+      signal: req.signal,
+      timeoutMs,
+      scenario: body.scenario,
+      liveProviderAllowed: false,
+    });
 
     // Structured safe log — no secrets / full input / connection strings.
     console.info(formatRuntimeLogLine(result));

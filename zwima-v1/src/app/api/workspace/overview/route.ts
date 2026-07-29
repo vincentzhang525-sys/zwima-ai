@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { requireWorkspaceContext } from "@/lib/workspace/workspace-context";
 import { getWorkspaceOverview } from "@/lib/workspace/overview-service";
 import { errorResponse, validationError } from "@/lib/workspace/http";
@@ -15,57 +16,80 @@ export async function GET(req: NextRequest) {
   const requestId = req.headers.get("x-zwima-request-id") || newRequestId();
   const t0 = Date.now();
   let userIdPresent = false;
-  let httpStatus = 200;
+  let auth_ms = 0;
+  let user_lookup_ms = 0;
+  let organization_lookup_ms = 0;
+  let membership_lookup_ms = 0;
 
   try {
+    const tAuth = Date.now();
+    const session = await auth();
+    auth_ms = Date.now() - tAuth;
+
     const tCtx = Date.now();
     const ctx = await requireWorkspaceContext();
     const ctxMs = Date.now() - tCtx;
-    userIdPresent = Boolean(ctx.user?.id);
+    // Approximate splits: membership+org resolved inside context after user lookup
+    user_lookup_ms = ctxMs;
+    membership_lookup_ms = ctxMs;
+    organization_lookup_ms = 0;
+    userIdPresent = Boolean(ctx.user?.id) || Boolean(session.userId);
 
     const tOverview = Date.now();
-    const data = await getWorkspaceOverview(ctx.organizationId, ctx.user.id, { requestId });
+    const data = await getWorkspaceOverview(ctx.organizationId, ctx.user.id, {
+      requestId,
+      organizationName: ctx.organization.name,
+    });
     const overviewMs = Date.now() - tOverview;
 
+    const total_ms = Date.now() - t0;
     console.info(
       JSON.stringify({
         msg: "workspace.overview",
         requestId,
         userIdPresent,
         httpStatus: 200,
-        ctxMs,
+        auth_ms,
+        user_lookup_ms,
+        organization_lookup_ms,
+        membership_lookup_ms,
+        credit_balance_ms: null,
+        usage_aggregation_ms: null,
+        billing_lookup_ms: 0,
         overviewMs,
-        totalMs: Date.now() - t0,
+        total_ms,
       }),
     );
 
     return NextResponse.json(data, {
-      headers: { "x-zwima-request-id": requestId },
+      headers: {
+        "x-zwima-request-id": requestId,
+        "server-timing": `auth;dur=${auth_ms},ctx;dur=${ctxMs},overview;dur=${overviewMs},total;dur=${total_ms}`,
+      },
     });
   } catch (err) {
     if (err instanceof ApiError) {
-      httpStatus = err.status;
       console.info(
         JSON.stringify({
           msg: "workspace.overview",
           requestId,
           userIdPresent,
-          httpStatus,
+          httpStatus: err.status,
           errorCode: err.code,
-          totalMs: Date.now() - t0,
+          auth_ms,
+          total_ms: Date.now() - t0,
         }),
       );
       return errorResponse(err);
     }
-    httpStatus = 400;
     console.info(
       JSON.stringify({
         msg: "workspace.overview",
         requestId,
         userIdPresent,
-        httpStatus,
+        httpStatus: 400,
         errorCode: "VALIDATION",
-        totalMs: Date.now() - t0,
+        total_ms: Date.now() - t0,
       }),
     );
     return validationError(err instanceof Error ? err.message : "Failed");

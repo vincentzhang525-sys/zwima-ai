@@ -27,6 +27,30 @@ type WorkspaceOverviewContextValue = {
 
 const WorkspaceOverviewContext = createContext<WorkspaceOverviewContextValue | null>(null);
 
+async function loadOverviewDetails(
+  generation: number,
+  generationRef: { current: number },
+  base: OverviewResponse,
+  setData: (data: OverviewResponse) => void,
+) {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
+    const res = await fetch("/api/workspace/overview/details", {
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return;
+    const details = (await res.json()) as Record<string, unknown>;
+    if (generation !== generationRef.current) return;
+    setData({ ...base, ...details, detailsDeferred: false });
+  } catch {
+    // Optional details — keep first-screen data
+  }
+}
+
 export function WorkspaceOverviewProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<OverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,6 +75,7 @@ export function WorkspaceOverviewProvider({ children }: { children: ReactNode })
       }
       setData(result.data);
       setError("");
+      void loadOverviewDetails(generation, generationRef, result.data, setData);
     } catch (err) {
       if (generation !== generationRef.current) return;
       setData(null);

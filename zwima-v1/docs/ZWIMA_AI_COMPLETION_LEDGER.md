@@ -2,8 +2,8 @@
 
 **LEDGER_CREATED:** 2026-07-28  
 **BRANCH:** `v1-p0-commercial-loop`  
-**HEAD:** `b30b5fb`  
-**LAST_CLOSEOUT:** 2026-07-29 — Emergency Preview Deployment and GAP-013 CI Repair PASS_LOCKED  
+**HEAD:** `bb5ee61`  
+**LAST_CLOSEOUT:** 2026-07-29 — Dashboard Performance Phase 2 PASS_LOCKED  
 **PURPOSE:** Historical Completion Check — prevent duplicate implementation, real spend, and secret reconfiguration.
 
 **Rule:** Before any development / audit / acceptance task, read this ledger. If a matching PASS item exists and no retest trigger is true → output `ALREADY_COMPLETED` only. Do not modify code, create resources, reconfigure keys, re-pay, or re-run live Provider/Stripe charges.
@@ -295,6 +295,29 @@
 
 ---
 
+### DASHBOARD-PERFORMANCE-PHASE2
+
+| Field | Value |
+|--------|--------|
+| ID | DASHBOARD-PERFORMANCE-PHASE2 |
+| 模块 | Production Dashboard Overview Performance (Phase 2) |
+| 完成状态 | PASS_LOCKED |
+| DUPLICATE_EXECUTION_FORBIDDEN | YES |
+| 完成日期 | 2026-07-29 |
+| Git commit | `bb5ee61` (chain: `f284341` infinite-skeleton/timeout → `a5ae0a0` slim first-screen → `bb5ee61` identity merge + TTL cache) |
+| Deployment ID/URL | Production `dpl_9CTUzR1iMWAbcrozuBz6AUdokr5p` → `https://zwima-90ut202k2-zwima.vercel.app`; alias **`https://zwima-group.info`** |
+| Database migration | **NONE** — no migrate deploy/reset/db push; Production schema unchanged |
+| Root cause | Identity path ~3.2s + multi-round-trip overview ~2.1s under `connection_limit=1`; Strict Mode duplicate details fetch |
+| Fix | Read-only `requireOverviewIdentity` (single User+membership+org query); one SQL metrics round-trip; per-org/user TTL caches; deferred `/api/workspace/overview/details`; 15s hard client timeout retained |
+| Production timing (authenticated `workspace.overview` HTTP 200) | Unique samples in retained logs: **n=2**; `total_ms` **min=2 / median=2 / p95=3 / max=3** (warm identity+slim cache hits); `writeOps=0` |
+| Mobile Owner acceptance | PASS — `/dashboard` renders; Organization/Credits/This month + Overview load; no infinite skeleton; no Request timed out; perceived warm load **~2s** (≤3s target) |
+| Test result | Unit/typecheck/lint/prisma validate/build PASS on `bb5ee61` |
+| Evidence | Vercel Production Ready on `bb5ee61`; timing JSON `msg=workspace.overview`; this ledger |
+| Retest trigger | `related_code_changed` on overview/identity/cache fetch path; Production DB pooler/region change; mobile Owner reports warm load >3s sustained |
+| DO_NOT_REPEAT | Re-tune Dashboard overview performance without retest trigger; increase frontend timeout to mask API latency; add Production migration for overview indexes without authorize; re-open infinite-skeleton client state machine |
+
+---
+
 ### GAP-014
 
 | Field | Value |
@@ -417,6 +440,7 @@ Tasks that would map to ledger PASS and must return `ALREADY_COMPLETED` unless a
 - “Re-wire GAP-016 FX into chargeForUsage / invent FX rates / re-add FX migration”
 - “Re-build GAP-013 CI from deleted recovery drafts / add Production migrate or live spend jobs”
 - “Re-run Emergency Preview Deployment + GAP-013 CI repair (typecheck gap011 / Preview P3009 recovery)”
+- “Re-tune Production Dashboard overview performance / raise client timeout / re-open infinite-skeleton state machine (DASHBOARD-PERFORMANCE-PHASE2)”
 - “Live-restore Production DB / dump Vercel env values / re-apply locked migrations to prove GAP-014”
 - “Re-run multi-provider live smoke / buy vendor quota / enable LIVE_PROVIDER_CALLS for GAP-015 proof”
 - “Re-wire GAP-010 deprecation EMAIL / re-implement migration engines without trigger”

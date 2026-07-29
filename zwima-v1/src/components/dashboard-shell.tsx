@@ -16,7 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -56,18 +56,31 @@ export function DashboardShell({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [header, setHeader] = useState<HeaderStats | null>(null);
+  const [headerError, setHeaderError] = useState("");
+
+  const loadHeader = useCallback(async (force = false) => {
+    setHeaderError("");
+    try {
+      const result = await fetchWorkspaceOverview({ force });
+      if (!result.ok || !result.data?.organization) {
+        setHeader(null);
+        setHeaderError(result.message || "Unable to load workspace summary.");
+        return;
+      }
+      setHeader({
+        organization: result.data.organization as { name: string },
+        creditBalance: Number(result.data.creditBalance ?? 0),
+        monthCostEur: Number(result.data.monthCostEur ?? 0),
+      });
+    } catch {
+      setHeader(null);
+      setHeaderError("Unable to load workspace summary.");
+    }
+  }, []);
 
   useEffect(() => {
-    fetchWorkspaceOverview().then((d) => {
-      if (d?.organization) {
-        setHeader({
-          organization: d.organization as { name: string },
-          creditBalance: Number(d.creditBalance ?? 0),
-          monthCostEur: Number(d.monthCostEur ?? 0),
-        });
-      }
-    });
-  }, []);
+    void loadHeader(false);
+  }, [loadHeader]);
 
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
@@ -146,6 +159,14 @@ export function DashboardShell({
                 <p className="text-xs text-slate-500">This month</p>
                 <p className="font-medium">{header ? `€${header.monthCostEur.toFixed(4)}` : "—"}</p>
               </div>
+              {headerError && (
+                <div className="text-xs text-red-600 dark:text-red-400">
+                  {headerError}{" "}
+                  <button type="button" className="underline" onClick={() => void loadHeader(true)}>
+                    Retry
+                  </button>
+                </div>
+              )}
             </div>
             <div className="ml-auto flex items-center gap-3">
               <NotificationBell />

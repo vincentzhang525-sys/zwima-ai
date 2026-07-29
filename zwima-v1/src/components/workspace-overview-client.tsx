@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { DonutChart } from "@/components/ui/chart";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -48,18 +48,25 @@ export function WorkspaceOverviewClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function load() {
+  const load = useCallback(async (force = false) => {
     setLoading(true);
     setError("");
-    const json = await fetchWorkspaceOverview();
-    if (!json) setError("Failed to load");
-    else setData(json as Overview);
-    setLoading(false);
-  }
+    try {
+      const result = await fetchWorkspaceOverview({ force });
+      if (!result.ok || !result.data) {
+        setData(null);
+        setError(result.message || "Failed to load dashboard data.");
+        return;
+      }
+      setData(result.data as Overview);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    load();
-  }, []);
+    void load(false);
+  }, [load]);
 
   if (loading) {
     return (
@@ -74,8 +81,8 @@ export function WorkspaceOverviewClient() {
     );
   }
 
-  if (error) return <ErrorState message={error} onRetry={load} />;
-  if (!data) return null;
+  if (error) return <ErrorState message={error} onRetry={() => void load(true)} />;
+  if (!data) return <ErrorState message="Failed to load dashboard data." onRetry={() => void load(true)} />;
 
   return (
     <div className="space-y-6">

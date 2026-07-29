@@ -120,7 +120,7 @@ function applyMigrationSql(migrationName, env) {
     return false;
   }
   console.log("[db-migrate] prisma db execute --file " + migrationName);
-  if (!runOptional(`npx prisma db execute --file "${sqlPath}"`, env)) {
+  if (!runOptional(`npx prisma db execute --schema prisma/schema.prisma --file "${sqlPath}"`, env)) {
     console.error("[db-migrate] execute failed for " + migrationName);
     return false;
   }
